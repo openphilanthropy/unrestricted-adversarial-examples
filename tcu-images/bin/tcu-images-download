@@ -1,0 +1,15 @@
+#! /bin/python
+import argparse
+
+import tcu_images
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--split', default="all")
+  args = parser.parse_args()
+
+  if args.split == 'all':
+    for split in ['train', 'test', 'extras']:
+      tcu_images.get_dataset(split, force_download=True)
+  else:
+    tcu_images.get_dataset(args.split, force_download=True)
