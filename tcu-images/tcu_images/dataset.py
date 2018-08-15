@@ -158,13 +158,17 @@ def verify_dataset_integrity(split, data_root=None):
 def _crop_and_resize_images(split_root):
   print("Cropping images to correct shape and size...")
 
-  cmd = 'find {data_dir} -name \"*.jpg\" | \
-  xargs -P{N_WORKERS} -I% convert % \
-  -resize \"299^>\" \
-  -gravity center \
-  -crop 299x299+0+0 %'.format(data_dir=split_root, N_WORKERS=N_WORKERS)
+  try:
+     cmd = 'find {data_dir} -name \"*.jpg\" | \
+     xargs -P{N_WORKERS} -I % convert % \
+     -resize \"299^>\" \
+     -gravity center \
+     -crop 299x299+0+0 %'.format(data_dir=split_root, N_WORKERS=N_WORKERS)
 
-  subprocess.check_call(cmd, shell=True)
+     subprocess.check_call(cmd, shell=True)
+  except subprocess.CalledProcessError as e:
+    print("\nERROR: convert command failed.\nTry 'sudo apt-get install imagemagick'\n")
+    raise(e)
 
 
 def _get_tcu_image_ids(split):
