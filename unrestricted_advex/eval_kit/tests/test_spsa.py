@@ -20,6 +20,7 @@ import os
 import unittest
 import numpy as np
 from PIL import Image
+from six.moves import xrange
 import tensorflow as tf
 from tensorflow.contrib import slim
 from tensorflow.contrib.slim.nets import inception
@@ -84,7 +85,7 @@ def load_images(input_dir, metadata_file_path, batch_shape):
         row = rows[idx]
         filepath = os.path.join(input_dir, row[row_idx_image_id] + '.png')
 
-        with tf.gfile.Open(filepath) as f:
+        with tf.gfile.Open(filepath, 'rb') as f:
             image = np.array(
                 Image.open(f).convert('RGB')).astype(np.float) / 255.0
         images[idx, :, :, :] = image
