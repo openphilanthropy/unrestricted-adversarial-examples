@@ -61,8 +61,6 @@ def spsa_attack(model, batch_nchw, labels, epsilon=(4. / 255)):
     return np.concatenate(all_x_adv_np)
 
 
-
-
 def null_attack(model, x_np, y_np):
   return x_np
 
@@ -106,9 +104,8 @@ def main():
       lambda x: x / 255.,
     ]))
 
-  dataset_iter = [(x.numpy(), y.numpy())
-                  for (x, y) in
-                  iter(torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE))]
+  data_loader = torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE)
+  dataset_iter = [(x.numpy(), y.numpy()) for (x, y) in iter(data_loader)]
 
   ### Load model
   pytorch_model = torchvision.models.resnet50(pretrained=True)
@@ -130,7 +127,7 @@ def main():
   ### Evaluate attack
   for attack_fn in [null_attack, spsa_attack]:
     logits, labels = run_attack(model_fn, dataset_iter, attack_fn,
-                              max_num_batches=1)
+                                max_num_batches=1)
     preds = (logits > 0).astype(np.int64)
     correct = np.equal(preds, labels).astype(np.float32)
     correct_fracs = np.sum(correct, axis=0) / len(labels)
