@@ -1,4 +1,5 @@
 """Evaluate a model with attacks."""
+import os
 
 import numpy as np
 import tcu_images
@@ -8,6 +9,9 @@ import torchvision
 from cleverhans.attacks import SPSA
 from cleverhans.model import Model
 from six.moves import xrange
+
+BIRD_CLASSES = list(range(80, 100 + 1))
+BICYCLE_CLASSES = [671, 444]
 
 
 class CleverhansModelWrapper(Model):
@@ -65,7 +69,7 @@ def null_attack(model, x_np, y_np):
   return x_np
 
 
-def run_attack(model, data_iter, attack_fn, max_num_batches=1):
+def run_attack(model, data_iter, attack_fn, max_num_batches=1, save_image_dir=None):
   """
   :param model: Model should output a
   :param data_iter:
@@ -84,11 +88,19 @@ def run_attack(model, data_iter, attack_fn, max_num_batches=1):
     all_labels.append(y_np)
     all_logits.append(logits)
 
+  if save_image_dir:
+    for i, image_np in enumerate(x_adv):
+      save_image_to_png(image_np, os.path.join(save_image_dir, "adv_image_%s.png" % i))
+
   return np.concatenate(all_logits), np.concatenate(all_labels)
 
 
-BIRD_CLASSES = list(range(80, 100 + 1))
-BICYCLE_CLASSES = [671, 444]
+
+def save_image_to_png(image_np, filename):
+  from PIL import Image
+  os.makedirs(os.path.dirname(filename), exist_ok=True)
+  img = Image.fromarray(np.uint8(image_np * 255.), 'RGB')
+  img.save(filename)
 
 
 def main():
@@ -101,7 +113,6 @@ def main():
     torchvision.transforms.Compose([
       torchvision.transforms.Resize(224),
       torchvision.transforms.ToTensor(),
-      lambda x: x / 255.,
     ]))
 
   data_loader = torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE)
@@ -125,9 +136,10 @@ def main():
       return delta_logits.cpu().numpy()
 
   ### Evaluate attack
-  for attack_fn in [null_attack, spsa_attack]:
+  for attack_fn in [null_attack]:
     logits, labels = run_attack(model_fn, dataset_iter, attack_fn,
-                                max_num_batches=1)
+                                max_num_batches=1,
+                                save_image_dir='/tmp/eval_with_attacks/null_attack')
     preds = (logits > 0).astype(np.int64)
     correct = np.equal(preds, labels).astype(np.float32)
     correct_fracs = np.sum(correct, axis=0) / len(labels)
