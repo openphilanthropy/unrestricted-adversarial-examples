@@ -32,6 +32,11 @@ OPEN_IMAGES_BIRD_CLASS = '/m/015p6'
 OPEN_IMAGES_BICYCLE_CLASS = '/m/0199g'
 
 
+CLASS_NAME_TO_IMAGENET_CLASS = {
+  'bird': list(range(80, 100 + 1)),
+  'bicycle': [671, 444]
+}
+
 def _is_valid_extras_image(bbox_row, strict=False, min_bbox_area=0.2 ** 2):
   """
   :param bbox_row: A single row from the bbox.csv file

@@ -9,9 +9,7 @@ import torchvision
 from cleverhans.attacks import SPSA
 from cleverhans.model import Model
 from six.moves import xrange
-
-BIRD_CLASSES = list(range(80, 100 + 1))
-BICYCLE_CLASSES = [671, 444]
+from tcu_images import CLASS_NAME_TO_IMAGENET_CLASS
 
 
 class CleverhansModelWrapper(Model):
@@ -95,7 +93,6 @@ def run_attack(model, data_iter, attack_fn, max_num_batches=1, save_image_dir=No
   return np.concatenate(all_logits), np.concatenate(all_labels)
 
 
-
 def save_image_to_png(image_np, filename):
   from PIL import Image
   os.makedirs(os.path.dirname(filename), exist_ok=True)
@@ -104,7 +101,7 @@ def save_image_to_png(image_np, filename):
 
 
 def main():
-  BATCH_SIZE = 1
+  BATCH_SIZE = 32
   ### Get data
   data_dir = tcu_images.get_dataset('train')
 
@@ -115,7 +112,14 @@ def main():
       torchvision.transforms.ToTensor(),
     ]))
 
-  data_loader = torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE)
+  data_loader = torch.utils.data.DataLoader(
+    train_dataset,
+    batch_size=BATCH_SIZE,
+    shuffle=True)
+
+  assert train_dataset.class_to_idx['bicycle'] == 0
+  assert train_dataset.class_to_idx['bird'] == 1
+
   dataset_iter = [(x.numpy(), y.numpy()) for (x, y) in iter(data_loader)]
 
   ### Load model
@@ -128,11 +132,13 @@ def main():
       x = torch.from_numpy(x_np).cuda()
       logits1000 = pytorch_model(x)
 
-      # model API needs a single logit. Positive values correspond to bicycle
-      bird_max_logit, _ = torch.max(logits1000[:, BIRD_CLASSES], dim=1)
-      bicycle_max_logit, _ = torch.max(logits1000[:, BICYCLE_CLASSES], dim=1)
-      delta_logits = bicycle_max_logit - bird_max_logit
+      # model API needs a single logit. Positive values correspond to bird
+      bird_max_logit, _ = torch.max(
+        logits1000[:, CLASS_NAME_TO_IMAGENET_CLASS['bird']], dim=1)
+      bicycle_max_logit, _ = torch.max(
+        logits1000[:, CLASS_NAME_TO_IMAGENET_CLASS['bicycle']], dim=1)
 
+      delta_logits = bird_max_logit - bicycle_max_logit
       return delta_logits.cpu().numpy()
 
   ### Evaluate attack
