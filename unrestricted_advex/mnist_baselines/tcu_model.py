@@ -8,6 +8,7 @@ class TCUWrapper(object):
 
   def __call__(self, xs):
     logits = self.mnist_model(xs)
-    class_a = logits[:,self.classes[0]]
-    class_b = logits[:,self.classes[1]]
-    return class_a - class_b
+    #class_a = logits[:,self.classes[0]]
+    #class_b = logits[:,self.classes[1]]
+    #return class_a - class_b
+    return tf.stack([logits[:,self.classes[0]],logits[:,self.classes[1]]],axis=1)
