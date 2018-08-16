@@ -9,6 +9,8 @@ import torchvision
 from cleverhans.attacks import SPSA
 from cleverhans.model import Model
 from six.moves import xrange
+from tensorflow.keras.applications.resnet50 import preprocess_input
+
 from tcu_images import CLASS_NAME_TO_IMAGENET_CLASS
 
 
@@ -94,9 +96,7 @@ def save_image_to_png(image_np, filename):
   img.save(filename)
 
 
-def main():
-  BATCH_SIZE = 4
-  ### Get data
+def get_torch_tcu_dataset_iter(batch_size):
   data_dir = tcu_images.get_dataset('train')
 
   train_dataset = torchvision.datasets.ImageFolder(
@@ -108,15 +108,17 @@ def main():
 
   data_loader = torch.utils.data.DataLoader(
     train_dataset,
-    batch_size=BATCH_SIZE,
+    batch_size=batch_size,
     shuffle=True)
 
   assert train_dataset.class_to_idx['bicycle'] == 0
   assert train_dataset.class_to_idx['bird'] == 1
 
   dataset_iter = [(x.numpy(), y.numpy()) for (x, y) in iter(data_loader)]
+  return dataset_iter
 
-  ### Load model
+
+def get_torch_tcu_model():
   pytorch_model = torchvision.models.resnet50(pretrained=True)
   pytorch_model = pytorch_model.cuda()
   pytorch_model.eval()  # switch to eval mode
@@ -126,7 +128,6 @@ def main():
       x = torch.from_numpy(x_np).cuda()
       logits1000 = pytorch_model(x)
 
-      # model API needs a single logit. Positive values correspond to bird
       bird_max_logit, _ = torch.max(
         logits1000[:, CLASS_NAME_TO_IMAGENET_CLASS['bird']], dim=1)
       bicycle_max_logit, _ = torch.max(
@@ -135,7 +136,34 @@ def main():
                           bird_max_logit[:, None]), dim=1)
       return logits.cpu().numpy()
 
-  ### Evaluate attack
+  return model_fn
+
+
+def get_keras_tcu_model():
+  tf.keras.backend.set_image_data_format('channels_first')
+
+  k_model = tf.keras.applications.resnet50.ResNet50(
+    include_top=True, weights='imagenet', input_tensor=None,
+    input_shape=None, pooling=None, classes=1000)
+
+  def model_wrapper(x_np):
+    # it seems keras pre-trained model directly output softmax-ed probs
+    x_np = preprocess_input(x_np * 255)
+    prob1000 = k_model.predict_on_batch(x_np) / 10
+    fake_logits1000 = np.log(prob1000)
+
+    bird_max_logit = np.max(
+      fake_logits1000[:, CLASS_NAME_TO_IMAGENET_CLASS['bird']], axis=1)
+    bicycle_max_logit = np.max(
+      fake_logits1000[:, CLASS_NAME_TO_IMAGENET_CLASS['bicycle']], axis=1)
+    logits = np.concatenate((bicycle_max_logit[:, None],
+                             bird_max_logit[:, None]), axis=1)
+    return logits
+
+  return model_wrapper
+
+
+def evaluate_model(model_fn, dataset_iter):
   for (attack_fn, save_name) in [(null_attack, 'null_attack'),
                                  (spsa_attack, 'spsa_attack')]:
     logits, labels = run_attack(
@@ -145,6 +173,12 @@ def main():
     correct = np.equal(preds, labels).astype(np.float32)
     correct_fracs = np.sum(correct, axis=0) / len(labels)
     print(correct_fracs)
+
+
+def main():
+  tcu_dataset_iter = get_torch_tcu_dataset_iter(batch_size=4)
+  model_fn = get_keras_tcu_model()
+  evaluate_model(model_fn, tcu_dataset_iter)
 
 
 if __name__ == '__main__':
