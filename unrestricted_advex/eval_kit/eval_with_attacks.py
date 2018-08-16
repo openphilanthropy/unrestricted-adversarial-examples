@@ -59,37 +59,30 @@ def spsa_attack(model, batch_nchw, labels, epsilon=(4. / 255)):
     return x_adv_np
 
 
-def evaluate(model, data_iter, attacks=None, max_num_batches=1):
+def null_attack(model, x_np, y_np):
+  return x_np
+
+
+def evaluate(model, data_iter, attack_fn, max_num_batches=1):
   """
   :param model:
   :param data_iter:
-  :param attacks:
+  :param attack:
   :param max_num_batches:
   :return: A list of tuples of (preds, labels) corredsponding to each attack
   """
-  if attacks is None:
-    attacks = ['null']  # a single null attack
-
   all_labels = []
-  all_preds = [[] for _ in attacks]
-
+  all_preds = []
   for i_batch, (x_np, y_np) in enumerate(data_iter):
     if max_num_batches > 0 and i_batch >= max_num_batches:
       break
 
-    for attack_f, preds_container in zip(attacks, all_preds):
-      if attack_f == 'null':
-        x_adv = x_np
-      else:
-        x_adv = attack_f(model, x_np, y_np)
+    x_adv = attack_fn(model, x_np, y_np)
+    y_pred = model(x_adv)
+    all_labels.append(y_np)
+    all_preds.append(y_pred)
 
-      y_pred = model(x_adv)
-
-      all_labels.append(y_np)
-      preds_container.append(y_pred)
-
-  all_preds = [np.concatenate(x) for x in all_preds]
-  return zip(*[all_labels, all_preds])
+  return np.concatenate(all_preds), np.concatenate(all_labels)
 
 
 BIRD_CLASSES = list(range(80, 100 + 1))
@@ -129,10 +122,10 @@ def main():
       return delta_logits.cpu().numpy()
 
   ### Evaluate attack
-  labels_and_preds = evaluate(model_fn, dataset_iter, attacks=['null', spsa_attack],
-                                   max_num_batches=1)
+  for attack_fn in [null_attack, spsa_attack]:
+    preds, labels = evaluate(model_fn, dataset_iter, attack_fn,
+                                max_num_batches=1)
 
-  for labels, preds in labels_and_preds:
     correct = np.equal(preds, labels).astype(np.float32)
     correct_fracs = np.sum(correct, axis=0) / len(labels)
     print(correct_fracs)
