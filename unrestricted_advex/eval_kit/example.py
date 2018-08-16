@@ -129,8 +129,8 @@ if __name__ == '__main__':
   attacks = ['null']
 
   # set max_num_batches to -1 to evaluate on the whole validation set
-  labels, preds = eval_with_attacks.evaluate(model, data_iter, attacks,
-                                             max_num_batches=10)
+  labels, preds = eval_with_attacks.run_attack(model, data_iter, attacks,
+                                               max_num_batches=10)
 
   print('{:>15s} | {}'.format('Attack', 'Accuracy'))
   for attack, preds_under_attack in zip(attacks, preds):

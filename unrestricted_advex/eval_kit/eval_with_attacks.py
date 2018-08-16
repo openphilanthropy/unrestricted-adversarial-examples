@@ -63,26 +63,26 @@ def null_attack(model, x_np, y_np):
   return x_np
 
 
-def evaluate(model, data_iter, attack_fn, max_num_batches=1):
+def run_attack(model, data_iter, attack_fn, max_num_batches=1):
   """
-  :param model:
+  :param model: Model should output a
   :param data_iter:
   :param attack:
   :param max_num_batches:
-  :return: A list of tuples of (preds, labels) corredsponding to each attack
+  :return: (logits, labels)
   """
   all_labels = []
-  all_preds = []
+  all_logits = []
   for i_batch, (x_np, y_np) in enumerate(data_iter):
     if max_num_batches > 0 and i_batch >= max_num_batches:
       break
 
     x_adv = attack_fn(model, x_np, y_np)
-    y_pred = model(x_adv)
+    logits = model(x_adv)
     all_labels.append(y_np)
-    all_preds.append(y_pred)
+    all_logits.append(logits)
 
-  return np.concatenate(all_preds), np.concatenate(all_labels)
+  return np.concatenate(all_logits), np.concatenate(all_labels)
 
 
 BIRD_CLASSES = list(range(80, 100 + 1))
@@ -114,19 +114,21 @@ def main():
       x = torch.from_numpy(x_np).cuda()
       logits1000 = pytorch_model(x)
 
-      # model API needs a single probability in [0, 1]
+      # model API needs a single logit. Positive values correspond to bicycle
       bird_max_logit, _ = torch.max(logits1000[:, BIRD_CLASSES], dim=1)
       bicycle_max_logit, _ = torch.max(logits1000[:, BICYCLE_CLASSES], dim=1)
-      delta_logits = bird_max_logit - bicycle_max_logit
+      delta_logits = bicycle_max_logit - bird_max_logit
 
       return delta_logits.cpu().numpy()
 
   ### Evaluate attack
   for attack_fn in [null_attack, spsa_attack]:
-    preds, labels = evaluate(model_fn, dataset_iter, attack_fn,
-                                max_num_batches=1)
+    logits, labels = run_attack(model_fn, dataset_iter, attack_fn,
+                               max_num_batches=1)
 
+    preds = (logits > 0).astype(np.int64)
     correct = np.equal(preds, labels).astype(np.float32)
+    import ipdb; ipdb.set_trace()
     correct_fracs = np.sum(correct, axis=0) / len(labels)
     print(correct_fracs)
 
