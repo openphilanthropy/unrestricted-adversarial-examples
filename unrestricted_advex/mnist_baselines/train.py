@@ -6,9 +6,12 @@ from cleverhans.attacks import MadryEtAl
 
 from mnist_model import Model
 
-batch_size = 256
-train_mode = "vanilla"  # "adversarial" #
-model_dir = "models/"+train_mode+"_bs=256"
+flags = tf.app.flags
+FLAGS = flags.FLAGS
+
+flags.DEFINE_string("train_mode", "vanilla", "Model type (either 'vanilla' or 'adversarial')")
+flags.DEFINE_string("model_dir", "", "Where to put the trained model checkpoint")
+flags.DEFINE_integer("batch_size", 128, "Batch size for training the model")
 
 
 def main(_):
@@ -46,15 +49,15 @@ def main(_):
   with tf.Session() as sess:
     attack = MadryEtAl(model, sess=sess)
   
-    summary_writer = tf.summary.FileWriter(model_dir, sess.graph)
+    summary_writer = tf.summary.FileWriter(FLAGS.model_dir, sess.graph)
     sess.run(tf.global_variables_initializer())
     training_time = 0.0
   
     for batch_num in range(1000000):
-      x_batch, y_batch = mnist.train.next_batch(batch_size)
+      x_batch, y_batch = mnist.train.next_batch(FLAGS.batch_size)
       x_batch = np.reshape(x_batch, (-1, 28, 28, 1))
   
-      if train_mode == "adversarial" and batch_num>1000:
+      if FLAGS.train_mode == "adversarial" and batch_num>1000:
         x_batch_adv = attack.generate_np(x_batch, y=y_batch, eps=.3,
                                          nb_iter=40, eps_iter=.01,
                                          rand_init=True,
@@ -73,14 +76,14 @@ def main(_):
         a,l,s = sess.run((accuracy, loss, nat_summaries), nat_dict)
         summary_writer.add_summary(s, sess.run(global_step))
         print(batch_num,"Clean accuracy", a, "loss", l)
-        if train_mode == "adversarial":
+        if FLAGS.train_mode == "adversarial":
           a,l,s = sess.run((accuracy, loss, adv_summaries), adv_dict)
           summary_writer.add_summary(s, sess.run(global_step))
           print(batch_num,"Adv accuracy", a, "loss", l)
   
   
       if batch_num%1000 == 0:
-          saver.save(sess, os.path.join(model_dir, "checkpoint"),
+          saver.save(sess, os.path.join(FLAGS.model_dir, "checkpoint"),
                      global_step=global_step)
   
       sess.run(train_step, nat_dict)
