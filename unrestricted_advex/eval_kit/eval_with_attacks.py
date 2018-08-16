@@ -64,6 +64,7 @@ def spsa_attack(model, batch_nchw, labels, epsilon=(4. / 255)):
 
 
 def null_attack(model, x_np, y_np):
+  del model, y_np  # unused
   return x_np
 
 
@@ -96,7 +97,7 @@ def run_attack(model, data_iter, attack_fn, max_num_batches=1, save_image_dir=No
 def save_image_to_png(image_np, filename):
   from PIL import Image
   os.makedirs(os.path.dirname(filename), exist_ok=True)
-  img = Image.fromarray(np.uint8(image_np * 255.), 'RGB')
+  img = Image.fromarray(np.uint8(np.einsum('chw->hwc', image_np) * 255.), 'RGB')
   img.save(filename)
 
 
@@ -142,10 +143,11 @@ def main():
       return delta_logits.cpu().numpy()
 
   ### Evaluate attack
-  for attack_fn in [null_attack]:
-    logits, labels = run_attack(model_fn, dataset_iter, attack_fn,
-                                max_num_batches=1,
-                                save_image_dir='/tmp/eval_with_attacks/null_attack')
+  for (attack_fn, save_name) in [(null_attack, 'null_attack'),
+                                 (spsa_attack, 'spsa_attack')]:
+    logits, labels = run_attack(
+      model_fn, dataset_iter, attack_fn, max_num_batches=1,
+      save_image_dir=os.path.join('/tmp/eval_with_attacks', save_name))
     preds = (logits > 0).astype(np.int64)
     correct = np.equal(preds, labels).astype(np.float32)
     correct_fracs = np.sum(correct, axis=0) / len(labels)
