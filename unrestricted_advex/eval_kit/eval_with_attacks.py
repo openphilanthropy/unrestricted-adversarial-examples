@@ -12,17 +12,23 @@ import torchvision
 import tcu_images
 
 
-def CleverhansModelWrapper(Model):
+class CleverhansModelWrapper(Model):
     def __init__(self, model_fn):
         """
         Wrap a callable function that takes a numpy array of shape (N, C, H, W),
         and outputs a numpy vector of length N, with each element in range [0, 1].
         """
-        self.model_fn = model_fn
+        self.nb_classes = 2
+        def two_class_model_fn(x):
+            class_one_logit = model_fn(x)
+            class_zero_logit = -class_one_logit
+            stack = np.vstack([class_zero_logit, class_one_logit]).T
+            return stack
+        self.model_fn = two_class_model_fn
 
     def fprop(self, x, **kwargs):
         logits_op = tf.py_func(self.model_fn, [x], tf.float32)
-        return {'logits': logits_op(x)}
+        return {'logits': logits_op}
 
 
 def spsa_attack(model, batch_nchw, labels, epsilon=(4. / 255)):
@@ -32,7 +38,6 @@ def spsa_attack(model, batch_nchw, labels, epsilon=(4. / 255)):
         y_label = tf.placeholder(tf.int32, shape=(1,))
 
         cleverhans_model = CleverhansModelWrapper(model)
-
         attack = SPSA(cleverhans_model)
         x_adv = attack.generate(
             x_input, y=y_label, epsilon=epsilon, num_steps=30,
@@ -78,6 +83,10 @@ def evaluate(model, data_iter, attacks=None, max_num_batches=1):
   return all_labels, all_preds
 
 
+BIRD_CLASSES = list(range(80,100+1))
+BICYCLE_CLASSES = [671, 444]
+
+
 def main():
   ### Get data
   data_dir = tcu_images.get_dataset('train')
@@ -107,14 +116,16 @@ def main():
       logits1000 = pytorch_model(x)
 
       # model API needs a single probability in [0, 1]
-      IMAGENET_CLASS = 0
-      prob0 = torch.nn.functional.softmax(
-          logits1000, dim=1)[:, IMAGENET_CLASS]
-      return prob0.cpu().numpy()
+      bird_max_logit, _ = torch.max(logits1000[:, BIRD_CLASSES], dim=1)
+      bicycle_max_logit, _ = torch.max(logits1000[:, BICYCLE_CLASSES], dim=1)
+      delta_logits = bird_max_logit - bicycle_max_logit
+
+      return delta_logits.cpu().numpy()
 
   ### Evaluate attack
-  evaluate(model_fn, dataset_iter, attacks=None, max_num_batches=1)
-
+  all_labels, all_preds = evaluate(model_fn, dataset_iter, attacks=[spsa_attack], max_num_batches=1)
+  correct = np.sum(np.equal(all_preds[0], all_labels).astype(np.float32)) / len(all_labels)
+  print(correct)
 
 if __name__ == '__main__':
   main()
