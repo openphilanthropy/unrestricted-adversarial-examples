@@ -5,10 +5,24 @@ from cleverhans.model import Model
 from cleverhans.attacks import SPSA
 import numpy as np
 import tensorflow as tf
+import torch
+import torchvision
 
 
-def make_cleverhans_model(model):
-    return None
+import tcu_images
+
+
+def CleverhansModelWrapper(Model):
+    def __init__(self, model_fn):
+        """
+        Wrap a callable function that takes a numpy array of shape (N, C, H, W),
+        and outputs a numpy vector of length N, with each element in range [0, 1].
+        """
+        self.model_fn = model_fn
+
+    def fprop(self, x, **kwargs):
+        logits_op = tf.py_func(self.model_fn, [x], tf.float32)
+        return {'logits': logits_op(x)}
 
 
 def spsa_attack(model, batch_nchw, labels, epsilon=(4. / 255)):
@@ -17,7 +31,7 @@ def spsa_attack(model, batch_nchw, labels, epsilon=(4. / 255)):
         x_input = tf.placeholder(tf.float32, shape=(1,) + batch_nchw.shape[1:])
         y_label = tf.placeholder(tf.int32, shape=(1,))
 
-        cleverhans_model = make_cleverhans_model(model)
+        cleverhans_model = CleverhansModelWrapper(model)
 
         attack = SPSA(cleverhans_model)
         x_adv = attack.generate(
@@ -42,7 +56,7 @@ def evaluate(model, data_iter, attacks=None, max_num_batches=1):
   all_labels = []
   all_preds = [[] for _ in attacks]
 
-  for i_batch, (x_np, y_np) in enumerate(data_iter()):
+  for i_batch, (x_np, y_np) in enumerate(data_iter):
     if max_num_batches > 0 and i_batch >= max_num_batches:
       break
 
@@ -62,3 +76,45 @@ def evaluate(model, data_iter, attacks=None, max_num_batches=1):
   all_preds = [np.concatenate(x) for x in all_preds]
 
   return all_labels, all_preds
+
+
+def main():
+  ### Get data
+  data_dir = tcu_images.get_dataset('train')
+
+  normalize = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                   std=[0.229, 0.224, 0.225])
+
+  train_dataset = torchvision.datasets.ImageFolder(
+    data_dir,
+    torchvision.transforms.Compose([
+      torchvision.transforms.Resize(224),
+      torchvision.transforms.ToTensor(),
+      normalize,
+    ]))
+
+  dataset_iter = [(x.numpy(), y.numpy())
+                  for (x, y) in iter(torch.utils.data.DataLoader(train_dataset, batch_size=32))]
+
+  ### Load model
+  pytorch_model = torchvision.models.resnet50(pretrained=True)
+  pytorch_model = pytorch_model.cuda()
+  pytorch_model.eval()  # switch to eval mode
+
+  def model_fn(x_np):
+    with torch.no_grad():
+      x = torch.from_numpy(x_np).cuda()
+      logits1000 = pytorch_model(x)
+
+      # model API needs a single probability in [0, 1]
+      IMAGENET_CLASS = 0
+      prob0 = torch.nn.functional.softmax(
+          logits1000, dim=1)[:, IMAGENET_CLASS]
+      return prob0.cpu().numpy()
+
+  ### Evaluate attack
+  evaluate(model_fn, dataset_iter, attacks=None, max_num_batches=1)
+
+
+if __name__ == '__main__':
+  main()

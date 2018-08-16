@@ -103,7 +103,7 @@ def get_data_iter(data_key):
 
 ################################################################################
 import argparse
-from eval_kit import eval_with_attacks
+from unrestricted_advex.eval_kit import eval_with_attacks
 
 
 parser = argparse.ArgumentParser(description='Example evaluation')
@@ -136,4 +136,3 @@ if __name__ == '__main__':
   for attack, preds_under_attack in zip(attacks, preds):
     acc = np.equal(labels, preds_under_attack > 0.5).astype(np.float64).mean()
     print('{:>15s} | {:.2f}%'.format(attack, acc * 100))
-
