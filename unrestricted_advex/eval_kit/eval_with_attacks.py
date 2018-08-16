@@ -19,21 +19,14 @@ class CleverhansModelWrapper(Model):
     and outputs a numpy vector of length N, with each element in range [0, 1].
     """
     self.nb_classes = 2
-
-    def two_class_model_fn(x):
-      class_one_logit = model_fn(x)
-      class_zero_logit = -class_one_logit
-      stack = np.vstack([class_zero_logit, class_one_logit]).T
-      return stack
-
-    self.model_fn = two_class_model_fn
+    self.model_fn = model_fn
 
   def fprop(self, x, **kwargs):
     logits_op = tf.py_func(self.model_fn, [x], tf.float32)
     return {'logits': logits_op}
 
 
-def spsa_attack(model, batch_nchw, labels, epsilon=(4. / 255)):
+def spsa_attack(model, batch_nchw, labels, epsilon=(16. / 255)): # (4. / 255)):
   with tf.Graph().as_default():
     # Prepare graph
     x_input = tf.placeholder(tf.float32, shape=(1,) + batch_nchw.shape[1:])
@@ -46,7 +39,7 @@ def spsa_attack(model, batch_nchw, labels, epsilon=(4. / 255)):
       x_input,
       y=y_label,
       epsilon=epsilon,
-      num_steps=30,
+      num_steps=200,
       early_stop_loss_threshold=-1.,
       spsa_samples=32,
       is_debug=True)
@@ -102,7 +95,7 @@ def save_image_to_png(image_np, filename):
 
 
 def main():
-  BATCH_SIZE = 32
+  BATCH_SIZE = 4
   ### Get data
   data_dir = tcu_images.get_dataset('train')
 
@@ -138,9 +131,9 @@ def main():
         logits1000[:, CLASS_NAME_TO_IMAGENET_CLASS['bird']], dim=1)
       bicycle_max_logit, _ = torch.max(
         logits1000[:, CLASS_NAME_TO_IMAGENET_CLASS['bicycle']], dim=1)
-
-      delta_logits = bird_max_logit - bicycle_max_logit
-      return delta_logits.cpu().numpy()
+      logits = torch.cat((bicycle_max_logit[:, None],
+                          bird_max_logit[:, None]), dim=1)
+      return logits.cpu().numpy()
 
   ### Evaluate attack
   for (attack_fn, save_name) in [(null_attack, 'null_attack'),
@@ -148,7 +141,7 @@ def main():
     logits, labels = run_attack(
       model_fn, dataset_iter, attack_fn, max_num_batches=1,
       save_image_dir=os.path.join('/tmp/eval_with_attacks', save_name))
-    preds = (logits > 0).astype(np.int64)
+    preds = (logits[:, 0] < logits[:, 1]).astype(np.int64)
     correct = np.equal(preds, labels).astype(np.float32)
     correct_fracs = np.sum(correct, axis=0) / len(labels)
     print(correct_fracs)
