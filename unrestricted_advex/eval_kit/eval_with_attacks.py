@@ -39,24 +39,28 @@ def spsa_attack(model, batch_nchw, labels, epsilon=(4. / 255)):
 
     cleverhans_model = CleverhansModelWrapper(model)
     attack = SPSA(cleverhans_model)
+
     x_adv = attack.generate(
       x_input,
       y=y_label,
       epsilon=epsilon,
       num_steps=30,
       early_stop_loss_threshold=-1.,
-      batch_size=batch_nchw.shape[0],
-      spsa_iters=16,
+      spsa_samples=32,
       is_debug=True)
 
     # Run computation
+    all_x_adv_np = []
     with tf.Session() as sess:
-      for i in xrange(batch_nchw.shape[0]):
+      for i in xrange(len(batch_nchw)):
         x_adv_np = sess.run(x_adv, feed_dict={
           x_input: np.expand_dims(batch_nchw[i], axis=0),
           y_label: np.expand_dims(labels[i], axis=0),
         })
-    return x_adv_np
+        all_x_adv_np.append(x_adv_np)
+    return np.concatenate(all_x_adv_np)
+
+
 
 
 def null_attack(model, x_np, y_np):
@@ -90,6 +94,7 @@ BICYCLE_CLASSES = [671, 444]
 
 
 def main():
+  BATCH_SIZE = 1
   ### Get data
   data_dir = tcu_images.get_dataset('train')
 
@@ -102,7 +107,8 @@ def main():
     ]))
 
   dataset_iter = [(x.numpy(), y.numpy())
-                  for (x, y) in iter(torch.utils.data.DataLoader(train_dataset, batch_size=32))]
+                  for (x, y) in
+                  iter(torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE))]
 
   ### Load model
   pytorch_model = torchvision.models.resnet50(pretrained=True)
@@ -124,11 +130,9 @@ def main():
   ### Evaluate attack
   for attack_fn in [null_attack, spsa_attack]:
     logits, labels = run_attack(model_fn, dataset_iter, attack_fn,
-                               max_num_batches=1)
-
+                              max_num_batches=1)
     preds = (logits > 0).astype(np.int64)
     correct = np.equal(preds, labels).astype(np.float32)
-    import ipdb; ipdb.set_trace()
     correct_fracs = np.sum(correct, axis=0) / len(labels)
     print(correct_fracs)
 
