@@ -72,7 +72,10 @@ def null_attack(model, x_np, y_np):
 
 
 def spatial_attack(model, x_np, y_np):
-  attack = SpatialGridAttack(model, image_shape_hwc=x_np.shape[1:])
+  attack = SpatialGridAttack(model, image_shape_hwc=x_np.shape[1:],
+#                             spatial_limits=[0, 0, 0],
+                             grid_granularity=[1, 1, 1],
+)
   x_adv, transform_adv = attack.perturb_grid(x_input_np=x_np, y_input_np=y_np)
   return x_adv
 
@@ -158,6 +161,8 @@ class SpatialGridAttack:
 
 def apply_transformation(x, transform, image_height, image_width, pad_mode='CONSTANT'):
   # Map a transformation onto the input
+
+
   trans_x, trans_y, rot = tf.unstack(transform, axis=1)
   rot *= np.pi / 180  # convert degrees to radians
 

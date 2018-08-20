@@ -19,7 +19,7 @@ from unrestricted_advex.eval_kit import attacks
 def run_attack(model, data_iter, attack_fn, max_num_batches=1, save_image_dir=None):
   """
   :param model: Model should output a
-  :param data_iter:
+  :param data_iter: NHWC data
   :param attack:
   :param max_num_batches:
   :return: (logits, labels)
@@ -27,6 +27,7 @@ def run_attack(model, data_iter, attack_fn, max_num_batches=1, save_image_dir=No
   all_labels = []
   all_logits = []
   for i_batch, (x_np, y_np) in enumerate(data_iter):
+    assert x_np.shape[-1] == 3, "Data was {}, should be NHWC".format(x_np.shape)
     if max_num_batches > 0 and i_batch >= max_num_batches:
       break
 
@@ -45,7 +46,7 @@ def run_attack(model, data_iter, attack_fn, max_num_batches=1, save_image_dir=No
 def save_image_to_png(image_np, filename):
   from PIL import Image
   os.makedirs(os.path.dirname(filename), exist_ok=True)
-  img = Image.fromarray(np.uint8(np.einsum('chw->hwc', image_np) * 255.), 'RGB')
+  img = Image.fromarray(np.uint8(image_np * 255.), 'RGB')
   img.save(filename)
 
 
@@ -57,6 +58,7 @@ def get_torch_tcu_dataset_iter(batch_size):
     torchvision.transforms.Compose([
       torchvision.transforms.Resize(224),
       torchvision.transforms.ToTensor(),
+      lambda x: torch.einsum('chw->hwc', [x]),
     ]))
 
   data_loader = torch.utils.data.DataLoader(
@@ -72,6 +74,7 @@ def get_torch_tcu_dataset_iter(batch_size):
 
 
 def get_torch_tcu_model():
+  assert False, "Change me to NHWC"
   pytorch_model = torchvision.models.resnet50(pretrained=True)
   pytorch_model = pytorch_model.cuda()
   pytorch_model.eval()  # switch to eval mode
@@ -79,6 +82,7 @@ def get_torch_tcu_model():
   def model_fn(x_np):
     with torch.no_grad():
       x = torch.from_numpy(x_np).cuda()
+      x = torch.einsum('hwc->chw', x)
       logits1000 = pytorch_model(x)
 
       bird_max_logit, _ = torch.max(
@@ -93,7 +97,7 @@ def get_torch_tcu_model():
 
 
 def get_keras_tcu_model():
-  tf.keras.backend.set_image_data_format('channels_first')
+  tf.keras.backend.set_image_data_format('channels_last')
 
   k_model = tf.keras.applications.resnet50.ResNet50(
     include_top=True, weights='imagenet', input_tensor=None,
@@ -102,6 +106,7 @@ def get_keras_tcu_model():
   def model_wrapper(x_np):
     # it seems keras pre-trained model directly output softmax-ed probs
     x_np = preprocess_input(x_np * 255)
+
     prob1000 = k_model.predict_on_batch(x_np) / 10
     fake_logits1000 = np.log(prob1000)
 
