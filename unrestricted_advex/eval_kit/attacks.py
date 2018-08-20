@@ -10,6 +10,23 @@ from cleverhans.attacks import SPSA
 from cleverhans.model import Model
 from six.moves import xrange
 
+# correct solution:
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=1)
+
+
+def log_softmax(x):
+  """Compute softmax values for each sets of scores in x."""
+  e_x = np.exp(x - np.max(x))
+  return x - np.log(e_x.sum(axis=1))
+
+
+def sparse_softmax_cross_entropy_from_logits(logits, y_np):
+  log_probs = log_softmax(logits)
+  import ipdb; ipdb.set_trace()
+  return -log_probs[y_np]
 
 class CleverhansModelWrapper(Model):
   def __init__(self, model_fn):
@@ -61,12 +78,17 @@ def null_attack(model, x_np, y_np):
 
 
 def spatial_attack(model, x_np, y_np):
-  with tf.Graph().as_default():
-    return x_np
+  attack = SpatialGridAttack(model, image_shape_hwc=x_np.shape[1:],
+                             spatial_limits=[0,0,0],
+                             grid_granularity=[1,1,1],
+
+                             )
+  x_adv, transform_adv = attack.perturb_grid(x_input_np=x_np, y_input_np=y_np)
+  return x_adv
 
 
 class SpatialGridAttack:
-  def __init__(self, model,
+  def __init__(self, model, image_shape_hwc,
                spatial_limits=[3, 3, 30],
                grid_granularity=[5, 5, 31],
                ):
@@ -82,20 +104,21 @@ class SpatialGridAttack:
 
     self.graph = tf.Graph()
     with self.graph.as_default():
-      self._x_for_trans = tf.placeholder(tf.float32, shape=[None] + IM_SHAPE)
+      # self._x_for_trans = tf.placeholder(tf.float32, shape=[None] + IM_SHAPE)
+      self._x_for_trans = tf.placeholder(tf.float32)
       self._t_for_trans = tf.placeholder(tf.float32, shape=[None, 3])
       self._tranformed_x_op = apply_transformation(
-        self._x_for_trans, self._t_for_trans)
-    self.session = tf.Session()
+        self._x_for_trans,
+        self._t_for_trans,
+      image_height=image_shape_hwc[0],
+      image_width=image_shape_hwc[1],
+      )
+      self.session = tf.Session()
 
     self.model = model
     self.grid_store = []
 
-  def perturb(self, x_nat, y_sparse, sess):
-    # Grid attack
-    return self.perturb_grid(x_nat, y_sparse, sess)
-
-  def perturb_grid(self, x_input_np, y_input_np, sess):
+  def perturb_grid(self, x_input_np, y_input_np):
     n = len(x_input_np)
     grid = product(*list(np.linspace(-l, l, num=g)
                          for l, g in zip(self.limits, self.granularity)))
@@ -110,17 +133,19 @@ class SpatialGridAttack:
         repeat([horizontal_trans, vertical_trans, rotation], n))
 
       # Apply the spatial attack
-      x_np = self.session.run(self._tranformed_x_op, feed_dict={
-        self._x_for_trans: x_input_np,
-        self._t_for_trans: trans_np,
+      with self.graph.as_default():
+        x_np = self.session.run(self._tranformed_x_op, feed_dict={
+          self._x_for_trans: x_input_np,
+          self._t_for_trans: trans_np,
 
-      })
-
+        })
       # See how the model performs on the perturbed input
-      cur_xent, predictions = self.model(x_np, y_input_np)
+      logits = self.model(x_np)
+
+      cur_xent = sparse_softmax_cross_entropy_from_logits(logits, y_input_np)
 
       cur_xent = np.asarray(cur_xent)
-      cur_correct = np.equal(y_input_np, predictions)
+      cur_correct = np.equal(y_input_np, logits)
 
       # Select indices to update: we choose the misclassified transformation
       # of maximum xent (or just highest xent if everything else if correct).
@@ -139,7 +164,7 @@ class SpatialGridAttack:
     return worst_x, worst_t
 
 
-def apply_transformation(x, transform, pad_mode='CONSTANT'):
+def apply_transformation(x, transform, image_height, image_width, pad_mode='CONSTANT'):
   # Map a transformation onto the input
   trans_x, trans_y, rot = tf.unstack(transform, axis=1)
   rot *= np.pi / 180  # convert degrees to radians
@@ -155,4 +180,4 @@ def apply_transformation(x, transform, pad_mode='CONSTANT'):
   x = tf.contrib.image.rotate(x, rot, interpolation='BILINEAR')
   x = tf.contrib.image.transform(x, trans, interpolation='BILINEAR')
   return tf.image.resize_image_with_crop_or_pad(
-    x, _DEFAULT_IMAGE_SIZE, _DEFAULT_IMAGE_SIZE)
+    x, image_height, image_width)
