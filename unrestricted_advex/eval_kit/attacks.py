@@ -10,23 +10,17 @@ from cleverhans.attacks import SPSA
 from cleverhans.model import Model
 from six.moves import xrange
 
-# correct solution:
-def softmax(x):
-    """Compute softmax values for each sets of scores in x."""
-    e_x = np.exp(x - np.max(x))
-    return e_x / e_x.sum(axis=1, keepdims=True)
 
+def np_sparse_softmax_cross_entropy_with_logits(
+        logits_np, labels_np, graph, sess):
+  with graph.as_default():
+    labels_tf = tf.placeholder(tf.int32)
+    logits_tf = tf.placeholder(tf.float32)
+    xent_tf = tf.nn.sparse_softmax_cross_entropy_with_logits(
+        labels=labels_tf, logits=logits_tf)
+    return sess.run(xent_tf, feed_dict={
+        labels_tf: labels_np, logits_tf: logits_np})
 
-def log_softmax(x):
-  """Compute softmax values for each sets of scores in x."""
-  e_x = np.exp(x - np.max(x))
-  return x - np.log(e_x.sum(axis=1))
-
-
-def sparse_softmax_cross_entropy_from_logits(logits, y_np):
-  log_probs = log_softmax(logits)
-  import ipdb; ipdb.set_trace()
-  return -log_probs[y_np]
 
 class CleverhansModelWrapper(Model):
   def __init__(self, model_fn):
@@ -78,11 +72,7 @@ def null_attack(model, x_np, y_np):
 
 
 def spatial_attack(model, x_np, y_np):
-  attack = SpatialGridAttack(model, image_shape_hwc=x_np.shape[1:],
-                             spatial_limits=[0,0,0],
-                             grid_granularity=[1,1,1],
-
-                             )
+  attack = SpatialGridAttack(model, image_shape_hwc=x_np.shape[1:])
   x_adv, transform_adv = attack.perturb_grid(x_input_np=x_np, y_input_np=y_np)
   return x_adv
 
@@ -141,11 +131,13 @@ class SpatialGridAttack:
         })
       # See how the model performs on the perturbed input
       logits = self.model(x_np)
+      preds = np.argmax(logits, axis=1)
 
-      cur_xent = sparse_softmax_cross_entropy_from_logits(logits, y_input_np)
+      cur_xent = np_sparse_softmax_cross_entropy_with_logits(
+        logits, y_input_np, self.graph, self.session)
 
       cur_xent = np.asarray(cur_xent)
-      cur_correct = np.equal(y_input_np, logits)
+      cur_correct = np.equal(y_input_np, preds)
 
       # Select indices to update: we choose the misclassified transformation
       # of maximum xent (or just highest xent if everything else if correct).
