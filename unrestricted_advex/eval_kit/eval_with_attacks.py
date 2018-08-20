@@ -1,4 +1,8 @@
 """Evaluate a model with attacks."""
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import os
 
 import numpy as np
@@ -113,15 +117,19 @@ def get_keras_tcu_model():
 
 
 def evaluate_model(model_fn, dataset_iter):
-  for (attack_fn, save_name) in [(attacks.null_attack, 'null_attack'),
-                                 (attacks.spsa_attack, 'spsa_attack')]:
+  for (attack_fn, attack_name) in [
+    (attacks.null_attack, 'null_attack'),
+    (attacks.spatial_attack, 'spatial_attack'),
+    # (attacks.spsa_attack, 'spsa_attack'),
+  ]:
+    print("Executing attack: %s" % attack_name)
     logits, labels = run_attack(
       model_fn, dataset_iter, attack_fn, max_num_batches=1,
-      save_image_dir=os.path.join('/tmp/eval_with_attacks', save_name))
+      save_image_dir=os.path.join('/tmp/eval_with_attacks', attack_name))
     preds = (logits[:, 0] < logits[:, 1]).astype(np.int64)
     correct = np.equal(preds, labels).astype(np.float32)
     correct_fracs = np.sum(correct, axis=0) / len(labels)
-    print(correct_fracs)
+    print("Fraction correct under %s: %.3f" % (attack_name, correct_fracs))
 
 
 def main():
