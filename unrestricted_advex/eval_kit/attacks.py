@@ -73,7 +73,7 @@ def null_attack(model, x_np, y_np):
 
 def spatial_attack(model, x_np, y_np):
   attack = SpatialGridAttack(model, image_shape_hwc=x_np.shape[1:],
-#                             spatial_limits=[0, 0, 0],
+                            spatial_limits=[0, 0, 0],
                              grid_granularity=[1, 1, 1],
 )
   x_adv, transform_adv = attack.perturb_grid(x_input_np=x_np, y_input_np=y_np)
