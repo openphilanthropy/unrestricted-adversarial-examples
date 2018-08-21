@@ -27,7 +27,7 @@ def run_attack(model, data_iter, attack_fn, max_num_batches=1, save_image_dir=No
   all_labels = []
   all_logits = []
   for i_batch, (x_np, y_np) in enumerate(data_iter):
-    assert x_np.shape[-1] == 3, "Data was {}, should be NHWC".format(x_np.shape)
+    assert x_np.shape[-1] == 3 or x_np.shape[-1] == 1, "Data was {}, should be NHWC".format(x_np.shape)
     if max_num_batches > 0 and i_batch >= max_num_batches:
       break
 
