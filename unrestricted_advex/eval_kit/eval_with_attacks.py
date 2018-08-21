@@ -139,7 +139,7 @@ def evaluate_tcu_model(model_fn, dataset_iter):
 
 
 def main():
-  tcu_dataset_iter = get_torch_tcu_dataset_iter(batch_size=4, shuffle=False)
+  tcu_dataset_iter = get_torch_tcu_dataset_iter(batch_size=64, shuffle=True)
   model_fn = get_keras_tcu_model()
   evaluate_tcu_model(model_fn, tcu_dataset_iter)
 

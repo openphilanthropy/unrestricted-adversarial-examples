@@ -115,13 +115,13 @@ def spatial_replicate_paper(model, x_np, y_np):
 def evaluate_imagenet_model(model_fn, dataset_iter):
   for (attack_fn, attack_name) in [
     (attacks.null_attack, 'null_attack'),
-    (attacks.spatial_attack, 'spatial_attack'),
+    (spatial_replicate_paper, 'spatial_replicate_paper'),
     # (attacks.spsa_attack, 'spsa_attack'),
   ]:
     print("Executing attack: %s" % attack_name)
     logits, labels = run_attack(
       model_fn, dataset_iter, attack_fn, max_num_batches=1,
-      save_image_dir=os.path.join('/tmp/eval_with_attacks', attack_name))
+      save_image_dir=os.path.join('/tmp/test_original_imagenet', attack_name))
 
     preds = np.argmax(logits, axis=1)
     correct = np.equal(preds, labels).astype(np.float32)

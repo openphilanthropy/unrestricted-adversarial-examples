@@ -72,8 +72,8 @@ def null_attack(model, x_np, y_np):
 
 
 def spatial_attack(model, x_np, y_np,
-                   spatial_limits=[18, 18, 30],
-                   grid_granularity=[3, 3, 3],
+                   spatial_limits=[10, 10, 20],
+                   grid_granularity=[5, 5, 21],
                    black_border_size=60):
   attack = SpatialGridAttack(
     model,
