@@ -86,7 +86,8 @@ def get_keras_imagenet_model():
 
 
 def get_torch_imagenet_model():
-  print("WARNING: Torch model currently only gets 50% top1 accuracy and may have a preprocessing issue")
+  print(
+    "WARNING: Torch model currently only gets 50% top1 accuracy and may have a preprocessing issue")
   pytorch_model = torchvision.models.resnet50(pretrained=True)
   pytorch_model = pytorch_model.cuda()
   pytorch_model.eval()  # switch to eval mode
@@ -101,16 +102,26 @@ def get_torch_imagenet_model():
   return model_fn
 
 
+def spatial_replicate_paper(model, x_np, y_np):
+  """Replicate the settings from "A Rotation and a Translation Suffice: Fooling CNNs with Simple Transformations" - https://arxiv.org/abs/1712.02779
+"""
+  # We use 18 pixels in the spatial limit because our model is 224x224 rather than 299x299
+  return attacks.spatial_attack(model, x_np, y_np,
+                                spatial_limits=[18, 18, 30],
+                                grid_granularity=[5, 5, 31],
+                                black_border_size=0)
+
+
 def evaluate_imagenet_model(model_fn, dataset_iter):
   for (attack_fn, attack_name) in [
     (attacks.null_attack, 'null_attack'),
-    (attacks.spatial_attack, 'spatial_attack'),
+    (spatial_replicate_paper, 'spatial_replicate_paper'),
     # (attacks.spsa_attack, 'spsa_attack'),
   ]:
     print("Executing attack: %s" % attack_name)
     logits, labels = run_attack(
       model_fn, dataset_iter, attack_fn, max_num_batches=1,
-      save_image_dir=os.path.join('/tmp/eval_with_attacks', attack_name))
+      save_image_dir=os.path.join('/tmp/test_original_imagenet', attack_name))
 
     preds = np.argmax(logits, axis=1)
     correct = np.equal(preds, labels).astype(np.float32)

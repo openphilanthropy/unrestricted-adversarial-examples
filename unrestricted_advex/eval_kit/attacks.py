@@ -12,14 +12,14 @@ from six.moves import xrange
 
 
 def np_sparse_softmax_cross_entropy_with_logits(
-        logits_np, labels_np, graph, sess):
+    logits_np, labels_np, graph, sess):
   with graph.as_default():
     labels_tf = tf.placeholder(tf.int32)
     logits_tf = tf.placeholder(tf.float32)
     xent_tf = tf.nn.sparse_softmax_cross_entropy_with_logits(
-        labels=labels_tf, logits=logits_tf)
+      labels=labels_tf, logits=logits_tf)
     return sess.run(xent_tf, feed_dict={
-        labels_tf: labels_np, logits_tf: logits_np})
+      labels_tf: labels_np, logits_tf: logits_np})
 
 
 class CleverhansModelWrapper(Model):
@@ -71,19 +71,25 @@ def null_attack(model, x_np, y_np):
   return x_np
 
 
-def spatial_attack(model, x_np, y_np):
-  attack = SpatialGridAttack(model, image_shape_hwc=x_np.shape[1:],
-                            spatial_limits=[0, 0, 0],
-                             grid_granularity=[1, 1, 1],
-)
-  x_adv, transform_adv = attack.perturb_grid(x_input_np=x_np, y_input_np=y_np)
-  return x_adv
+def spatial_attack(model, x_np, y_np,
+                   spatial_limits=[10, 10, 20],
+                   grid_granularity=[5, 5, 21],
+                   black_border_size=60):
+  attack = SpatialGridAttack(
+    model,
+    image_shape_hwc=x_np.shape[1:],
+    spatial_limits=spatial_limits,
+    grid_granularity=grid_granularity,
+    black_border_size=black_border_size,
+  )
+  return attack.perturb_grid(x_input_np=x_np, y_input_np=y_np)
 
 
 class SpatialGridAttack:
   def __init__(self, model, image_shape_hwc,
-               spatial_limits=[3, 3, 30],
-               grid_granularity=[5, 5, 31],
+               spatial_limits,
+               grid_granularity,
+               black_border_size,
                ):
     """
     :param model: a callable: batch-input -> batch-probability in [0, 1]
@@ -94,17 +100,23 @@ class SpatialGridAttack:
     self.granularity = grid_granularity
 
     # Construct graph for spatial attack
-
     self.graph = tf.Graph()
     with self.graph.as_default():
-      # self._x_for_trans = tf.placeholder(tf.float32, shape=[None] + IM_SHAPE)
-      self._x_for_trans = tf.placeholder(tf.float32)
+      self._x_for_trans = tf.placeholder(tf.float32, shape=[None] + list(image_shape_hwc))
       self._t_for_trans = tf.placeholder(tf.float32, shape=[None, 3])
-      self._tranformed_x_op = apply_transformation(
+
+      x = apply_black_border(
         self._x_for_trans,
-        self._t_for_trans,
-      image_height=image_shape_hwc[0],
-      image_width=image_shape_hwc[1],
+        image_height=image_shape_hwc[0],
+        image_width=image_shape_hwc[1],
+        border_size=black_border_size
+      )
+
+      self._tranformed_x_op = apply_transformation(
+        x,
+        transform=self._t_for_trans,
+        image_height=image_shape_hwc[0],
+        image_width=image_shape_hwc[1],
       )
       self.session = tf.Session()
 
@@ -117,7 +129,6 @@ class SpatialGridAttack:
                          for l, g in zip(self.limits, self.granularity)))
 
     worst_x = np.copy(x_input_np)
-    worst_t = np.zeros([n, 3])
     max_xent = np.zeros(n)
     all_correct = np.ones(n).astype(bool)
 
@@ -150,23 +161,32 @@ class SpatialGridAttack:
       all_correct = cur_correct & all_correct
 
       idx = np.expand_dims(idx, axis=-1)  # shape (bsize, 1)
-      worst_t = np.where(idx, trans_np, worst_t)  # shape (bsize, 3)
 
       idx = np.expand_dims(idx, axis=-1)
       idx = np.expand_dims(idx, axis=-1)  # shape (bsize, 1, 1, 1)
       worst_x = np.where(idx, x_np, worst_x, )  # shape (bsize, 32, 32, 3)
 
-    return worst_x, worst_t
+    return worst_x
 
 
-def apply_transformation(x, transform, image_height, image_width, pad_mode='CONSTANT'):
+def apply_black_border(x, image_height, image_width, border_size):
+  x = tf.image.resize_images(x, (image_width - border_size,
+                                 image_height - border_size))
+  x = tf.pad(x, [[0, 0],
+                 [border_size, border_size],
+                 [border_size, border_size],
+                 [0, 0]], 'CONSTANT')
+  return x
+
+
+def apply_transformation(x, transform, image_height, image_width):
   # Map a transformation onto the input
-
-
   trans_x, trans_y, rot = tf.unstack(transform, axis=1)
   rot *= np.pi / 180  # convert degrees to radians
 
-  x = tf.pad(x, [[0, 0], [16, 16], [16, 16], [0, 0]], pad_mode)
+  # Pad the image to prevent two-step rotation / translation
+  # resulting in a cropped image
+  x = tf.pad(x, [[0, 0], [50, 50], [50, 50], [0, 0]], 'CONSTANT')
 
   # rotate and translate image
   ones = tf.ones(shape=tf.shape(trans_x))
