@@ -196,6 +196,5 @@ def apply_transformation(x, transform, image_height, image_width):
                     zeros, zeros], axis=1)
   x = tf.contrib.image.rotate(x, rot, interpolation='BILINEAR')
   x = tf.contrib.image.transform(x, trans, interpolation='BILINEAR')
-  print('here shape',x.shape)
   return tf.image.resize_image_with_crop_or_pad(
     x, image_height, image_width)
