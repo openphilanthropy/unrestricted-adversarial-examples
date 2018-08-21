@@ -122,12 +122,8 @@ def get_keras_tcu_model():
   return model_wrapper
 
 
-def evaluate_tcu_model(model_fn, dataset_iter):
-  for (attack_fn, attack_name) in [
-    # (attacks.null_attack, 'null_attack'),
-    (attacks.spatial_attack, 'spatial_attack'),
-    # (attacks.spsa_attack, 'spsa_attack'),
-  ]:
+def evaluate_tcu_model(model_fn, dataset_iter, attack_list):
+  for (attack_fn, attack_name) in attack_list:
     print("Executing attack: %s" % attack_name)
     logits, labels = run_attack(
       model_fn, dataset_iter, attack_fn, max_num_batches=1,
@@ -137,11 +133,30 @@ def evaluate_tcu_model(model_fn, dataset_iter):
     correct_fracs = np.sum(correct, axis=0) / len(labels)
     print("Fraction correct under %s: %.3f" % (attack_name, correct_fracs))
 
+def evaluate_mnist_tcu_model(model_fn, dataset_iter):
+  return evaluate_tcu_model(model_fn, dataset_iter, [
+    # (attacks.null_attack, 'null_attack'),
+    (lambda model, x, y: attacks.spatial_attack(model, x, y,
+                                                spatial_limits=[10, 10, 15],
+                                                grid_granularity=[10, 10, 10],
+                                                black_border_size=4),
+     'spatial_attack'),
+    # (attacks.spsa_attack, 'spsa_attack'),
+  ])
 
+
+def evaluate_images_tcu_model(model_fn, dataset_iter):
+  return evaluate_tcu_model(model_fn, dataset_iter, [
+  # (attacks.null_attack, 'null_attack'),
+    (attacks.spatial_attack, 'spatial_attack'),
+    # (attacks.spsa_attack, 'spsa_attack'),
+  ])
+    
+    
 def main():
   tcu_dataset_iter = get_torch_tcu_dataset_iter(batch_size=64, shuffle=True)
   model_fn = get_keras_tcu_model()
-  evaluate_tcu_model(model_fn, tcu_dataset_iter)
+  evaluate_images_tcu_model(model_fn, tcu_dataset_iter)
 
 
 if __name__ == '__main__':
