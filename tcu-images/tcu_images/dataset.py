@@ -37,6 +37,10 @@ CLASS_NAME_TO_IMAGENET_CLASS = {
   'bicycle': [671, 444]
 }
 
+BICYCLE_IDX = 0
+BIRD_IDX = 1
+
+
 def _is_valid_extras_image(bbox_row, strict=False, min_bbox_area=0.2 ** 2):
   """
   :param bbox_row: A single row from the bbox.csv file
