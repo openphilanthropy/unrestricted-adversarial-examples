@@ -50,7 +50,7 @@ def save_image_to_png(image_np, filename):
   img.save(filename)
 
 
-def get_torch_tcu_dataset_iter(batch_size):
+def get_torch_tcu_dataset_iter(batch_size, shuffle=True):
   data_dir = tcu_images.get_dataset('train')
 
   train_dataset = torchvision.datasets.ImageFolder(
@@ -64,7 +64,7 @@ def get_torch_tcu_dataset_iter(batch_size):
   data_loader = torch.utils.data.DataLoader(
     train_dataset,
     batch_size=batch_size,
-    shuffle=True)
+    shuffle=shuffle)
 
   assert train_dataset.class_to_idx['bicycle'] == 0
   assert train_dataset.class_to_idx['bird'] == 1
@@ -124,7 +124,7 @@ def get_keras_tcu_model():
 
 def evaluate_tcu_model(model_fn, dataset_iter):
   for (attack_fn, attack_name) in [
-    (attacks.null_attack, 'null_attack'),
+    # (attacks.null_attack, 'null_attack'),
     (attacks.spatial_attack, 'spatial_attack'),
     # (attacks.spsa_attack, 'spsa_attack'),
   ]:
@@ -139,7 +139,7 @@ def evaluate_tcu_model(model_fn, dataset_iter):
 
 
 def main():
-  tcu_dataset_iter = get_torch_tcu_dataset_iter(batch_size=4)
+  tcu_dataset_iter = get_torch_tcu_dataset_iter(batch_size=4, shuffle=False)
   model_fn = get_keras_tcu_model()
   evaluate_tcu_model(model_fn, tcu_dataset_iter)
 
