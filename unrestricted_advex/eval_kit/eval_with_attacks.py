@@ -176,11 +176,12 @@ def mnist_valid_check(before, after):
 
 
 def evaluate_mnist_tcu_model(model_fn, dataset_iter):
+  spsa_attack = (lambda model, x, y:
+                 attacks.SpsaAttack(model_fn, (28, 28), epsilon=0.3)
+                 .spsa_attack(model, x, y))
   return evaluate_tcu_model(model_fn, dataset_iter, [
     #(attacks.null_attack, 'null_attack'),
-    (lambda model, x, y: attacks.spsa_attack(model, x, y,
-                                             epsilon=0.3),
-     'spsa_attack'),
+    (spsa_attack, 'spsa_attack'),
     (lambda model, x, y: attacks.spatial_attack(model, x, y,
                                                 spatial_limits=[10, 10, 10],
                                                 grid_granularity=[10, 10, 10],
