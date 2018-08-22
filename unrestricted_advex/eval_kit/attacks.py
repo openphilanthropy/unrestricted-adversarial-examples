@@ -36,39 +36,48 @@ class CleverhansModelWrapper(Model):
     return {'logits': logits_op}
 
 
-def spsa_attack(model, x_np, y_np, epsilon=(16. / 255)):  # (4. / 255)):
-  with tf.Graph().as_default():
-    # Prepare graph
-    x_input = tf.placeholder(tf.float32, shape=(1,) + x_np.shape[1:])
-    y_label = tf.placeholder(tf.int32, shape=(1,))
-
-    cleverhans_model = CleverhansModelWrapper(model)
-    attack = SPSA(cleverhans_model)
-
-    x_adv = attack.generate(
-      x_input,
-      y=y_label,
-      epsilon=epsilon,
-      num_steps=200,
-      early_stop_loss_threshold=-1.,
-      spsa_samples=32,
-      is_debug=True)
-
-    # Run computation
-    all_x_adv_np = []
-    with tf.Session() as sess:
-      for i in xrange(len(x_np)):
-        x_adv_np = sess.run(x_adv, feed_dict={
-          x_input: np.expand_dims(x_np[i], axis=0),
-          y_label: np.expand_dims(y_np[i], axis=0),
-        })
-        all_x_adv_np.append(x_adv_np)
-    return np.concatenate(all_x_adv_np)
-
-
 def null_attack(model, x_np, y_np):
   del model, y_np  # unused
   return x_np
+
+
+class SpsaAttack(object):
+  def __init__(self, model, img_shape, epsilon=(16. / 255)):
+    self.graph = tf.Graph()
+
+    with self.graph.as_default():
+      self.sess = tf.Session(graph=self.graph)
+
+      self.x_input = tf.placeholder(tf.float32, shape=(1,) + img_shape)
+      self.y_label = tf.placeholder(tf.int32, shape=(1,))
+
+      self.model = model
+      attack = SPSA(CleverhansModelWrapper(self.model), sess=self.sess)
+      self.x_adv = attack.generate(
+        self.x_input,
+        y=self.y_label,
+        epsilon=epsilon,
+        num_steps=200,
+        early_stop_loss_threshold=-1.,
+        spsa_samples=32,
+        is_debug=True)
+
+    self.graph.finalize()
+
+  def spsa_attack(self, model, x_np, y_np):  # (4. / 255)):
+    if model != self.model:
+      raise NotImplementedError('Cannot call spsa attack on different models')
+    del model  # unused except to check that we already wired it up right
+
+    with self.graph.as_default():
+      all_x_adv_np = []
+      for i in xrange(len(x_np)):
+        x_adv_np = self.sess.run(self.x_adv, feed_dict={
+          self.x_input: np.expand_dims(x_np[i], axis=0),
+          self.y_label: np.expand_dims(y_np[i], axis=0),
+        })
+        all_x_adv_np.append(x_adv_np)
+      return np.concatenate(all_x_adv_np)
 
 
 def spatial_attack(model, x_np, y_np,
@@ -143,7 +152,7 @@ class SpatialGridAttack:
       x_downsize_np = self.session.run(self._tranformed_x_op, feed_dict={
         self._x_for_trans: x_input_np,
         self._t_for_trans: trans_np,
-        
+
       })
 
     for horizontal_trans, vertical_trans, rotation in grid:
@@ -171,7 +180,7 @@ class SpatialGridAttack:
         is_valid = self.valid_check(x_downsize_np, x_np)
         cur_correct |= ~is_valid
         cur_xent -= is_valid*1e9
-      
+
 
       # Select indices to update: we choose the misclassified transformation
       # of maximum xent (or just highest xent if everything else if correct).

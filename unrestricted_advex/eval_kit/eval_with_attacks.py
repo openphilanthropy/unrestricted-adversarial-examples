@@ -4,6 +4,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import shutil
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -107,16 +108,19 @@ def get_torch_tcu_model():
 
 def get_keras_tcu_model():
   tf.keras.backend.set_image_data_format('channels_last')
-
-  k_model = tf.keras.applications.resnet50.ResNet50(
-    include_top=True, weights='imagenet', input_tensor=None,
-    input_shape=None, pooling=None, classes=1000)
+  _graph = tf.Graph()
+  with _graph.as_default():
+    k_model = tf.keras.applications.resnet50.ResNet50(
+      include_top=True, weights='imagenet', input_tensor=None,
+      input_shape=None, pooling=None, classes=1000)
 
   def model_wrapper(x_np):
     # it seems keras pre-trained model directly output softmax-ed probs
     x_np = preprocess_input(x_np * 255)
 
-    prob1000 = k_model.predict_on_batch(x_np) / 10
+    with _graph.as_default():
+      prob1000 = k_model.predict_on_batch(x_np) / 10
+
     fake_logits1000 = np.log(prob1000)
 
     bird_max_logit = np.max(
@@ -130,7 +134,8 @@ def get_keras_tcu_model():
   return model_wrapper
 
 
-def evaluate_tcu_model(model_fn, dataset_iter, attack_list):
+def evaluate_tcu_model(model_fn, dataset_iter, attack_list,
+                       model_fn_name=None):
   for (attack_fn, attack_name) in attack_list:
     print("Executing attack: %s" % attack_name)
     logits, labels, x_adv = run_attack(
@@ -151,7 +156,8 @@ def evaluate_tcu_model(model_fn, dataset_iter, attack_list):
     results_dir = os.path.join(EVAL_WITH_ATTACKS_DIR, attack_name)
     plot_ims(x_adv, correct, results_dir)
     plot_confident_error_rate(
-      coverages, cov_to_confident_error_idxs, len(labels), attack_name, results_dir)
+      coverages, cov_to_confident_error_idxs, len(labels), attack_name, results_dir,
+      legend=model_fn_name)
 
 
 def show(img):
@@ -206,18 +212,26 @@ def get_coverage_to_confident_error_idxs(preds, confidences, y_true):
 
 
 def plot_ims(x_adv, correct, results_dir):
-    for i, image_np in enumerate(x_adv):
-      if correct[i]:
-        subfolder = 'correct_images'
-      else:
-        subfolder = 'incorrect_images'
-      save_image_to_png(image_np, os.path.join(
-          results_dir, subfolder, "adv_image_%s.png" % i))
+  correct_dir = os.path.join(results_dir, 'correct_images')
+  shutil.rmtree(correct_dir, ignore_errors=True)
+
+  incorrect_dir = os.path.join(results_dir, 'incorrect_images')
+  shutil.rmtree(incorrect_dir, ignore_errors=True)
+
+  for i, image_np in enumerate(x_adv):
+    if correct[i]:
+      save_dir = correct_dir
+    else:
+      save_dir = incorrect_dir
+    save_image_to_png(image_np, os.path.join(save_dir, "adv_image_%s.png" % i))
 
 
 def plot_confident_error_rate(coverages, cov_to_confident_error_idxs, num_examples,
-                              attack_name, results_dir,
+                              attack_name, results_dir, legend=None,
                               title="Risk vs Coverage ({attack_name})"):
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
     plt.plot(coverages, [float(len(idxs)) / num_examples
                          for idxs in cov_to_confident_error_idxs])
@@ -225,25 +239,34 @@ def plot_confident_error_rate(coverages, cov_to_confident_error_idxs, num_exampl
     plt.ylabel("Risk \n (error rate on covered data)")
     plt.xlabel("Coverage \n (fraction of points not abstained on)")
 
-    plt.legend(["Pretrained Inception Resnet w/o finetuning"])
+    if legend:
+      ax.legend([legend], loc='best', fontsize=15)
+
+    for item in ([ax.xaxis.label, ax.yaxis.label]):
+      item.set_fontsize(15)
+    for item in (ax.get_xticklabels() + ax.get_yticklabels()):
+      item.set_fontsize(15)
+    ax.title.set_fontsize(15)
+
     plt.tight_layout()
     plt.savefig(os.path.join(results_dir,
                              "confident_error_rate_{}.png".format(attack_name)))
 
 
-def evaluate_images_tcu_model(model_fn, dataset_iter):
-  spsa_attack = attacks.SpsaAttack(model_fn, [3, 224, 224]).spsa_attack
+def evaluate_images_tcu_model(model_fn, dataset_iter, model_fn_name=None):
+  spsa_attack = attacks.SpsaAttack(model_fn, (224, 224, 3)).spsa_attack
   return evaluate_tcu_model(model_fn, dataset_iter, [
   # (attacks.null_attack, 'null_attack'),
 #    (attacks.spatial_attack, 'spatial_attack'),
     (spsa_attack, 'spsa_attack'),
-  ])
+  ], model_fn_name=model_fn_name)
 
 
 def main():
   tcu_dataset_iter = get_torch_tcu_dataset_iter(batch_size=64, shuffle=True)
   model_fn = get_keras_tcu_model()
-  evaluate_images_tcu_model(model_fn, tcu_dataset_iter)
+  evaluate_images_tcu_model(model_fn, tcu_dataset_iter,
+                            model_fn_name='Keras TCU model')
 
 
 if __name__ == '__main__':
