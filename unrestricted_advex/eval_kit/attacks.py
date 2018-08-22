@@ -14,8 +14,8 @@ from six.moves import xrange
 def np_sparse_softmax_cross_entropy_with_logits(
     logits_np, labels_np, graph, sess):
   with graph.as_default():
-    labels_tf = tf.placeholder(tf.int32)
-    logits_tf = tf.placeholder(tf.float32)
+    labels_tf = tf.placeholder(tf.int32, [None])
+    logits_tf = tf.placeholder(tf.float32, [None, None])
     xent_tf = tf.nn.sparse_softmax_cross_entropy_with_logits(
       labels=labels_tf, logits=logits_tf)
     return sess.run(xent_tf, feed_dict={
@@ -74,13 +74,15 @@ def null_attack(model, x_np, y_np):
 def spatial_attack(model, x_np, y_np,
                    spatial_limits=[10, 10, 20],
                    grid_granularity=[5, 5, 21],
-                   black_border_size=60):
+                   black_border_size=60,
+                   valid_check=None):
   attack = SpatialGridAttack(
     model,
     image_shape_hwc=x_np.shape[1:],
     spatial_limits=spatial_limits,
     grid_granularity=grid_granularity,
     black_border_size=black_border_size,
+    valid_check=valid_check,
   )
   return attack.perturb_grid(x_input_np=x_np, y_input_np=y_np)
 
@@ -90,6 +92,7 @@ class SpatialGridAttack:
                spatial_limits,
                grid_granularity,
                black_border_size,
+               valid_check,
                ):
     """
     :param model: a callable: batch-input -> batch-probability in [0, 1]
@@ -98,6 +101,7 @@ class SpatialGridAttack:
     """
     self.limits = spatial_limits
     self.granularity = grid_granularity
+    self.valid_check = valid_check
 
     # Construct graph for spatial attack
     self.graph = tf.Graph()
@@ -132,6 +136,16 @@ class SpatialGridAttack:
     max_xent = np.zeros(n)
     all_correct = np.ones(n).astype(bool)
 
+
+    trans_np = np.stack(
+      repeat([0, 0, 0], n))
+    with self.graph.as_default():
+      x_downsize_np = self.session.run(self._tranformed_x_op, feed_dict={
+        self._x_for_trans: x_input_np,
+        self._t_for_trans: trans_np,
+        
+      })
+
     for horizontal_trans, vertical_trans, rotation in grid:
       trans_np = np.stack(
         repeat([horizontal_trans, vertical_trans, rotation], n))
@@ -152,6 +166,13 @@ class SpatialGridAttack:
 
       cur_xent = np.asarray(cur_xent)
       cur_correct = np.equal(y_input_np, preds)
+
+      if self.valid_check is not None:
+        is_valid = self.valid_check(x_downsize_np, x_np)
+        print(is_valid)
+        cur_correct |= ~is_valid
+        cur_xent -= is_valid*1e9
+      
 
       # Select indices to update: we choose the misclassified transformation
       # of maximum xent (or just highest xent if everything else if correct).

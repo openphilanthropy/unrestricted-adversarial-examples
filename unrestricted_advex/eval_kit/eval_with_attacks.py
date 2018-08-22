@@ -46,7 +46,10 @@ def run_attack(model, data_iter, attack_fn, max_num_batches=1, save_image_dir=No
 def save_image_to_png(image_np, filename):
   from PIL import Image
   os.makedirs(os.path.dirname(filename), exist_ok=True)
-  img = Image.fromarray(np.uint8(image_np * 255.), 'RGB')
+  if image_np.shape[-1] == 3:
+    img = Image.fromarray(np.uint8(image_np * 255.), 'RGB')
+  else:
+    img = Image.fromarray(np.uint8(image_np[:,:,0] * 255.), 'L')
   img.save(filename)
 
 
@@ -133,13 +136,27 @@ def evaluate_tcu_model(model_fn, dataset_iter, attack_list):
     correct_fracs = np.sum(correct, axis=0) / len(labels)
     print("Fraction correct under %s: %.3f" % (attack_name, correct_fracs))
 
+def show(img):
+  remap = " .*#"+"#"*100
+  img = (img.flatten())*3
+  print("START")
+  for i in range(28):
+    print("".join([remap[int(round(x))] for x in img[i*28:i*28+28]]))
+    
+def mnist_valid_check(before, after):
+  weight_before = np.sum(np.abs(before),axis=(1,2,3))
+  weight_after = np.sum(np.abs(after),axis=(1,2,3))
+  
+  return np.abs(weight_after-weight_before) < weight_before*.1
+    
 def evaluate_mnist_tcu_model(model_fn, dataset_iter):
   return evaluate_tcu_model(model_fn, dataset_iter, [
     # (attacks.null_attack, 'null_attack'),
     (lambda model, x, y: attacks.spatial_attack(model, x, y,
-                                                spatial_limits=[10, 10, 15],
+                                                spatial_limits=[10, 10, 10],
                                                 grid_granularity=[10, 10, 10],
-                                                black_border_size=4),
+                                                black_border_size=4,
+                                                valid_check=mnist_valid_check),
      'spatial_attack'),
     # (attacks.spsa_attack, 'spsa_attack'),
   ])
