@@ -38,11 +38,11 @@ with tf.Session() as sess:
     which = (mnist.test.labels==7)|(mnist.test.labels==6)
     for i in range(1):
       yield mnist.test.images[which][i:i+100].reshape((100,28,28,1)), mnist.test.labels[which][i:i+100]==7
-    
+
 
   logits = tcu_model(x_input)
   def np_tcu_model(x):
     return sess.run(logits, {x_input: x})
-      
+
   eval_with_attacks.evaluate_mnist_tcu_model(np_tcu_model,
                                              iterator())

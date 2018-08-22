@@ -3,30 +3,27 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+
 import os
 import shutil
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
-import tcu_images
-import tensorflow as tf
-import torch
-import torchvision
-from tcu_images import CLASS_NAME_TO_IMAGENET_CLASS, BICYCLE_IDX, BIRD_IDX
-from tensorflow.keras.applications.resnet50 import preprocess_input
 
-from unrestricted_advex.eval_kit import attacks
+from tcu_images import BICYCLE_IDX, BIRD_IDX
+from unrestricted_advex.eval_kit import attacks, load_models
+
 
 EVAL_WITH_ATTACKS_DIR = '/tmp/eval_with_attacks'
 
+
 def run_attack(model, data_iter, attack_fn, max_num_batches=1):
   """
-  :param model: Model should output a
-  :param data_iter: NHWC data
-  :param attack:
-  :param max_num_batches:
+  :param model: Callable batch-input -> batch-probability in [0, 1]
+  :param data_iter: NHWC data iterator
+  :param attack_fn: Callable (model, x_np, y_np) -> x_adv
+  :param max_num_batches: Integer number of batches to stop after
   :return: (logits, labels, x_adv)
   """
   all_labels = []
@@ -47,91 +44,6 @@ def run_attack(model, data_iter, attack_fn, max_num_batches=1):
   return (np.concatenate(all_logits),
           np.concatenate(all_labels),
           np.concatenate(all_xadv))
-
-
-def save_image_to_png(image_np, filename):
-  from PIL import Image
-  os.makedirs(os.path.dirname(filename), exist_ok=True)
-  if image_np.shape[-1] == 3:
-    img = Image.fromarray(np.uint8(image_np * 255.), 'RGB')
-  else:
-    img = Image.fromarray(np.uint8(image_np[:,:,0] * 255.), 'L')
-  img.save(filename)
-
-
-def get_torch_tcu_dataset_iter(batch_size, shuffle=True):
-  data_dir = tcu_images.get_dataset('train')
-
-  train_dataset = torchvision.datasets.ImageFolder(
-    data_dir,
-    torchvision.transforms.Compose([
-      torchvision.transforms.Resize(224),
-      torchvision.transforms.ToTensor(),
-      lambda x: torch.einsum('chw->hwc', [x]),
-    ]))
-
-  data_loader = torch.utils.data.DataLoader(
-    train_dataset,
-    batch_size=batch_size,
-    shuffle=shuffle)
-
-  assert train_dataset.class_to_idx['bicycle'] == BICYCLE_IDX
-  assert train_dataset.class_to_idx['bird'] == BIRD_IDX
-
-  dataset_iter = [(x.numpy(), y.numpy()) for (x, y) in iter(data_loader)]
-  return dataset_iter
-
-
-def get_torch_tcu_model():
-  print("WARNING: Torch model currently only gets 50% top1 accuracy and may have a preprocessing issue")
-
-  pytorch_model = torchvision.models.resnet50(pretrained=True)
-  pytorch_model = pytorch_model.cuda()
-  pytorch_model.eval()  # switch to eval mode
-
-  def model_fn(x_np):
-    with torch.no_grad():
-      x = torch.from_numpy(x_np).cuda()
-      x = torch.einsum('bhwc->bchw', [x])
-      logits1000 = pytorch_model(x)
-
-      bird_max_logit, _ = torch.max(
-        logits1000[:, CLASS_NAME_TO_IMAGENET_CLASS['bird']], dim=1)
-      bicycle_max_logit, _ = torch.max(
-        logits1000[:, CLASS_NAME_TO_IMAGENET_CLASS['bicycle']], dim=1)
-      logits = torch.cat((bicycle_max_logit[:, None],
-                          bird_max_logit[:, None]), dim=1)
-      return logits.cpu().numpy()
-
-  return model_fn
-
-
-def get_keras_tcu_model():
-  tf.keras.backend.set_image_data_format('channels_last')
-  _graph = tf.Graph()
-  with _graph.as_default():
-    k_model = tf.keras.applications.resnet50.ResNet50(
-      include_top=True, weights='imagenet', input_tensor=None,
-      input_shape=None, pooling=None, classes=1000)
-
-  def model_wrapper(x_np):
-    # it seems keras pre-trained model directly output softmax-ed probs
-    x_np = preprocess_input(x_np * 255)
-
-    with _graph.as_default():
-      prob1000 = k_model.predict_on_batch(x_np) / 10
-
-    fake_logits1000 = np.log(prob1000)
-
-    bird_max_logit = np.max(
-      fake_logits1000[:, CLASS_NAME_TO_IMAGENET_CLASS['bird']], axis=1)
-    bicycle_max_logit = np.max(
-      fake_logits1000[:, CLASS_NAME_TO_IMAGENET_CLASS['bicycle']], axis=1)
-    logits = np.concatenate((bicycle_max_logit[:, None],
-                             bird_max_logit[:, None]), axis=1)
-    return logits
-
-  return model_wrapper
 
 
 def evaluate_tcu_model(model_fn, dataset_iter, attack_list,
@@ -159,13 +71,6 @@ def evaluate_tcu_model(model_fn, dataset_iter, attack_list,
       coverages, cov_to_confident_error_idxs, len(labels), attack_name, results_dir,
       legend=model_fn_name)
 
-
-def show(img):
-  remap = " .*#"+"#"*100
-  img = (img.flatten())*3
-  print("START")
-  for i in range(28):
-    print("".join([remap[int(round(x))] for x in img[i*28:i*28+28]]))
 
 
 def mnist_valid_check(before, after):
@@ -227,6 +132,16 @@ def plot_ims(x_adv, correct, results_dir):
     save_image_to_png(image_np, os.path.join(save_dir, "adv_image_%s.png" % i))
 
 
+def save_image_to_png(image_np, filename):
+  from PIL import Image
+  os.makedirs(os.path.dirname(filename), exist_ok=True)
+  if image_np.shape[-1] == 3:
+    img = Image.fromarray(np.uint8(image_np * 255.), 'RGB')
+  else:
+    img = Image.fromarray(np.uint8(image_np[:,:,0] * 255.), 'L')
+  img.save(filename)
+
+
 def plot_confident_error_rate(coverages, cov_to_confident_error_idxs, num_examples,
                               attack_name, results_dir, legend=None,
                               title="Risk vs Coverage ({attack_name})"):
@@ -257,15 +172,16 @@ def plot_confident_error_rate(coverages, cov_to_confident_error_idxs, num_exampl
 def evaluate_images_tcu_model(model_fn, dataset_iter, model_fn_name=None):
   spsa_attack = attacks.SpsaAttack(model_fn, (224, 224, 3)).spsa_attack
   return evaluate_tcu_model(model_fn, dataset_iter, [
-  # (attacks.null_attack, 'null_attack'),
+   (attacks.null_attack, 'null_attack'),
 #    (attacks.spatial_attack, 'spatial_attack'),
-    (spsa_attack, 'spsa_attack'),
+#    (spsa_attack, 'spsa_attack'),
   ], model_fn_name=model_fn_name)
 
 
 def main():
-  tcu_dataset_iter = get_torch_tcu_dataset_iter(batch_size=64, shuffle=True)
-  model_fn = get_keras_tcu_model()
+  tcu_dataset_iter = load_models.get_torch_tcu_dataset_iter(
+    batch_size=64, shuffle=True)
+  model_fn = load_models.get_keras_tcu_model()
   evaluate_images_tcu_model(model_fn, tcu_dataset_iter,
                             model_fn_name='Keras TCU model')
 
