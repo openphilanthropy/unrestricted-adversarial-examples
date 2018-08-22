@@ -151,20 +151,22 @@ def mnist_valid_check(before, after):
     
 def evaluate_mnist_tcu_model(model_fn, dataset_iter):
   return evaluate_tcu_model(model_fn, dataset_iter, [
-    # (attacks.null_attack, 'null_attack'),
+    #(attacks.null_attack, 'null_attack'),
+    (lambda model, x, y: attacks.spsa_attack(model, x, y,
+                                             epsilon=0.3),
+     'spsa_attack'),
     (lambda model, x, y: attacks.spatial_attack(model, x, y,
                                                 spatial_limits=[10, 10, 10],
                                                 grid_granularity=[10, 10, 10],
                                                 black_border_size=4,
                                                 valid_check=mnist_valid_check),
      'spatial_attack'),
-    # (attacks.spsa_attack, 'spsa_attack'),
   ])
 
 
 def evaluate_images_tcu_model(model_fn, dataset_iter):
   return evaluate_tcu_model(model_fn, dataset_iter, [
-  # (attacks.null_attack, 'null_attack'),
+    # (attacks.null_attack, 'null_attack'),
     (attacks.spatial_attack, 'spatial_attack'),
     # (attacks.spsa_attack, 'spsa_attack'),
   ])
