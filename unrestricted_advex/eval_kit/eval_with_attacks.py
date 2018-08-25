@@ -3,10 +3,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-
 import os
 import shutil
+
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
@@ -145,27 +146,35 @@ def save_image_to_png(image_np, filename):
 def plot_confident_error_rate(coverages, cov_to_confident_error_idxs, num_examples,
                               attack_name, results_dir, legend=None,
                               title="Risk vs Coverage ({attack_name})"):
+  """Plot the confident error rate (risk on covered data vs coverage)"""
+  fig = plt.figure()
+  ax = fig.add_subplot(111)
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+  cov_to_num_covered_examples = [
+    num_examples * coverage for coverage in coverages
+  ]
 
-    plt.plot(coverages, [float(len(idxs)) / num_examples
-                         for idxs in cov_to_confident_error_idxs])
-    plt.title(title.format(attack_name=attack_name))
-    plt.ylabel("Risk \n (error rate on covered data)")
-    plt.xlabel("Coverage \n (fraction of points not abstained on)")
+  risk_on_covered_data = [
+    float(len(error_idxs)) / num_covered_examples
+    for error_idxs, num_covered_examples in
+    zip(cov_to_confident_error_idxs, cov_to_num_covered_examples)]
 
-    if legend:
-      ax.legend([legend], loc='best', fontsize=15)
+  plt.plot(coverages, risk_on_covered_data)
+  plt.title(title.format(attack_name=attack_name))
+  plt.ylabel("Risk \n (error rate on covered data)")
+  plt.xlabel("Coverage \n (fraction of points not abstained on)")
 
-    for item in ([ax.xaxis.label, ax.yaxis.label]):
-      item.set_fontsize(15)
-    for item in (ax.get_xticklabels() + ax.get_yticklabels()):
-      item.set_fontsize(15)
-    ax.title.set_fontsize(15)
+  if legend:
+    ax.legend([legend], loc='best', fontsize=15)
 
-    plt.tight_layout()
-    plt.savefig(os.path.join(results_dir,
+  for item in ([ax.xaxis.label, ax.yaxis.label]):
+    item.set_fontsize(15)
+  for item in (ax.get_xticklabels() + ax.get_yticklabels()):
+    item.set_fontsize(15)
+  ax.title.set_fontsize(15)
+
+  plt.tight_layout()
+  plt.savefig(os.path.join(results_dir,
                              "confident_error_rate_{}.png".format(attack_name)))
 
 
