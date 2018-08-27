@@ -19,7 +19,7 @@ You can see a more detailed structure of the repository below:
 * `contest_proposal.md` - Details of the contest portion of the challenge
 * `baselines` - Starter code to help you get started with training defenses
   
-## Leaderboard (Warm-up phase)
+## <a name="leaderboard"></a>Leaderboard (Warm-up phase)
 
 | Defense               | Submitted by  | SPSA acc@80% | Spatial acc@80% | Submission Date |
 | --------------------- | ------------- | ------------ |--------------- | --------------- |
