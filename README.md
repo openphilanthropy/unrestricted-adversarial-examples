@@ -1,6 +1,6 @@
 # Unrestricted Adversarial Examples Challenge
 
-In the Unrestricted Adversarial Examples Challenge, attackers submit arbitrary adversarial inputs, and defenders are expected to assign low confidence to difficult inputs while retaining high confidence and accuracy on a clean, unambiguous test set. You can learn more about the motivation and structure of the contest in [Unrestricted Adversarial Examples, Brown et al. 2018](http://arxiv.org/)
+In the Unrestricted Adversarial Examples Challenge, attackers submit arbitrary adversarial inputs, and defenders are expected to assign low confidence to difficult inputs while retaining high confidence and accuracy on a clean, unambiguous test set. You can learn more about the motivation and structure of the contest in [Unrestricted Adversarial Examples paper](http://arxiv.org/)
 
 This repository contains code for Phase 1 of the challenge (the warm-up), as well as the public proposal for phase 2 of the challenge (the contest). 
 
