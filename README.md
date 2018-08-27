@@ -8,18 +8,18 @@ You can learn more about the motivation and structure of the contest in our rece
 *Authors*<br>
 [http://arxiv.org/](http://arxiv.org/)
 
-This repository contains code for Phase 1 of the challenge (the warm-up), as well as the public proposal for phase 2 of the challenge (the contest). 
+This repository contains code for the warm-up to the challenge, as well as [the public proposal for the contest](https://github.com/google/unrestricted-adversarial-examples/blob/master/contest_proposal.md). 
 
 ![image](https://user-images.githubusercontent.com/306655/44686400-f0b74800-aa02-11e8-8967-fa354244813f.png)
 
 You can see a more detailed structure of the repository below:
 
 * `tcu-images` - The dataset used throughout the challenge
-* `unrestricted_advex` - A library used for the evaluation of defenses in Phase 1 of the contest
-* `contest_proposal.md` - Details of the contest portion of the challenge (Phase 2)
+* `unrestricted_advex` - A library used for the evaluation of defenses
+* `contest_proposal.md` - Details of the contest portion of the challenge
 * `baselines` - Starter code to help you get started with training defenses
   
-## Phase 1 Leaderboard
+## Leaderboard (Warm-up phase)
 
 | Defense               | Submitted by  | SPSA acc@80% | Spatial acc@80% | Submission Date |
 | --------------------- | ------------- | ------------ |--------------- | --------------- |
@@ -27,9 +27,9 @@ You can see a more detailed structure of the repository below:
 | [Undefended Baseline](https://github.com/google/unrestricted-adversarial-examples/tree/master/unrestricted_advex/pytorch_resnet_baseline)   |  --           |    0.0%    |     0.0%     |  Aug 27th, 2018 |
 
 
-## Benchmarking your defense on Phase 1
+## Benchmarking your defense on the warm-up
 
-#### To be evaluated against our Phase 1 attacks, your defense must do all of the following
+#### To be evaluated against our fixed warm-up attacks, your defense must do all of the following
 
 - [ ] Accept batches of N images (passed into the constructor for the model)
 - [ ] For each image return two scalar logits between `[-inf, inf]`. These correspond to the likelihood the image corresponds to each of the two classes (e.g., for TCU-Images, the bird and bicycle class)
