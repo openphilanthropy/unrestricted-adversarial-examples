@@ -4,7 +4,7 @@ In the Unrestricted Adversarial Examples Challenge, attackers submit arbitrary a
 
 This repository contains code for Phase 1 of the challenge (the warm-up), as well as the public proposal for phase 2 of the challenge (the contest). 
 
-![image](https://user-images.githubusercontent.com/306655/44686261-80a8c200-aa02-11e8-9f13-c7e29deed8e4.png)
+![image](https://user-images.githubusercontent.com/306655/44686400-f0b74800-aa02-11e8-8967-fa354244813f.png)
 
 You can see a more detailed structure of the repository below:
 
