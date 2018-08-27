@@ -42,4 +42,5 @@ You can see the current leaderboard below
 
 | Defense               | Submitted by  | SPSA acc@80% | Spatial acc@80% | Submission Date |
 | --------------------- | ------------- | ------------ |--------------- | --------------- |
-| [Undefended Baseline](https://github.com/google/unrestricted-adversarial-examples/tree/master/unrestricted_advex/pytorch_resnet_baseline)   |  --           |    **0.0%**    |     **0.0%**     |  Aug 27th, 2018 |
+| [PGD-trained Baseline](https://github.com/google/unrestricted-adversarial-examples/tree/master/unrestricted_advex/pytorch_resnet_baseline) TODO  |  --           |    **??**    |     **??**     |  Aug 28th, 2018 |
+| [Undefended Baseline](https://github.com/google/unrestricted-adversarial-examples/tree/master/unrestricted_advex/pytorch_resnet_baseline)   |  --           |    0.0%    |     0.0%     |  Aug 27th, 2018 |
