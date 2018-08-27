@@ -1,19 +1,18 @@
 # Unrestricted Adversarial Examples Challenge
 
-This repository containes
+In the Unrestricted Adversarial Examples Challenge, attackers submit arbitrary adversarial inputs, and defenders are expected to assign low confidence to difficult inputs while retaining high confidence and accuracy on a clean, unambiguous test set. You can learn more about the motivation and structure of the contest in [Unrestricted Adversarial Examples, Brown et al. 2018](http://arxiv.org/)
 
+This repository contains code for Phase 1 of the challenge (the warm-up), as well as the public proposal for phase 2 of the challenge (the contest). 
 
-## Structure of this repository
+![image](https://user-images.githubusercontent.com/306655/44686261-80a8c200-aa02-11e8-9f13-c7e29deed8e4.png)
 
+You can see a more detailed structure of the repository below:
 
-* `tcu-images` -> The Two-Class Unambiguous Images dataset
-* `unrestricted_advex`
-  * `eval_kit` -> Tools for evaluating defenses 
-  * `mnist_baselines`
-  * `resnet_baselines`
-* `contest_proposal.md` -> Details of the contest  
-
-
+* `tcu-images` - The dataset used throughout the challenge
+* `unrestricted_advex` - A library used for the evaluation of defenses in Phase 1 of the contest
+* `contest_proposal.md` - Details of the contest portion of the challenge (Phase 2)
+* `baselines` - Starter code to help you get started with training defenses
+  
 ## Phase 1 Leaderboard
 
 | Defense               | Submitted by  | SPSA acc@80% | Spatial acc@80% | Submission Date |
@@ -27,8 +26,8 @@ This repository containes
 To be evaluated against our Phase 1 attacks, your defense must do all of the following
 
 - [ ] Accept batches of N images (passed into the constructor for the model)
-- [ ] For each image return two scalar logits between [-inf, inf]. These correspond to the likelihood the image corresponds to each of the two classes (e.g., for TCU-Images, the bird and bicycle class)
-- [ ] Maintain a throughput of at least 100 images per second when evaluated on a P100 GPU on TCU-Images, and XXXX images per second on TCU-MNIST
+- [ ] For each image return two scalar logits between `[-inf, inf]`. These correspond to the likelihood the image corresponds to each of the two classes (e.g., for TCU-Images, the bird and bicycle class)
+- [ ] Maintain a throughput of at least **100 images per second** when evaluated on a P100 GPU on TCU-Images, and XXXX images per second on TCU-MNIST
 
 Your defense will be evaluated with the following mechanism
 - A test dataset is passed through the model and converted to logits
