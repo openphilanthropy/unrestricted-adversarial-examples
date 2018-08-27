@@ -23,8 +23,8 @@ You can see a more detailed structure of the repository below:
 
 | Defense               | Submitted by  | SPSA acc@80% | Spatial acc@80% | Submission Date |
 | --------------------- | ------------- | ------------ |--------------- | --------------- |
-| [PGD-trained Baseline](https://github.com/google/unrestricted-adversarial-examples/tree/master/unrestricted_advex/pytorch_resnet_baseline)  |  --           |    **??**    |     **??**     |  Aug 28th, 2018 |
-| [Undefended Baseline](https://github.com/google/unrestricted-adversarial-examples/tree/master/unrestricted_advex/pytorch_resnet_baseline)   |  --           |    0.0%    |     0.0%     |  Aug 27th, 2018 |
+| [PGD-trained Baseline](#)  |  ?? |    **??**    |     **??**     |  Aug 28th, 2018 |
+| [Undefended ResNet Baseline](https://github.com/google/unrestricted-adversarial-examples/tree/master/unrestricted_advex/pytorch_resnet_baseline)   |  Google Brain   |    0.0%    |     0.0%     |  Aug 27th, 2018 |
 
 
 ## Benchmarking your defense on the warm-up
