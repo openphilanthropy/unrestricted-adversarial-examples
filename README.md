@@ -5,16 +5,14 @@ This repository containes
 
 ## Structure of this repository
 
-```
-tcu-images -> The Two-Class Unambiguous Images dataset
 
-unrestricted_advex
-  eval_kit -> Tools for evaluating defenses 
-  mnist_baselines
-  resnet_baselines
-  
-contest_proposal.md -> Details of the contest  
-```
+* `tcu-images` -> The Two-Class Unambiguous Images dataset
+* `unrestricted_advex`
+  * `eval_kit` -> Tools for evaluating defenses 
+  * `mnist_baselines`
+  * `resnet_baselines`
+*`contest_proposal.md` -> Details of the contest  
+
 
 ## Phase 1 Leaderboard
 
@@ -28,9 +26,9 @@ contest_proposal.md -> Details of the contest
 
 To be evaluated against our Phase 1 attacks, your defense must do all of the following
 
--[ ] Accept batches of N images (passed into the constructor for the model)
--[ ] For each image return two scalar logits between [-inf, inf]. These correspond to the likelihood the image corresponds to each of the two classes (e.g., for TCU-Images, the bird and bicycle class)
--[ ] Maintain a throughput of at least 100 images per second when evaluated on a P100 GPU on TCU-Images, and XXXX images per second on TCU-MNIST
+- [ ] Accept batches of N images (passed into the constructor for the model)
+- [ ] For each image return two scalar logits between [-inf, inf]. These correspond to the likelihood the image corresponds to each of the two classes (e.g., for TCU-Images, the bird and bicycle class)
+- [ ] Maintain a throughput of at least 100 images per second when evaluated on a P100 GPU on TCU-Images, and XXXX images per second on TCU-MNIST
 
 Your defense will be evaluated with the following mechanism
 - A test dataset is passed through the model and converted to logits
