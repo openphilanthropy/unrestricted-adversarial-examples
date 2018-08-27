@@ -11,7 +11,7 @@ This repository containes
   * `eval_kit` -> Tools for evaluating defenses 
   * `mnist_baselines`
   * `resnet_baselines`
-*`contest_proposal.md` -> Details of the contest  
+* `contest_proposal.md` -> Details of the contest  
 
 
 ## Phase 1 Leaderboard
