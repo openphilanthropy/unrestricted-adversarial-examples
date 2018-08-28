@@ -21,9 +21,10 @@ from unrestricted_advex.tf_resnet_baseline.official_imagenet_input_pipeline impo
   _DEFAULT_IMAGE_SIZE, _NUM_CHANNELS, \
   _NUM_IMAGES
 from unrestricted_advex.tf_resnet_baseline.official_resnet_model import ImagenetModel
-from unrestricted_advex.tf_resnet_baseline.utils.misc import model_helpers
 from unrestricted_advex.tf_resnet_baseline.utils import flag_definitions
-from unrestricted_advex.tf_resnet_baseline.utils.misc import distribution_utils
+
+from baselines.tf_resnet_baseline.utils.misc import distribution_utils
+from baselines.tf_resnet_baseline.utils.misc import model_helpers
 
 flag_definitions.define_base()
 flag_definitions.define_performance()

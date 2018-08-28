@@ -6,11 +6,11 @@ import numpy as np
 from absl import app as absl_app
 from absl import flags
 
-from unrestricted_advex.tf_resnet_baseline import tcu_imagenet_pipeline
-from unrestricted_advex.tf_resnet_baseline.eval_attacks import sess_with_loaded_model
-from unrestricted_advex.tf_resnet_baseline.spatial_attack import EvalModeAttackableModel
-from unrestricted_advex.tf_resnet_baseline.tcu_imagenet_pipeline import BIRD_CLASSES, \
+from baselines.tf_resnet_baseline import BIRD_CLASSES, \
   BICYCLE_CLASSES
+from baselines.tf_resnet_baseline import EvalModeAttackableModel
+from baselines.tf_resnet_baseline import sess_with_loaded_model
+from baselines.tf_resnet_baseline import tcu_imagenet_pipeline
 
 FLAGS = flags.FLAGS
 

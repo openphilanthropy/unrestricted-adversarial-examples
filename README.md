@@ -43,7 +43,7 @@ pip install -e unrestricted-advex
 
 Confirm that the baseline defense runs correctly for you by running a model. It should print scores that match the leaderboard above.
 ```bash
-python baselines/undefended_pytorch_resnet/train.py
+python baselines/undefended_pytorch_resnet/main.py
 ```
 
 ##### Implementing a defense

@@ -8,9 +8,10 @@ import numpy as np
 import tensorflow as tf
 from absl import app as absl_app
 from absl import flags
-from tensorflow.keras.preprocessing import image as keras_image
 from keras.applications.resnet50 import preprocess_input
-from unrestricted_advex.tf_resnet_baseline.imagenet_main import IM_SHAPE
+from tensorflow.keras.preprocessing import image as keras_image
+
+from baselines.tf_resnet_baseline import IM_SHAPE
 
 flags.DEFINE_string(
   name='tcu_imagenet_data',

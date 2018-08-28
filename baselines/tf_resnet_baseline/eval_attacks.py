@@ -9,7 +9,8 @@ from tensorflow.python.training import monitored_session
 from unrestricted_advex.tf_resnet_baseline.imagenet_main import input_fn, get_num_gpus
 from unrestricted_advex.tf_resnet_baseline.spatial_attack import \
   SpatialGridAttack, EvalModeAttackableModel
-from unrestricted_advex.tf_resnet_baseline.utils.misc import distribution_utils
+
+from baselines.tf_resnet_baseline.utils.misc import distribution_utils
 
 FLAGS = flags.FLAGS
 
