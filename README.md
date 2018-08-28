@@ -21,9 +21,9 @@ You can see a more detailed structure of the repository below:
   
 ## <a name="leaderboard"></a>Leaderboard (Warm-up phase)
 
-| Defense               | Submitted by  | SPSA acc@80% | Spatial acc@80% | Submission Date |
+| Defense               | Submitted by  | SPSA acc.<br>at 80% cov. | Spatial acc.<br>at 80% cov. | Submission Date |
 | --------------------- | ------------- | ------------ |--------------- | --------------- |
-| [PGD-trained Baseline](#)  |  ?? |    **??**    |     **??**     |  Aug 28th, 2018 |
+| [Worst-of-10-Spatial Baseline](#)  |  ?? |    **??**    |     **??**     |  Aug 28th, 2018 |
 | [Undefended ResNet Baseline](https://github.com/google/unrestricted-adversarial-examples/tree/master/unrestricted_advex/pytorch_resnet_baseline)   |  Google Brain   |    0.0%    |     0.0%     |  Aug 27th, 2018 |
 
 
