@@ -38,12 +38,12 @@ git clone git@github.com:google/unrestricted-adversarial-examples.git
 cd unrestricted-adversarial-examples
 
 pip install -e tcu-images
-pip install -e .
+pip install -e unrestricted-advex
 ```
 
 Confirm that the baseline defense runs correctly for you by running a model. It should print scores that match the leaderboard above.
 ```bash
-python baselines/pytorch_resnet_baseline/train.py
+python baselines/undefended_pytorch_resnet/train.py
 ```
 
 ##### Implementing a defense
