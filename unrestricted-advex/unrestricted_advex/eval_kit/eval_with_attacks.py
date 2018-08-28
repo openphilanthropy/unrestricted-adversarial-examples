@@ -15,7 +15,6 @@ import numpy as np
 from tcu_images import BICYCLE_IDX, BIRD_IDX
 from unrestricted_advex.eval_kit import attacks, load_models
 
-
 EVAL_WITH_ATTACKS_DIR = '/tmp/eval_with_attacks'
 
 
@@ -31,7 +30,8 @@ def run_attack(model, data_iter, attack_fn, max_num_batches=1):
   all_logits = []
   all_xadv = []
   for i_batch, (x_np, y_np) in enumerate(data_iter):
-    assert x_np.shape[-1] == 3 or x_np.shape[-1] == 1, "Data was {}, should be NHWC".format(x_np.shape)
+    assert x_np.shape[-1] == 3 or x_np.shape[-1] == 1, "Data was {}, should be NHWC".format(
+      x_np.shape)
     if max_num_batches > 0 and i_batch >= max_num_batches:
       break
 
@@ -60,8 +60,8 @@ def evaluate_tcu_model(model_fn, dataset_iter, attack_list,
     print("Fraction correct under %s: %.3f" % (attack_name, correct_fracs))
 
     confidences = logits_to_confidences(
-      bicycle_logits = logits[:, BICYCLE_IDX],
-      bird_logits = logits[:, BIRD_IDX])
+      bicycle_logits=logits[:, BICYCLE_IDX],
+      bird_logits=logits[:, BIRD_IDX])
 
     coverages, cov_to_confident_error_idxs = get_coverage_to_confident_error_idxs(
       preds, confidences, labels)
@@ -73,12 +73,11 @@ def evaluate_tcu_model(model_fn, dataset_iter, attack_list,
       legend=model_fn_name)
 
 
-
 def mnist_valid_check(before, after):
-  weight_before = np.sum(np.abs(before),axis=(1,2,3))
-  weight_after = np.sum(np.abs(after),axis=(1,2,3))
+  weight_before = np.sum(np.abs(before), axis=(1, 2, 3))
+  weight_after = np.sum(np.abs(after), axis=(1, 2, 3))
 
-  return np.abs(weight_after-weight_before) < weight_before*.1
+  return np.abs(weight_after - weight_before) < weight_before * .1
 
 
 def evaluate_mnist_tcu_model(model_fn, dataset_iter):
@@ -86,7 +85,7 @@ def evaluate_mnist_tcu_model(model_fn, dataset_iter):
                  attacks.SpsaAttack(model_fn, (28, 28, 1), epsilon=0.3)
                  .spsa_attack(model, x, y))
   return evaluate_tcu_model(model_fn, dataset_iter, [
-    #(attacks.null_attack, 'null_attack'),
+    # (attacks.null_attack, 'null_attack'),
     (spsa_attack, 'spsa_attack'),
     (lambda model, x, y: attacks.spatial_attack(model, x, y,
                                                 spatial_limits=[10, 10, 10],
@@ -98,24 +97,24 @@ def evaluate_mnist_tcu_model(model_fn, dataset_iter):
 
 
 def logits_to_confidences(bicycle_logits, bird_logits):
-    return np.max(np.vstack([ bicycle_logits, bird_logits]).T, axis=1)
+  return np.max(np.vstack([bicycle_logits, bird_logits]).T, axis=1)
 
 
 def get_coverage_to_confident_error_idxs(preds, confidences, y_true):
-    sorted_confidences = list(sorted(confidences, reverse=True))
+  sorted_confidences = list(sorted(confidences, reverse=True))
 
-    coverages = np.linspace(0.01, .99, 99)
-    cov_to_confident_error_idxs = []
+  coverages = np.linspace(0.01, .99, 99)
+  cov_to_confident_error_idxs = []
 
-    for coverage in coverages:
-        threshold = sorted_confidences[int(coverage * len(preds))]
-        confident_mask = confidences >= threshold
-        confident_error_mask = (y_true != preds) * confident_mask
-        confident_error_idx = confident_error_mask.nonzero()[0]
+  for coverage in coverages:
+    threshold = sorted_confidences[int(coverage * len(preds))]
+    confident_mask = confidences >= threshold
+    confident_error_mask = (y_true != preds) * confident_mask
+    confident_error_idx = confident_error_mask.nonzero()[0]
 
-        cov_to_confident_error_idxs.append(confident_error_idx)
+    cov_to_confident_error_idxs.append(confident_error_idx)
 
-    return (coverages, cov_to_confident_error_idxs)
+  return (coverages, cov_to_confident_error_idxs)
 
 
 def plot_ims(x_adv, correct, results_dir):
@@ -139,7 +138,7 @@ def save_image_to_png(image_np, filename):
   if image_np.shape[-1] == 3:
     img = Image.fromarray(np.uint8(image_np * 255.), 'RGB')
   else:
-    img = Image.fromarray(np.uint8(image_np[:,:,0] * 255.), 'L')
+    img = Image.fromarray(np.uint8(image_np[:, :, 0] * 255.), 'L')
   img.save(filename)
 
 
@@ -175,15 +174,15 @@ def plot_confident_error_rate(coverages, cov_to_confident_error_idxs, num_exampl
 
   plt.tight_layout()
   plt.savefig(os.path.join(results_dir,
-                             "confident_error_rate_{}.png".format(attack_name)))
+                           "confident_error_rate_{}.png".format(attack_name)))
 
 
 def evaluate_images_tcu_model(model_fn, dataset_iter, model_fn_name=None):
   spsa_attack = attacks.SpsaAttack(model_fn, (224, 224, 3)).spsa_attack
   return evaluate_tcu_model(model_fn, dataset_iter, [
-   (attacks.null_attack, 'null_attack'),
-#    (attacks.spatial_attack, 'spatial_attack'),
-#    (spsa_attack, 'spsa_attack'),
+    (attacks.null_attack, 'null_attack'),
+    #    (attacks.spatial_attack, 'spatial_attack'),
+    #    (spsa_attack, 'spsa_attack'),
   ], model_fn_name=model_fn_name)
 
 

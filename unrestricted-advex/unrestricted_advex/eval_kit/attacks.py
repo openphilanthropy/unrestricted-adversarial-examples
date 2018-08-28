@@ -145,7 +145,6 @@ class SpatialGridAttack:
     max_xent = np.zeros(n)
     all_correct = np.ones(n).astype(bool)
 
-
     trans_np = np.stack(
       repeat([0, 0, 0], n))
     with self.graph.as_default():
@@ -180,8 +179,7 @@ class SpatialGridAttack:
         is_valid = self.valid_check(x_downsize_np, x_np)
         print(is_valid)
         cur_correct |= ~is_valid
-        cur_xent -= is_valid*1e9
-
+        cur_xent -= is_valid * 1e9
 
       # Select indices to update: we choose the misclassified transformation
       # of maximum xent (or just highest xent if everything else if correct).

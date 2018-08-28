@@ -10,7 +10,6 @@ import tensorflow as tf
 import torch
 import torchvision
 from tensorflow.keras.applications.resnet50 import preprocess_input
-
 from unrestricted_advex.eval_kit import attacks
 
 

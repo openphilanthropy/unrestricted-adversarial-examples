@@ -31,7 +31,6 @@ N_WORKERS = multiprocessing.cpu_count() * 2 or 1
 OPEN_IMAGES_BIRD_CLASS = '/m/015p6'
 OPEN_IMAGES_BICYCLE_CLASS = '/m/0199g'
 
-
 CLASS_NAME_TO_IMAGENET_CLASS = {
   'bird': list(range(80, 100 + 1)),
   'bicycle': [671, 444]
@@ -154,7 +153,8 @@ def verify_dataset_integrity(split, data_root=None):
   split_root = os.path.join(data_root, split)
 
   if True:  # split == 'extras':
-    print("WARNING: data validation is currently not implemented. Make sure that you have the correct dataset here and that it is cropped to 299x299 pixels")
+    print(
+      "WARNING: data validation is currently not implemented. Make sure that you have the correct dataset here and that it is cropped to 299x299 pixels")
     return
 
   shasum = _compute_sha1sum_of_directory(split_root)
@@ -168,16 +168,16 @@ def _crop_and_resize_images(split_root):
   print("Cropping images to correct shape and size...")
 
   try:
-     cmd = 'find {data_dir} -name \"*.jpg\" | \
+    cmd = 'find {data_dir} -name \"*.jpg\" | \
      xargs -P{N_WORKERS} -I % convert % \
      -resize \"299^>\" \
      -gravity center \
      -crop 299x299+0+0 %'.format(data_dir=split_root, N_WORKERS=N_WORKERS)
 
-     subprocess.check_call(cmd, shell=True)
+    subprocess.check_call(cmd, shell=True)
   except subprocess.CalledProcessError as e:
     print("\nERROR: convert command failed.\nTry 'sudo apt-get install imagemagick'\n")
-    raise(e)
+    raise (e)
 
 
 def _get_tcu_image_ids(split):

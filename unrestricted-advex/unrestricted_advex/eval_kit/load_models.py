@@ -4,13 +4,12 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+import tcu_images
 import tensorflow as tf
-from tensorflow.keras.applications.resnet50 import preprocess_input
 import torch
 import torchvision
-
-import tcu_images
 from tcu_images import CLASS_NAME_TO_IMAGENET_CLASS, BICYCLE_IDX, BIRD_IDX
+from tensorflow.keras.applications.resnet50 import preprocess_input
 
 
 def get_torch_tcu_dataset_iter(batch_size, shuffle=True):
@@ -37,7 +36,8 @@ def get_torch_tcu_dataset_iter(batch_size, shuffle=True):
 
 
 def get_torch_tcu_model():
-  print("WARNING: Torch model currently only gets 50% top1 accuracy and may have a preprocessing issue")
+  print(
+    "WARNING: Torch model currently only gets 50% top1 accuracy and may have a preprocessing issue")
 
   pytorch_model = torchvision.models.resnet50(pretrained=True)
   pytorch_model = pytorch_model.cuda()
