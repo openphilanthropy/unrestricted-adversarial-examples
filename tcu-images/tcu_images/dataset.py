@@ -66,6 +66,7 @@ def _is_valid_extras_image(bbox_row, strict=False, min_bbox_area=0.2 ** 2):
 
 
 def _get_extras_image_ids():
+  """Return a map from label to set of image ids"""
   # Fetch metadata
   bbox_url = 'https://storage.googleapis.com/openimages/2018_04/train/train-annotations-bbox.csv'
   bbox_file = os.path.join(METADATA_ROOT, 'train-annotations-bbox.csv')
@@ -106,6 +107,10 @@ def _get_extras_image_ids():
     for label_name in ['bird', 'bicycle']:
       label_to_extras[label_name] -= label_to_used_images[label_name]
 
+    # Truncate to the first 13000 images
+    num_extras = metadata.NUM_IMAGES_PER_CLASS[VERSION]['extras']
+    label_to_extras[label_name] = set(sorted(label_to_extras[label_name])[:num_extras])
+
   return label_to_extras
 
 
@@ -141,27 +146,8 @@ def _download_to_dir(image_ids, dest_dir, split):
 
 def _compute_sha1sum_of_directory(dir):
   print("Checking sha1sum of %s" % dir)
-  cmd = "cd %s && find . | grep .jpg | xargs sha1sum | sha1sum" % dir
+  cmd = "cd %s && find . | grep .jpg | sha1sum" % dir
   return check_output(cmd, shell=True).decode('utf-8')[:40]
-
-
-def verify_dataset_integrity(split, data_root=None):
-  """Check the sha1sum to make sure we have prepared the dataset correctly"""
-  if data_root is None:
-    data_root = default_data_root()
-
-  split_root = os.path.join(data_root, split)
-
-  if True:  # split == 'extras':
-    print(
-      "WARNING: data validation is currently not implemented. Make sure that you have the correct dataset here and that it is cropped to 299x299 pixels")
-    return
-
-  shasum = _compute_sha1sum_of_directory(split_root)
-  assert shasum == metadata.SHASUMS[
-    VERSION][split], "sha1sum mismatch (%s). Please remove the files in %s" % (
-    shasum, split_root)
-  print("sha1sum matches. Dataset is correctly prepared.")
 
 
 def _crop_and_resize_images(split_root):
@@ -181,6 +167,7 @@ def _crop_and_resize_images(split_root):
 
 
 def _get_tcu_image_ids(split):
+  """Return a map from label to set of image ids"""
   label_name_to_image_ids = {}
   for label_name in ['bird', 'bicycle']:
     path = os.path.join(METADATA_ROOT, VERSION, "%s_image_ids.csv" % label_name)
@@ -199,6 +186,27 @@ def _get_tcu_image_ids(split):
 
 def default_data_root():
   return os.path.expanduser('~/datasets/tcu_images')
+
+
+def verify_dataset_integrity(split, data_root=None):
+  """Check the sha1sum to make sure we have prepared the dataset correctly"""
+  if data_root is None:
+    data_root = default_data_root()
+
+  split_root = os.path.join(data_root, split)
+  for label_name in ['bird', 'bicycle']:
+    class_dir = os.path.join(split_root, label_name)
+    images_in_class = os.listdir(class_dir)
+    expected_images = metadata.NUM_IMAGES_PER_CLASS[VERSION][split]
+    assert len(images_in_class) == expected_images, \
+      "Incomplete dataset in %s: Expected %s images and found %s" % (
+        class_dir, expected_images, len(images_in_class))
+
+  shasum = _compute_sha1sum_of_directory(split_root)
+  assert shasum == metadata.SHASUMS[
+    VERSION][split], "sha1sum mismatch (%s). Please remove the files in %s" % (
+    shasum, split_root)
+  print("sha1sum match. Dataset is correctly prepared.")
 
 
 def get_dataset(split, data_root=None, force_download=False, verify=True):
