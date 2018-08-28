@@ -11,7 +11,7 @@ from absl import flags
 from keras.applications.resnet50 import preprocess_input
 from tensorflow.keras.preprocessing import image as keras_image
 
-from baselines.tf_resnet_baseline import IM_SHAPE
+from baselines.undefended_tf_resnet import IM_SHAPE
 
 flags.DEFINE_string(
   name='tcu_imagenet_data',

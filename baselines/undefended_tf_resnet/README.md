@@ -1,4 +1,10 @@
 ## Installation
+
+```bash
+cd unrestricted-adversarial-examples/baselines
+export PYTHONPATH=$PYTHONPATH:`pwd`
+```
+
 Fetch Imagenet
 ```bash
 mkdir -p ~/datasets/cloudtpu-imagenet-data && gsutil -m rsync -r gs://cloudtpu-imagenet-data ~/datasets/cloudtpu-imagenet-data

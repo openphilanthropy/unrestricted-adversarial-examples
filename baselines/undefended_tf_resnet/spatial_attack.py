@@ -8,12 +8,12 @@ import numpy as np
 import tensorflow as tf
 from absl import flags
 from tensorflow.python.estimator.model_fn import ModeKeys
-from unrestricted_advex.tf_resnet_baseline.imagenet_main import IM_SHAPE
-from unrestricted_advex.tf_resnet_baseline.imagenet_main import model_fn
-from unrestricted_advex.tf_resnet_baseline.official_imagenet_input_pipeline import \
+from undefended_tf_resnet.imagenet_main import IM_SHAPE
+from undefended_tf_resnet.imagenet_main import model_fn
+from undefended_tf_resnet.official_imagenet_input_pipeline import \
   _DEFAULT_IMAGE_SIZE
 
-from baselines.tf_resnet_baseline.utils import flag_definitions
+from baselines.undefended_tf_resnet.utils import flag_definitions
 
 FLAGS = flags.FLAGS
 

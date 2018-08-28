@@ -6,11 +6,11 @@ import numpy as np
 from absl import app as absl_app
 from absl import flags
 from tensorflow.python.training import monitored_session
-from unrestricted_advex.tf_resnet_baseline.imagenet_main import input_fn, get_num_gpus
-from unrestricted_advex.tf_resnet_baseline.spatial_attack import \
+from undefended_tf_resnet.imagenet_main import input_fn, get_num_gpus
+from undefended_tf_resnet.spatial_attack import \
   SpatialGridAttack, EvalModeAttackableModel
 
-from baselines.tf_resnet_baseline.utils.misc import distribution_utils
+from baselines.undefended_tf_resnet.utils.misc import distribution_utils
 
 FLAGS = flags.FLAGS
 

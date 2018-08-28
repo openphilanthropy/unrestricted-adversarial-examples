@@ -16,15 +16,15 @@ from absl import app as absl_app
 from absl import flags
 from cleverhans.attacks import MadryEtAl
 from cleverhans.model import CallableModelWrapper
-from unrestricted_advex.tf_resnet_baseline import official_resnet_model
-from unrestricted_advex.tf_resnet_baseline.official_imagenet_input_pipeline import input_fn, \
+from undefended_tf_resnet import official_resnet_model
+from undefended_tf_resnet.official_imagenet_input_pipeline import input_fn, \
   _DEFAULT_IMAGE_SIZE, _NUM_CHANNELS, \
   _NUM_IMAGES
-from unrestricted_advex.tf_resnet_baseline.official_resnet_model import ImagenetModel
-from unrestricted_advex.tf_resnet_baseline.utils import flag_definitions
+from undefended_tf_resnet.official_resnet_model import ImagenetModel
+from undefended_tf_resnet.utils import flag_definitions
 
-from baselines.tf_resnet_baseline.utils.misc import distribution_utils
-from baselines.tf_resnet_baseline.utils.misc import model_helpers
+from baselines.undefended_tf_resnet.utils.misc import distribution_utils
+from baselines.undefended_tf_resnet.utils.misc import model_helpers
 
 flag_definitions.define_base()
 flag_definitions.define_performance()
