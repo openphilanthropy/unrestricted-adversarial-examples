@@ -4,7 +4,6 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-from itertools import tee
 
 import numpy as np
 from unrestricted_advex import attacks, load_models, plotting
@@ -12,12 +11,12 @@ from unrestricted_advex import attacks, load_models, plotting
 EVAL_WITH_ATTACKS_DIR = '/tmp/eval_with_attacks'
 
 
-def run_attack(model, data_iter, attack_fn, max_num_batches=1):
-  """
+def run_attack(model, data_iter, attack_fn, ):
+  """ Runs an attack on the model and returns the results
+
   :param model: Callable batch-input -> batch-probability in [0, 1]
   :param data_iter: NHWC data iterator
   :param attack_fn: Callable (model, x_np, y_np) -> x_adv
-  :param max_num_batches: Integer number of batches to stop after
   :return: (logits, labels, x_adv)
   """
   all_labels = []
@@ -27,8 +26,6 @@ def run_attack(model, data_iter, attack_fn, max_num_batches=1):
   for i_batch, (x_np, y_np) in enumerate(data_iter):
     assert x_np.shape[-1] == 3 or x_np.shape[-1] == 1, "Data was {}, should be NHWC".format(
       x_np.shape)
-    if max_num_batches > 0 and i_batch >= max_num_batches:
-      break
 
     x_adv = attack_fn(model, x_np, y_np)
     logits = model(x_adv)
@@ -50,14 +47,11 @@ def evaluate_tcu_model(model_fn, data_iter, attack_list, model_fn_name=None):
   :param attack_list: A list of tuples of (attack_fn, attack_name)
   :param model_fn_name: An optional model name
   """
+  dataset = list(data_iter)
   for (attack_fn, attack_name) in attack_list:
     print("Executing attack: %s" % attack_name)
 
-    # Tee the data_iter so that we can use it multiple times without depletion
-    # https://stackoverflow.com/a/42132767/610785
-    data_iter, data_iter_tee = tee(data_iter)
-
-    logits, labels, x_adv = run_attack(model_fn, data_iter_tee, attack_fn, max_num_batches=1)
+    logits, labels, x_adv = run_attack(model_fn, dataset, attack_fn)
 
     preds = (logits[:, 0] < logits[:, 1]).astype(np.int64)
     correct = np.equal(preds, labels).astype(np.float32)
