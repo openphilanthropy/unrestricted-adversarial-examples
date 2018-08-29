@@ -101,9 +101,7 @@ def get_coverage_to_confident_error_idxs(coverages, preds, confidences, y_true):
 
 
 def evaluate_tcu_mnist_model(model_fn, dataset_iter):
-  spsa_attack = (lambda model, x, y:
-                 attacks.SpsaAttack(model_fn, (28, 28, 1), epsilon=0.3)
-                 .spsa_attack(model, x, y))
+  spsa_attack = attacks.SpsaAttack(model_fn, (28, 28, 1), epsilon=0.3)
   return evaluate_tcu_model(model_fn, dataset_iter, [
     # (attacks.null_attack, 'null_attack'),
     (spsa_attack, 'spsa_attack'),
@@ -118,7 +116,7 @@ def evaluate_tcu_mnist_model(model_fn, dataset_iter):
 
 
 def evaluate_tcu_images_model(model_fn, dataset_iter, model_fn_name=None):
-  spsa_attack = attacks.SpsaAttack(model_fn, (224, 224, 3)).spsa_attack
+  spsa_attack = attacks.SpsaAttack(model_fn, (224, 224, 3))
   return evaluate_tcu_model(model_fn, dataset_iter, [
     (attacks.null_attack, 'null_attack'),
     #    (attacks.spatial_attack, 'spatial_attack'),

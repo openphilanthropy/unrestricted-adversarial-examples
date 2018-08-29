@@ -11,17 +11,6 @@ from cleverhans.model import Model
 from six.moves import xrange
 
 
-def np_sparse_softmax_cross_entropy_with_logits(
-    logits_np, labels_np, graph, sess):
-  with graph.as_default():
-    labels_tf = tf.placeholder(tf.int32, [None])
-    logits_tf = tf.placeholder(tf.float32, [None, None])
-    xent_tf = tf.nn.sparse_softmax_cross_entropy_with_logits(
-      labels=labels_tf, logits=logits_tf)
-    return sess.run(xent_tf, feed_dict={
-      labels_tf: labels_np, logits_tf: logits_np})
-
-
 class CleverhansModelWrapper(Model):
   def __init__(self, model_fn):
     """
@@ -42,6 +31,8 @@ def null_attack(model, x_np, y_np):
 
 
 class SpsaAttack(object):
+  name = 'spsa_attack'
+
   def __init__(self, model, img_shape, epsilon=(16. / 255)):
     self.graph = tf.Graph()
 
@@ -64,7 +55,7 @@ class SpsaAttack(object):
 
     self.graph.finalize()
 
-  def spsa_attack(self, model, x_np, y_np):  # (4. / 255)):
+  def __call__(self, model, x_np, y_np):  # (4. / 255)):
     if model != self.model:
       raise NotImplementedError('Cannot call spsa attack on different models')
     del model  # unused except to check that we already wired it up right
@@ -94,6 +85,17 @@ def spatial_attack(model, x_np, y_np,
     valid_check=valid_check,
   )
   return attack.perturb_grid(x_input_np=x_np, y_input_np=y_np)
+
+
+def _sparse_softmax_cross_entropy_with_logits_from_numpy(logits_np, labels_np, graph, sess):
+  """Helper that calls the TF sparse_softmax_cross_entropy_with_logits function"""
+  with graph.as_default():
+    labels_tf = tf.placeholder(tf.int32, [None])
+    logits_tf = tf.placeholder(tf.float32, [None, None])
+    xent_tf = tf.nn.sparse_softmax_cross_entropy_with_logits(
+      labels=labels_tf, logits=logits_tf)
+    return sess.run(xent_tf, feed_dict={
+      labels_tf: labels_np, logits_tf: logits_np})
 
 
 class SpatialGridAttack:
@@ -169,7 +171,7 @@ class SpatialGridAttack:
       logits = self.model(x_np)
       preds = np.argmax(logits, axis=1)
 
-      cur_xent = np_sparse_softmax_cross_entropy_with_logits(
+      cur_xent = _sparse_softmax_cross_entropy_with_logits_from_numpy(
         logits, y_input_np, self.graph, self.session)
 
       cur_xent = np.asarray(cur_xent)
