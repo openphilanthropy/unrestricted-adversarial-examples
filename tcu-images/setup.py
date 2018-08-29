@@ -23,6 +23,7 @@ setup(
   packages=['tcu_images'],
   install_requires=[
     'awscli',
+    'torchvision',
   ],
   scripts=[
     'bin/tcu-images-download',

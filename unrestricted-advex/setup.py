@@ -9,6 +9,6 @@ setup(
     url='https://github.com/google/unrestricted-advex',
     packages=['unrestricted_advex'],
     install_requires=[
-
+        'tqdm',
     ],
 )

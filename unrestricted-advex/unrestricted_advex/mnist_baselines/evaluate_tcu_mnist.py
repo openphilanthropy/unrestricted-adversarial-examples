@@ -1,9 +1,10 @@
+import math
+
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 from unrestricted_advex import eval_kit
-from unrestricted_advex.mnist_baselines.tcu_model import TCUWrapper
 from unrestricted_advex.mnist_baselines import mnist_convnet
-
+from unrestricted_advex.mnist_baselines.tcu_model import TCUWrapper
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -30,11 +31,12 @@ def main(_):
     # mnist_model = mnist_model.Model("models/clean/", sess)
     tcu_model = TCUWrapper(model)
 
-    def iterator():
+    def iterator(num_datapoints, batch_size):
       which = (mnist.test.labels == 7) | (mnist.test.labels == 6)
-      for i in range(1):
-        images = mnist.test.images[which][i:i + 100].reshape((100, 28, 28, 1))
-        labels = mnist.test.labels[which][i:i + 100] == 7
+      num_batches = math.ceil(num_datapoints / batch_size)
+      for i in range(int(num_batches)):
+        images = mnist.test.images[which][i:i + batch_size].reshape((batch_size, 28, 28, 1))
+        labels = mnist.test.labels[which][i:i + batch_size] == 7
         yield images, labels
 
     logits = tcu_model(x_input)
@@ -42,8 +44,9 @@ def main(_):
     def np_tcu_model(x):
       return sess.run(logits, {x_input: x})
 
-    eval_kit.evaluate_tcu_mnist_model(np_tcu_model,
-                                      iterator())
+    eval_kit.evaluate_tcu_mnist_model(
+      np_tcu_model,
+      iterator(num_datapoints=100, batch_size=16))
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ from __future__ import print_function
 import os
 
 import numpy as np
+from tqdm import tqdm
 from unrestricted_advex import attacks, plotting
 
 EVAL_WITH_ATTACKS_DIR = '/tmp/eval_with_attacks'
@@ -23,7 +24,7 @@ def run_attack(model, data_iter, attack_fn, ):
   all_logits = []
   all_xadv = []
 
-  for i_batch, (x_np, y_np) in enumerate(data_iter):
+  for i_batch, (x_np, y_np) in enumerate(tqdm(data_iter)):
     assert x_np.shape[-1] == 3 or x_np.shape[-1] == 1, "Data was {}, should be NHWC".format(
       x_np.shape)
 
