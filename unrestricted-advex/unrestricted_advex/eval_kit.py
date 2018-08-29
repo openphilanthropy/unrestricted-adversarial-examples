@@ -54,8 +54,10 @@ def evaluate_tcu_model(model_fn, data_iter, attack_list, model_fn_name=None):
     print("Executing attack: %s" % attack_name)
 
     # Tee the data_iter so that we can use it multiple times without depletion
-    data_iter, data_iter_copy = tee(data_iter)
-    logits, labels, x_adv = run_attack(model_fn, data_iter_copy, attack_fn, max_num_batches=1)
+    # https://stackoverflow.com/a/42132767/610785
+    data_iter, data_iter_tee = tee(data_iter)
+
+    logits, labels, x_adv = run_attack(model_fn, data_iter_tee, attack_fn, max_num_batches=1)
 
     preds = (logits[:, 0] < logits[:, 1]).astype(np.int64)
     correct = np.equal(preds, labels).astype(np.float32)
