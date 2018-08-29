@@ -43,10 +43,15 @@ pip install -e tcu-images
 pip install -e unrestricted-advex
 ```
 
-Confirm that the baseline defense runs correctly for you by running a model. It should print scores that match the leaderboard above.
+Confirm that your setup runs correctly by training and evaluating an MNIST model. 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python baselines/undefended_keras_resnet/main.py
+cd unrestricted-advex/unrestricted_advex/mnist_baselines
+CUDA_VISIBLE_DEVICES=0 python train_tcu_mnist.py --total_batches 10000
+CUDA_VISIBLE_DEVICES=0 python evaluate_tcu_mnist.py
 ```
+
+You can also run our attacks that 
+It should print scores that match the leaderboard above.
 
 ##### To be evaluated against our fixed warm-up attacks, your defense must implement the following API
 

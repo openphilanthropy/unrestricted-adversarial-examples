@@ -9,7 +9,8 @@ from unrestricted_advex.mnist_baselines.tcu_model import TCUWrapper
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string("model_dir", "", "Where to put the trained model checkpoint")
+flags.DEFINE_string("model_dir", "/tmp/tcu-mnist/vanilla",
+                    "Where to put the trained model checkpoint")
 
 mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
 
@@ -46,7 +47,7 @@ def main(_):
 
     eval_kit.evaluate_tcu_mnist_model(
       np_tcu_model,
-      iterator(num_datapoints=100, batch_size=16))
+      iterator(num_datapoints=128, batch_size=128))
 
 
 if __name__ == "__main__":

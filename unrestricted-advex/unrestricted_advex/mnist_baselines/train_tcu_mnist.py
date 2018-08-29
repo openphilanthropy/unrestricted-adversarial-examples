@@ -10,8 +10,10 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string("train_mode", "vanilla", "Model type (either 'vanilla' or 'adversarial')")
-flags.DEFINE_string("model_dir", "", "Where to put the trained model checkpoint")
+flags.DEFINE_string("model_dir", "/tmp/tcu-mnist/vanilla",
+                    "Where to put the trained model checkpoint")
 flags.DEFINE_integer("batch_size", 128, "Batch size for training the model")
+flags.DEFINE_integer("total_batches", 1000000, "Total number of batches to train for")
 
 
 def main(_):
@@ -52,7 +54,7 @@ def main(_):
     sess.run(tf.global_variables_initializer())
     training_time = 0.0
 
-    for batch_num in range(1000000):
+    for batch_num in range(FLAGS.total_batches):
       x_batch, y_batch = mnist.train.next_batch(FLAGS.batch_size)
       x_batch = np.reshape(x_batch, (-1, 28, 28, 1))
 
