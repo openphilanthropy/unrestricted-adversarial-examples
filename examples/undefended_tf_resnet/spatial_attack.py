@@ -13,7 +13,7 @@ from undefended_tf_resnet.imagenet_main import model_fn
 from undefended_tf_resnet.official_imagenet_input_pipeline import \
   _DEFAULT_IMAGE_SIZE
 
-from baselines.undefended_tf_resnet.utils import flag_definitions
+from examples.undefended_tf_resnet.utils import flag_definitions
 
 FLAGS = flags.FLAGS
 

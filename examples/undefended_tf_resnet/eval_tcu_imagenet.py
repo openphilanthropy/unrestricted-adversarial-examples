@@ -6,11 +6,11 @@ import numpy as np
 from absl import app as absl_app
 from absl import flags
 
-from baselines.undefended_tf_resnet import BIRD_CLASSES, \
+from examples.undefended_tf_resnet import BIRD_CLASSES, \
   BICYCLE_CLASSES
-from baselines.undefended_tf_resnet import EvalModeAttackableModel
-from baselines.undefended_tf_resnet import sess_with_loaded_model
-from baselines.undefended_tf_resnet import tcu_imagenet_pipeline
+from examples.undefended_tf_resnet import EvalModeAttackableModel
+from examples.undefended_tf_resnet import sess_with_loaded_model
+from examples.undefended_tf_resnet import tcu_imagenet_pipeline
 
 FLAGS = flags.FLAGS
 

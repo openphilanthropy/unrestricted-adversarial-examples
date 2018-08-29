@@ -23,8 +23,8 @@ from undefended_tf_resnet.official_imagenet_input_pipeline import input_fn, \
 from undefended_tf_resnet.official_resnet_model import ImagenetModel
 from undefended_tf_resnet.utils import flag_definitions
 
-from baselines.undefended_tf_resnet.utils.misc import distribution_utils
-from baselines.undefended_tf_resnet.utils.misc import model_helpers
+from examples.undefended_tf_resnet.utils.misc import distribution_utils
+from examples.undefended_tf_resnet.utils.misc import model_helpers
 
 flag_definitions.define_base()
 flag_definitions.define_performance()

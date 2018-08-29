@@ -10,7 +10,7 @@ from undefended_tf_resnet.imagenet_main import input_fn, get_num_gpus
 from undefended_tf_resnet.spatial_attack import \
   SpatialGridAttack, EvalModeAttackableModel
 
-from baselines.undefended_tf_resnet.utils.misc import distribution_utils
+from examples.undefended_tf_resnet.utils.misc import distribution_utils
 
 FLAGS = flags.FLAGS
 

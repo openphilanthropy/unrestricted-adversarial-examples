@@ -13,7 +13,7 @@ import os
 
 import tensorflow as tf  # pylint: disable=g-bad-import-order
 
-from baselines.undefended_tf_resnet import official_imagenet_preprocessing
+from examples.undefended_tf_resnet import official_imagenet_preprocessing
 
 _DEFAULT_IMAGE_SIZE = 224
 _NUM_CHANNELS = 3
