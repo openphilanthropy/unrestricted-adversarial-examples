@@ -1,19 +1,8 @@
-import tensorflow as tf
-import numpy as np
-import scipy.misc
-import os
-
-import time
-
-from tensorflow.examples.tutorials.mnist import input_data
-from cleverhans.attacks import MadryEtAl, CarliniWagnerL2
-from cleverhans.model import CallableModelWrapper
-
-from unrestricted_advex.eval_kit import eval_with_attacks
-
-
 import mnist_model
 import tcu_model
+import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
+from unrestricted_advex import eval_kit
 
 mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
 
@@ -44,5 +33,5 @@ with tf.Session() as sess:
   def np_tcu_model(x):
     return sess.run(logits, {x_input: x})
 
-  eval_with_attacks.evaluate_mnist_tcu_model(np_tcu_model,
-                                             iterator())
+  eval_kit.evaluate_mnist_tcu_model(np_tcu_model,
+                                    iterator())

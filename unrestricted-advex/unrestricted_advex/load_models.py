@@ -12,7 +12,7 @@ from tcu_images import CLASS_NAME_TO_IMAGENET_CLASS, BICYCLE_IDX, BIRD_IDX
 from tensorflow.keras.applications.resnet50 import preprocess_input
 
 
-def get_torch_tcu_dataset_iter(batch_size, shuffle=True):
+def get_tcu_dataset_iter(batch_size, shuffle=True):
   data_dir = tcu_images.get_dataset('train')
 
   train_dataset = torchvision.datasets.ImageFolder(

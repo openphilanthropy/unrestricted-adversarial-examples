@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from tcu_images import BICYCLE_IDX, BIRD_IDX
-from unrestricted_advex.eval_kit import attacks, load_models
+from unrestricted_advex import attacks, load_models
 
 EVAL_WITH_ATTACKS_DIR = '/tmp/eval_with_attacks'
 
@@ -177,7 +177,10 @@ def plot_confident_error_rate(coverages, cov_to_confident_error_idxs, num_exampl
                            "confident_error_rate_{}.png".format(attack_name)))
 
 
-def evaluate_images_tcu_model(model_fn, dataset_iter, model_fn_name=None):
+def evaluate_tcu_images_model(model_fn, model_fn_name=None, batch_size=64):
+  dataset_iter = load_models.get_tcu_dataset_iter(
+    batch_size=batch_size, shuffle=True)
+
   spsa_attack = attacks.SpsaAttack(model_fn, (224, 224, 3)).spsa_attack
   return evaluate_tcu_model(model_fn, dataset_iter, [
     (attacks.null_attack, 'null_attack'),
@@ -187,11 +190,8 @@ def evaluate_images_tcu_model(model_fn, dataset_iter, model_fn_name=None):
 
 
 def main():
-  tcu_dataset_iter = load_models.get_torch_tcu_dataset_iter(
-    batch_size=64, shuffle=True)
   model_fn = load_models.get_keras_tcu_model()
-  evaluate_images_tcu_model(model_fn, tcu_dataset_iter,
-                            model_fn_name='Keras TCU model')
+  evaluate_tcu_images_model(model_fn, model_fn_name='Keras TCU model')
 
 
 if __name__ == '__main__':

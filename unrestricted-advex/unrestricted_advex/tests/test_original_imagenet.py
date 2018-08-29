@@ -10,7 +10,7 @@ import tensorflow as tf
 import torch
 import torchvision
 from tensorflow.keras.applications.resnet50 import preprocess_input
-from unrestricted_advex.eval_kit import attacks
+from unrestricted_advex import attacks
 
 
 def run_attack(model, data_iter, attack_fn, max_num_batches=1, save_image_dir=None):
