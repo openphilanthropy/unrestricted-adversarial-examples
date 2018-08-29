@@ -75,9 +75,10 @@ For ease of evaluation, your model must also maintain a throughput of at least *
 
 ##### Your defense will be evaluated with the following mechanism
 
-- A test dataset is passed through the model and converted to logits
-- Confidence is defined as `max(bicycle_logit, bird_logit)` The 20% of images that resulted in logits with the lowest confidence are abstained on by the model and are discarded.
-- The model’s score is the accuracy on points that were not abstained on.
+- The test dataset is passed through the model and converted to logits.
+- `confidence` is defined as `max(bicycle_logit, bird_logit)` for each image.
+- The 20% of images that resulted in logits with the lowest `confidence` are abstained on by the model and are discarded.
+- The model’s score is the **accuracy on points that were not abstained on**.
 
 ## Contest phase
 
