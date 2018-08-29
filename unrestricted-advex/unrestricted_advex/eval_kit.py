@@ -4,6 +4,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+from itertools import tee
 
 import numpy as np
 from unrestricted_advex import attacks, load_models, plotting
@@ -22,6 +23,7 @@ def run_attack(model, data_iter, attack_fn, max_num_batches=1):
   all_labels = []
   all_logits = []
   all_xadv = []
+
   for i_batch, (x_np, y_np) in enumerate(data_iter):
     assert x_np.shape[-1] == 3 or x_np.shape[-1] == 1, "Data was {}, should be NHWC".format(
       x_np.shape)
@@ -40,7 +42,7 @@ def run_attack(model, data_iter, attack_fn, max_num_batches=1):
           np.concatenate(all_xadv))
 
 
-def evaluate_tcu_model(model_fn, dataset_iter, attack_list, model_fn_name=None):
+def evaluate_tcu_model(model_fn, data_iter, attack_list, model_fn_name=None):
   """
   Evaluates a model on a set of attacks and creates plots
   :param model_fn: A function mapping images to logits
@@ -50,8 +52,10 @@ def evaluate_tcu_model(model_fn, dataset_iter, attack_list, model_fn_name=None):
   """
   for (attack_fn, attack_name) in attack_list:
     print("Executing attack: %s" % attack_name)
-    logits, labels, x_adv = run_attack(
-      model_fn, dataset_iter, attack_fn, max_num_batches=1)
+
+    # Tee the data_iter so that we can use it multiple times without depletion
+    data_iter, data_iter_copy = tee(data_iter)
+    logits, labels, x_adv = run_attack(model_fn, data_iter_copy, attack_fn, max_num_batches=1)
 
     preds = (logits[:, 0] < logits[:, 1]).astype(np.int64)
     correct = np.equal(preds, labels).astype(np.float32)
@@ -69,7 +73,6 @@ def evaluate_tcu_model(model_fn, dataset_iter, attack_list, model_fn_name=None):
 
     cov_to_confident_error_idxs = get_coverage_to_confident_error_idxs(
       coverages, preds, confidences, labels, )
-
 
     plotting.plot_confident_error_rate(
       coverages, cov_to_confident_error_idxs, len(labels), attack_name, results_dir,
@@ -103,7 +106,7 @@ def get_coverage_to_confident_error_idxs(coverages, preds, confidences, y_true):
 def evaluate_tcu_mnist_model(model_fn, dataset_iter):
   spsa_attack = attacks.SpsaAttack(model_fn, (28, 28, 1), epsilon=0.3)
   return evaluate_tcu_model(model_fn, dataset_iter, [
-    # (attacks.null_attack, 'null_attack'),
+    (attacks.null_attack, 'null_attack'),
     (spsa_attack, 'spsa_attack'),
     (lambda model, x, y: attacks.spatial_attack(
       model, x, y,
