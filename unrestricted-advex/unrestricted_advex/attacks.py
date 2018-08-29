@@ -11,39 +11,35 @@ from cleverhans.model import Model
 from six.moves import xrange
 
 
-class CleverhansModelWrapper(Model):
-  def __init__(self, model_fn):
-    """
-    Wrap a callable function that takes a numpy array of shape (N, C, H, W),
-    and outputs a numpy vector of length N, with each element in range [0, 1].
-    """
-    self.nb_classes = 2
-    self.model_fn = model_fn
+class Attack(object):
+  name = 'unnamed_attack'
 
-  def fprop(self, x, **kwargs):
-    logits_op = tf.py_func(self.model_fn, [x], tf.float32)
-    return {'logits': logits_op}
+  def __call__(self, *args, **kwargs):
+    raise NotImplementedError()
 
 
-def null_attack(model, x_np, y_np):
-  del model, y_np  # unused
-  return x_np
+class NullAttack(Attack):
+  name = 'null_attack'
+
+  def __call__(self, model_fn, x_np, y_np):
+    del model_fn, y_np  # unused
+    return x_np
 
 
-class SpsaAttack(object):
+class SpsaAttack(Attack):
   name = 'spsa_attack'
 
-  def __init__(self, model, img_shape, epsilon=(16. / 255), is_debug=False):
+  def __init__(self, model, image_shape_hwc, epsilon=(16. / 255), is_debug=False):
     self.graph = tf.Graph()
 
     with self.graph.as_default():
       self.sess = tf.Session(graph=self.graph)
 
-      self.x_input = tf.placeholder(tf.float32, shape=(1,) + img_shape)
+      self.x_input = tf.placeholder(tf.float32, shape=(1,) + image_shape_hwc)
       self.y_label = tf.placeholder(tf.int32, shape=(1,))
 
       self.model = model
-      attack = SPSA(CleverhansModelWrapper(self.model), sess=self.sess)
+      attack = SPSA(CleverhansPyfuncModelWrapper(self.model), sess=self.sess)
       self.x_adv = attack.generate(
         self.x_input,
         y=self.y_label,
@@ -71,42 +67,17 @@ class SpsaAttack(object):
       return np.concatenate(all_x_adv_np)
 
 
-def spatial_attack(model, x_np, y_np,
-                   spatial_limits=[10, 10, 20],
-                   grid_granularity=[5, 5, 21],
-                   black_border_size=60,
-                   valid_check=None):
-  attack = SpatialGridAttack(
-    model,
-    image_shape_hwc=x_np.shape[1:],
-    spatial_limits=spatial_limits,
-    grid_granularity=grid_granularity,
-    black_border_size=black_border_size,
-    valid_check=valid_check,
-  )
-  return attack.perturb_grid(x_input_np=x_np, y_input_np=y_np)
+class SpatialGridAttack(Attack):
+  name = 'spatial'
 
-
-def _sparse_softmax_cross_entropy_with_logits_from_numpy(logits_np, labels_np, graph, sess):
-  """Helper that calls the TF sparse_softmax_cross_entropy_with_logits function"""
-  with graph.as_default():
-    labels_tf = tf.placeholder(tf.int32, [None])
-    logits_tf = tf.placeholder(tf.float32, [None, None])
-    xent_tf = tf.nn.sparse_softmax_cross_entropy_with_logits(
-      labels=labels_tf, logits=logits_tf)
-    return sess.run(xent_tf, feed_dict={
-      labels_tf: labels_np, logits_tf: logits_np})
-
-
-class SpatialGridAttack:
-  def __init__(self, model, image_shape_hwc,
+  def __init__(self, image_shape_hwc,
                spatial_limits,
                grid_granularity,
                black_border_size,
-               valid_check,
+               valid_check=False,
                ):
     """
-    :param model: a callable: batch-input -> batch-probability in [0, 1]
+    :param model_fn: a callable: batch-input -> batch-probability in [0, 1]
     :param spatial_limits:
     :param grid_granularity:
     """
@@ -135,15 +106,14 @@ class SpatialGridAttack:
       )
       self.session = tf.Session()
 
-    self.model = model
     self.grid_store = []
 
-  def perturb_grid(self, x_input_np, y_input_np):
-    n = len(x_input_np)
+  def __call__(self, model_fn, x_np, y_np):
+    n = len(x_np)
     grid = product(*list(np.linspace(-l, l, num=g)
                          for l, g in zip(self.limits, self.granularity)))
 
-    worst_x = np.copy(x_input_np)
+    worst_x = np.copy(x_np)
     max_xent = np.zeros(n)
     all_correct = np.ones(n).astype(bool)
 
@@ -151,7 +121,7 @@ class SpatialGridAttack:
       repeat([0, 0, 0], n))
     with self.graph.as_default():
       x_downsize_np = self.session.run(self._tranformed_x_op, feed_dict={
-        self._x_for_trans: x_input_np,
+        self._x_for_trans: x_np,
         self._t_for_trans: trans_np,
 
       })
@@ -163,19 +133,19 @@ class SpatialGridAttack:
       # Apply the spatial attack
       with self.graph.as_default():
         x_np = self.session.run(self._tranformed_x_op, feed_dict={
-          self._x_for_trans: x_input_np,
+          self._x_for_trans: x_np,
           self._t_for_trans: trans_np,
 
         })
-      # See how the model performs on the perturbed input
-      logits = self.model(x_np)
+      # See how the model_fn performs on the perturbed input
+      logits = model_fn(x_np)
       preds = np.argmax(logits, axis=1)
 
       cur_xent = _sparse_softmax_cross_entropy_with_logits_from_numpy(
-        logits, y_input_np, self.graph, self.session)
+        logits, y_np, self.graph, self.session)
 
       cur_xent = np.asarray(cur_xent)
-      cur_correct = np.equal(y_input_np, preds)
+      cur_correct = np.equal(y_np, preds)
 
       if self.valid_check is not None:
         is_valid = self.valid_check(x_downsize_np, x_np)
@@ -196,6 +166,17 @@ class SpatialGridAttack:
       worst_x = np.where(idx, x_np, worst_x, )  # shape (bsize, 32, 32, 3)
 
     return worst_x
+
+
+def _sparse_softmax_cross_entropy_with_logits_from_numpy(logits_np, labels_np, graph, sess):
+  """Helper that calls the TF sparse_softmax_cross_entropy_with_logits function"""
+  with graph.as_default():
+    labels_tf = tf.placeholder(tf.int32, [None])
+    logits_tf = tf.placeholder(tf.float32, [None, None])
+    xent_tf = tf.nn.sparse_softmax_cross_entropy_with_logits(
+      labels=labels_tf, logits=logits_tf)
+    return sess.run(xent_tf, feed_dict={
+      labels_tf: labels_np, logits_tf: logits_np})
 
 
 def apply_black_border(x, image_height, image_width, border_size):
@@ -227,3 +208,17 @@ def apply_transformation(x, transform, image_height, image_width):
   x = tf.contrib.image.transform(x, trans, interpolation='BILINEAR')
   return tf.image.resize_image_with_crop_or_pad(
     x, image_height, image_width)
+
+
+class CleverhansPyfuncModelWrapper(Model):
+  def __init__(self, model_fn):
+    """
+    Wrap a callable function that takes a numpy array of shape (N, C, H, W),
+    and outputs a numpy vector of length N, with each element in range [0, 1].
+    """
+    self.nb_classes = 2
+    self.model_fn = model_fn
+
+  def fprop(self, x, **kwargs):
+    logits_op = tf.py_func(self.model_fn, [x], tf.float32)
+    return {'logits': logits_op}

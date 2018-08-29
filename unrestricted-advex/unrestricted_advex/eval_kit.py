@@ -10,13 +10,12 @@ from unrestricted_advex import attacks, load_models, plotting
 
 EVAL_WITH_ATTACKS_DIR = '/tmp/eval_with_attacks'
 
-
 def run_attack(model, data_iter, attack_fn, ):
-  """ Runs an attack on the model and returns the results
+  """ Runs an attack on the model_fn and returns the results
 
   :param model: Callable batch-input -> batch-probability in [0, 1]
   :param data_iter: NHWC data iterator
-  :param attack_fn: Callable (model, x_np, y_np) -> x_adv
+  :param attack_fn: Callable (model_fn, x_np, y_np) -> x_adv
   :return: (logits, labels, x_adv)
   """
   all_labels = []
@@ -39,26 +38,26 @@ def run_attack(model, data_iter, attack_fn, ):
           np.concatenate(all_xadv))
 
 
-def evaluate_tcu_model(model_fn, data_iter, attack_list, model_fn_name=None):
+def evaluate_tcu_model(model_fn, data_iter, attacks, model_fn_name=None):
   """
-  Evaluates a model on a set of attacks and creates plots
+  Evaluates a model_fn on a set of attacks and creates plots
   :param model_fn: A function mapping images to logits
   :param dataset_iter: An iterable that returns (batched_images, batched_labels)
-  :param attack_list: A list of tuples of (attack_fn, attack_name)
-  :param model_fn_name: An optional model name
+  :param attacks: A list of callable Attacks
+  :param model_fn_name: An optional model_fn name
   """
   dataset = list(data_iter)
-  for (attack_fn, attack_name) in attack_list:
-    print("Executing attack: %s" % attack_name)
+  for attack in attacks:
+    print("Executing attack: %s" % attack.name)
 
-    logits, labels, x_adv = run_attack(model_fn, dataset, attack_fn)
+    logits, labels, x_adv = run_attack(model_fn, dataset, attack)
 
     preds = (logits[:, 0] < logits[:, 1]).astype(np.int64)
     correct = np.equal(preds, labels).astype(np.float32)
     correct_fracs = np.sum(correct, axis=0) / len(labels)
-    print("Fraction correct under %s: %.3f" % (attack_name, correct_fracs))
+    print("Fraction correct under %s: %.3f" % (attack.name, correct_fracs))
 
-    results_dir = os.path.join(EVAL_WITH_ATTACKS_DIR, attack_name)
+    results_dir = os.path.join(EVAL_WITH_ATTACKS_DIR, attack.name)
     plotting.save_correct_and_incorrect_adv_images(x_adv, correct, results_dir)
 
     # Confidence is the value of the larger of the two logits
@@ -71,7 +70,7 @@ def evaluate_tcu_model(model_fn, data_iter, attack_list, model_fn_name=None):
       coverages, preds, confidences, labels, )
 
     plotting.plot_confident_error_rate(
-      coverages, cov_to_confident_error_idxs, len(labels), attack_name, results_dir,
+      coverages, cov_to_confident_error_idxs, len(labels), attack.name, results_dir,
       legend=model_fn_name)
 
 
@@ -100,33 +99,42 @@ def get_coverage_to_confident_error_idxs(coverages, preds, confidences, y_true):
 
 
 def evaluate_tcu_mnist_model(model_fn, dataset_iter):
-  spsa_attack = attacks.SpsaAttack(model_fn, (28, 28, 1), epsilon=0.3)
   return evaluate_tcu_model(model_fn, dataset_iter, [
-    (attacks.null_attack, 'null_attack'),
-    (spsa_attack, 'spsa_attack'),
-    (lambda model, x, y: attacks.spatial_attack(
-      model, x, y,
+    attacks.NullAttack(),
+    attacks.SpsaAttack(
+      model_fn,
+      image_shape_hwc=(28, 28, 1),
+      epsilon=0.3),
+    attacks.SpatialGridAttack(
+      image_shape_hwc=(28, 28, 1),
       spatial_limits=[10, 10, 10],
       grid_granularity=[10, 10, 10],
       black_border_size=4,
       valid_check=mnist_valid_check),
-     'spatial_attack'),
   ])
 
 
 def evaluate_tcu_images_model(model_fn, dataset_iter, model_fn_name=None):
-  spsa_attack = attacks.SpsaAttack(model_fn, (224, 224, 3))
-  return evaluate_tcu_model(model_fn, dataset_iter, [
-    (attacks.null_attack, 'null_attack'),
-    #    (attacks.spatial_attack, 'spatial_attack'),
-    #    (spsa_attack, 'spsa_attack'),
-  ], model_fn_name=model_fn_name)
+  return evaluate_tcu_model(model_fn, dataset_iter, model_fn_name= model_fn_name, attacks=[
+    attacks.NullAttack(),
+    attacks.SpsaAttack(
+      model_fn,
+      image_shape_hwc=(224, 224, 3),
+      epsilon=(16. / 255)),
+    attacks.SpatialGridAttack(
+      image_shape_hwc=(224, 224, 3),
+      spatial_limits=[18, 18, 30],
+      grid_granularity=[5, 5, 31],
+      black_border_size=0)
+  ])
+
+
 
 
 def main():
   model_fn = load_models.get_keras_tcu_model()
   dataset_iter = load_models.get_tcu_dataset_iter(batch_size=32)
-  evaluate_tcu_images_model(model_fn, dataset_iter, model_fn_name='Keras TCU model')
+  evaluate_tcu_images_model(model_fn, dataset_iter, model_fn_name='Keras TCU model_fn')
 
 
 if __name__ == '__main__':
