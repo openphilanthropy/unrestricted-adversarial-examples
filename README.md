@@ -37,6 +37,8 @@ First install the requirements
 git clone git@github.com:google/unrestricted-adversarial-examples.git
 cd unrestricted-adversarial-examples
 
+apt-get install imagemagick
+
 pip install -e tcu-images
 pip install -e unrestricted-advex
 ```
