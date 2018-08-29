@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from cleverhans.attacks import MadryEtAl
 from tensorflow.examples.tutorials.mnist import input_data
-from unrestricted_advex.mnist_baselines import mnist_model
+from unrestricted_advex.mnist_baselines import mnist_convnet
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -20,7 +20,7 @@ def main(_):
   x_input = tf.placeholder(tf.float32, (None, 28, 28, 1))
   y_input = tf.placeholder(tf.float32, [None, 10])
 
-  model = mnist_model.Model()
+  model = mnist_convnet.Model()
   logits = model(x_input)
 
   loss = tf.nn.softmax_cross_entropy_with_logits(labels=y_input,
