@@ -43,8 +43,7 @@ pip install -e unrestricted-advex
 
 Confirm that the baseline defense runs correctly for you by running a model. It should print scores that match the leaderboard above.
 ```bash
-pip install -r baselines/undefended_pytorch_resnet/requirements.txt
-python baselines/undefended_pytorch_resnet/main.py
+CUDA_VISIBLE_DEVICES=0 python baselines/undefended_keras_resnet/main.py
 ```
 
 ##### To be evaluated against our fixed warm-up attacks, your defense must implement the following API

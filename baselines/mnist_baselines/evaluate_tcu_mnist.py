@@ -33,5 +33,5 @@ with tf.Session() as sess:
   def np_tcu_model(x):
     return sess.run(logits, {x_input: x})
 
-  eval_kit.evaluate_mnist_tcu_model(np_tcu_model,
+  eval_kit.evaluate_tcu_mnist_model(np_tcu_model,
                                     iterator())

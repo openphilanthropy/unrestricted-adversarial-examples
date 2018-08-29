@@ -12,29 +12,6 @@ from tcu_images import CLASS_NAME_TO_IMAGENET_CLASS, BICYCLE_IDX, BIRD_IDX
 from tensorflow.keras.applications.resnet50 import preprocess_input
 
 
-def get_tcu_dataset_iter(batch_size, shuffle=True):
-  data_dir = tcu_images.get_dataset('train')
-
-  train_dataset = torchvision.datasets.ImageFolder(
-    data_dir,
-    torchvision.transforms.Compose([
-      torchvision.transforms.Resize(224),
-      torchvision.transforms.ToTensor(),
-      lambda x: torch.einsum('chw->hwc', [x]),
-    ]))
-
-  data_loader = torch.utils.data.DataLoader(
-    train_dataset,
-    batch_size=batch_size,
-    shuffle=shuffle)
-
-  assert train_dataset.class_to_idx['bicycle'] == BICYCLE_IDX
-  assert train_dataset.class_to_idx['bird'] == BIRD_IDX
-
-  dataset_iter = [(x.numpy(), y.numpy()) for (x, y) in iter(data_loader)]
-  return dataset_iter
-
-
 def get_torch_tcu_model():
   print(
     "WARNING: Torch model currently only gets 50% top1 accuracy and may have a preprocessing issue")
