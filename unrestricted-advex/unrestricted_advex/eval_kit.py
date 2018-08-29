@@ -6,7 +6,7 @@ from __future__ import print_function
 import os
 
 import numpy as np
-from unrestricted_advex import attacks, load_models, plotting
+from unrestricted_advex import attacks, plotting
 
 EVAL_WITH_ATTACKS_DIR = '/tmp/eval_with_attacks'
 
@@ -67,7 +67,7 @@ def evaluate_tcu_model(model_fn, data_iter, attack_list, model_name=None):
     # We will plot accuracy at various coverages
     coverages = np.linspace(0.01, .99, 99)
 
-    cov_to_confident_error_idxs = get_coverage_to_confident_error_idxs(
+    cov_to_confident_error_idxs = _get_coverage_to_confident_error_idxs(
       coverages, preds, confidences, labels, )
 
     plotting.plot_confident_error_rate(
@@ -75,14 +75,7 @@ def evaluate_tcu_model(model_fn, data_iter, attack_list, model_name=None):
       legend=model_name)
 
 
-def mnist_valid_check(before, after):
-  weight_before = np.sum(np.abs(before), axis=(1, 2, 3))
-  weight_after = np.sum(np.abs(after), axis=(1, 2, 3))
-
-  return np.abs(weight_after - weight_before) < weight_before * .1
-
-
-def get_coverage_to_confident_error_idxs(coverages, preds, confidences, y_true):
+def _get_coverage_to_confident_error_idxs(coverages, preds, confidences, y_true):
   """Returns a list of confident error indices for each coverage"""
   sorted_confidences = list(sorted(confidences, reverse=True))
 
@@ -100,6 +93,18 @@ def get_coverage_to_confident_error_idxs(coverages, preds, confidences, y_true):
 
 
 def evaluate_tcu_mnist_model(model_fn, dataset_iter, model_name=None):
+  """
+  Evaluates a TCU-MNIST model_fn on a default set of attacks and creates plots
+  :param model_fn: A function mapping images to logits
+  :param dataset_iter: An iterable that returns (batched_images, batched_labels)
+  :param model_name: An optional model_fn name
+  """
+
+  def _mnist_valid_check(before, after):
+    weight_before = np.sum(np.abs(before), axis=(1, 2, 3))
+    weight_after = np.sum(np.abs(after), axis=(1, 2, 3))
+    return np.abs(weight_after - weight_before) < weight_before * .1
+
   attack_list = [
     attacks.NullAttack(),
     attacks.SpsaAttack(
@@ -111,7 +116,7 @@ def evaluate_tcu_mnist_model(model_fn, dataset_iter, model_name=None):
       spatial_limits=[10, 10, 10],
       grid_granularity=[10, 10, 10],
       black_border_size=4,
-      valid_check=mnist_valid_check),
+      valid_check=_mnist_valid_check),
   ]
 
   return evaluate_tcu_model(model_fn, dataset_iter,
@@ -120,6 +125,12 @@ def evaluate_tcu_mnist_model(model_fn, dataset_iter, model_name=None):
 
 
 def evaluate_tcu_images_model(model_fn, dataset_iter, model_name=None):
+  """
+  Evaluates an TCU-Images model_fn on a default set of attacks and creates plots
+  :param model_fn: A function mapping images to logits
+  :param dataset_iter: An iterable that returns (batched_images, batched_labels)
+  :param model_name: An optional model_fn name
+  """
   attack_list = [
     attacks.NullAttack(),
     attacks.SpsaAttack(
@@ -135,13 +146,3 @@ def evaluate_tcu_images_model(model_fn, dataset_iter, model_name=None):
   return evaluate_tcu_model(model_fn, dataset_iter,
                             model_name=model_name,
                             attack_list=attack_list)
-
-
-def main():
-  model_fn = load_models.get_keras_tcu_model()
-  dataset_iter = load_models.get_tcu_dataset_iter(batch_size=32)
-  evaluate_tcu_images_model(model_fn, dataset_iter, model_name='Keras TCU model_fn')
-
-
-if __name__ == '__main__':
-  main()
