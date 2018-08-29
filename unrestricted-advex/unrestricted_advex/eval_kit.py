@@ -10,6 +10,7 @@ from unrestricted_advex import attacks, load_models, plotting
 
 EVAL_WITH_ATTACKS_DIR = '/tmp/eval_with_attacks'
 
+
 def run_attack(model, data_iter, attack_fn, ):
   """ Runs an attack on the model_fn and returns the results
 
@@ -38,16 +39,16 @@ def run_attack(model, data_iter, attack_fn, ):
           np.concatenate(all_xadv))
 
 
-def evaluate_tcu_model(model_fn, data_iter, attacks, model_fn_name=None):
+def evaluate_tcu_model(model_fn, data_iter, attack_list, model_name=None):
   """
   Evaluates a model_fn on a set of attacks and creates plots
   :param model_fn: A function mapping images to logits
   :param dataset_iter: An iterable that returns (batched_images, batched_labels)
-  :param attacks: A list of callable Attacks
-  :param model_fn_name: An optional model_fn name
+  :param attack_list: A list of callable Attacks
+  :param model_name: An optional model_fn name
   """
   dataset = list(data_iter)
-  for attack in attacks:
+  for attack in attack_list:
     print("Executing attack: %s" % attack.name)
 
     logits, labels, x_adv = run_attack(model_fn, dataset, attack)
@@ -71,7 +72,7 @@ def evaluate_tcu_model(model_fn, data_iter, attacks, model_fn_name=None):
 
     plotting.plot_confident_error_rate(
       coverages, cov_to_confident_error_idxs, len(labels), attack.name, results_dir,
-      legend=model_fn_name)
+      legend=model_name)
 
 
 def mnist_valid_check(before, after):
@@ -98,8 +99,8 @@ def get_coverage_to_confident_error_idxs(coverages, preds, confidences, y_true):
   return cov_to_confident_error_idxs
 
 
-def evaluate_tcu_mnist_model(model_fn, dataset_iter):
-  return evaluate_tcu_model(model_fn, dataset_iter, [
+def evaluate_tcu_mnist_model(model_fn, dataset_iter, model_name=None):
+  attack_list = [
     attacks.NullAttack(),
     attacks.SpsaAttack(
       model_fn,
@@ -111,11 +112,15 @@ def evaluate_tcu_mnist_model(model_fn, dataset_iter):
       grid_granularity=[10, 10, 10],
       black_border_size=4,
       valid_check=mnist_valid_check),
-  ])
+  ]
+
+  return evaluate_tcu_model(model_fn, dataset_iter,
+                            model_name=model_name,
+                            attack_list=attack_list)
 
 
-def evaluate_tcu_images_model(model_fn, dataset_iter, model_fn_name=None):
-  return evaluate_tcu_model(model_fn, dataset_iter, model_fn_name= model_fn_name, attacks=[
+def evaluate_tcu_images_model(model_fn, dataset_iter, model_name=None):
+  attack_list = [
     attacks.NullAttack(),
     attacks.SpsaAttack(
       model_fn,
@@ -126,15 +131,16 @@ def evaluate_tcu_images_model(model_fn, dataset_iter, model_fn_name=None):
       spatial_limits=[18, 18, 30],
       grid_granularity=[5, 5, 31],
       black_border_size=0)
-  ])
-
-
+  ]
+  return evaluate_tcu_model(model_fn, dataset_iter,
+                            model_name=model_name,
+                            attack_list=attack_list)
 
 
 def main():
   model_fn = load_models.get_keras_tcu_model()
   dataset_iter = load_models.get_tcu_dataset_iter(batch_size=32)
-  evaluate_tcu_images_model(model_fn, dataset_iter, model_fn_name='Keras TCU model_fn')
+  evaluate_tcu_images_model(model_fn, dataset_iter, model_name='Keras TCU model_fn')
 
 
 if __name__ == '__main__':
