@@ -33,7 +33,7 @@ def null_attack(model, x_np, y_np):
 class SpsaAttack(object):
   name = 'spsa_attack'
 
-  def __init__(self, model, img_shape, epsilon=(16. / 255)):
+  def __init__(self, model, img_shape, epsilon=(16. / 255), is_debug=False):
     self.graph = tf.Graph()
 
     with self.graph.as_default():
@@ -51,7 +51,7 @@ class SpsaAttack(object):
         num_steps=200,
         early_stop_loss_threshold=-1.,
         spsa_samples=32,
-        is_debug=True)
+        is_debug=is_debug)
 
     self.graph.finalize()
 
