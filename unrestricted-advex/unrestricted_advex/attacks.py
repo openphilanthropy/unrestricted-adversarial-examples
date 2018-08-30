@@ -46,7 +46,7 @@ class SpsaAttack(Attack):
         epsilon=epsilon,
         num_steps=200,
         early_stop_loss_threshold=-1.,
-        spsa_samples=32,
+        batch_size=32,
         is_debug=is_debug)
 
     self.graph.finalize()
@@ -216,7 +216,7 @@ class CleverhansPyfuncModelWrapper(Model):
     Wrap a callable function that takes a numpy array of shape (N, C, H, W),
     and outputs a numpy vector of length N, with each element in range [0, 1].
     """
-    self.nb_classes = 2
+    self.num_classes = 2
     self.model_fn = model_fn
 
   def fprop(self, x, **kwargs):
