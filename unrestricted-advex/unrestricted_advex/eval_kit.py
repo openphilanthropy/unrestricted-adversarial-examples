@@ -107,6 +107,9 @@ def evaluate_tcu_mnist_model(model_fn, dataset_iter, model_name=None):
     return np.abs(weight_after - weight_before) < weight_before * .1
 
   attack_list = [
+    attacks.BoundaryAttack(
+      model_fn,
+      max_l2_distortion=4),
     attacks.NullAttack(),
     attacks.SpsaAttack(
       model_fn,
