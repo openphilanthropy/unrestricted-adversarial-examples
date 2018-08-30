@@ -57,6 +57,13 @@ CUDA_VISIBLE_DEVICES=0 python train_tcu_mnist.py --total_batches 10000
 # 9900 Clean accuracy 1.0 loss 0.00033166306
 
 CUDA_VISIBLE_DEVICES=0 python evaluate_tcu_mnist.py
+# Outputs look like
+# Executing attack: null_attack
+# Fraction correct under null_attack: 1.000
+# Executing attack: spsa_attack
+# Fraction correct under spsa_attack: 0.016
+# Executing attack: spatial
+# Fraction correct under spatial: 0.117
 ```
 
 You can also run our attacks that
