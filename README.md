@@ -1,6 +1,6 @@
 # Unrestricted Adversarial Examples Challenge
 
-In the Unrestricted Adversarial Examples Challenge, attackers submit arbitrary adversarial inputs, and defenders are expected to assign low confidence to difficult inputs while retaining high confidence and accuracy on a clean, unambiguous test set. 
+In the Unrestricted Adversarial Examples Challenge, attackers submit arbitrary adversarial inputs, and defenders are expected to assign low confidence to difficult inputs while retaining high confidence and accuracy on a clean, unambiguous test set.
 
 You can learn more about the motivation and structure of the contest in our recent paper:
 
@@ -8,12 +8,12 @@ You can learn more about the motivation and structure of the contest in our rece
 *Authors*<br>
 [http://arxiv.org/](http://arxiv.org/)
 
-This repository contains code for the warm-up to the challenge, as well as [the public proposal for the contest](https://github.com/google/unrestricted-adversarial-examples/blob/master/contest_proposal.md). 
+This repository contains code for the warm-up to the challenge, as well as [the public proposal for the contest](https://github.com/google/unrestricted-adversarial-examples/blob/master/contest_proposal.md).
 
 ![image](https://user-images.githubusercontent.com/306655/44686400-f0b74800-aa02-11e8-8967-fa354244813f.png)
 
 
-  
+
 ## Warm-up phase
 ### <a name="leaderboard"></a>Leaderboard
 
@@ -32,7 +32,8 @@ We include three attacks in the warm-up phase of the challenge
 
 ### Implementing a defense
 
-First install the requirements
+First install the requirements (assuming you already have working installation
+of Tensorflow or pytorch)
 ```bash
 git clone git@github.com:google/unrestricted-adversarial-examples.git
 cd unrestricted-adversarial-examples
@@ -43,14 +44,14 @@ pip install -e tcu-images
 pip install -e unrestricted-advex
 ```
 
-Confirm that your setup runs correctly by training and evaluating an MNIST model. 
+Confirm that your setup runs correctly by training and evaluating an MNIST model.
 ```bash
 cd unrestricted-advex/unrestricted_advex/mnist_baselines
 CUDA_VISIBLE_DEVICES=0 python train_tcu_mnist.py --total_batches 10000
 CUDA_VISIBLE_DEVICES=0 python evaluate_tcu_mnist.py
 ```
 
-You can also run our attacks that 
+You can also run our attacks that
 It should print scores that match the leaderboard above.
 
 ##### To be evaluated against our fixed warm-up attacks, your defense must implement the following API
@@ -66,7 +67,7 @@ def my_very_robust_model(images_nchw):
   """This function implements a valid unrestricted advex defense"""
   logits = np.random.randn(batch_size, 2)
   return logits
-  
+
 from unrestricted_advex import eval_kit
 eval_kit.evaluate_tcu_images_model(my_very_robust_model, batch_size=batch_size)
 ```
@@ -84,4 +85,4 @@ For ease of evaluation, your model must also maintain a throughput of at least *
 
 The contest phase will begin after the warm-up attacks have been conclusively solved. We have published the [contest proposal](https://github.com/google/unrestricted-adversarial-examples/blob/master/contest_proposal.md) and are soliciting feedback from the community.
 
-## Authors 
+## Authors

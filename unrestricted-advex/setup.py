@@ -10,5 +10,6 @@ setup(
     packages=['unrestricted_advex'],
     install_requires=[
         'tqdm',
+        'cleverhans'
     ],
 )
