@@ -48,6 +48,14 @@ Confirm that your setup runs correctly by training and evaluating an MNIST model
 ```bash
 cd unrestricted-advex/unrestricted_advex/mnist_baselines
 CUDA_VISIBLE_DEVICES=0 python train_tcu_mnist.py --total_batches 10000
+# Outputs look like
+# 0 Clean accuracy 0.046875 loss 2.3123064
+# 100 Clean accuracy 0.9140625 loss 0.24851117
+# 200 Clean accuracy 0.953125 loss 0.1622512
+# ...
+# 9800 Clean accuracy 1.0 loss 0.004472881
+# 9900 Clean accuracy 1.0 loss 0.00033166306
+
 CUDA_VISIBLE_DEVICES=0 python evaluate_tcu_mnist.py
 ```
 
