@@ -8,6 +8,7 @@ import numpy as np
 import tensorflow as tf
 from cleverhans.attacks import SPSA
 from cleverhans.model import Model
+from foolbox.attacks import BoundaryAttack as FoolboxBoundaryAttack
 from six.moves import xrange
 
 
@@ -65,6 +66,29 @@ class SpsaAttack(Attack):
         })
         all_x_adv_np.append(x_adv_np)
       return np.concatenate(all_x_adv_np)
+
+class BoundaryAttack(object):
+  def __init__(self, model, img_shape, epsilon=(16. / 255)):
+
+    class Model:
+      def bounds(self):
+        return [0,1]
+
+      def predictions(self, img):
+        r = model(img[np.newaxis,:,:,:])[0]
+        return r
+
+      def batch_predictions(self, img):
+        r = model(img)
+        return r
+
+    self.attack = FoolboxBoundaryAttack(model=Model())
+
+  def __call__(self, model, x_np, y_np):
+    r = []
+    for i in range(len(x_np)):
+      r.append(self.attack(x_np[i], y_np[i]))
+    return r
 
 
 class SpatialGridAttack(Attack):
