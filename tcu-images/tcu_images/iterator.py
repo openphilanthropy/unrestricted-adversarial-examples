@@ -7,7 +7,7 @@ from tcu_images import BICYCLE_IDX, BIRD_IDX
 def get_iterator(split='train', batch_size=32, shuffle=True):
   """ Create a backend-agnostic iterator for the dataset.
   Images are formatted in channels-last in the Tensorflow style
-
+  :param split: One of ['train', 'test', 'extras']
   :param batch_size: The number of images and labels in each batch
   :param shuffle: Whether or not to shuffle
   :return:  An iterable that returns (batched_images, batched_labels)

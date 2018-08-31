@@ -77,15 +77,14 @@ It must be a function that takes in batched images, and returns two scalar logit
 ```python
 import numpy as np
 
-batch_size = 32
-
-def my_very_robust_model(images_nchw):
+def my_very_robust_model(images_batch_nchw):
   """This function implements a valid unrestricted advex defense"""
+  batch_size = len(images_batch_nchw)
   logits = np.random.randn(batch_size, 2)
   return logits
 
 from unrestricted_advex import eval_kit
-eval_kit.evaluate_tcu_images_model(my_very_robust_model, batch_size=batch_size)
+eval_kit.evaluate_tcu_images_model(my_very_robust_model)
 ```
 
 For ease of evaluation, your model must also maintain a throughput of at least **100 images per second** when evaluated on a P100 GPU on TCU-Images

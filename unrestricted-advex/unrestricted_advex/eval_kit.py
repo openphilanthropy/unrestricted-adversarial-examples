@@ -6,6 +6,7 @@ from __future__ import print_function
 import os
 
 import numpy as np
+import tcu_images
 from tqdm import tqdm
 from unrestricted_advex import attacks, plotting
 
@@ -93,13 +94,15 @@ def _get_coverage_to_confident_error_idxs(coverages, preds, confidences, y_true)
   return cov_to_confident_error_idxs
 
 
-def evaluate_tcu_mnist_model(model_fn, dataset_iter, model_name=None):
+def evaluate_tcu_mnist_model(model_fn, dataset_iter=None, model_name=None):
   """
   Evaluates a TCU-MNIST model_fn on a default set of attacks and creates plots
   :param model_fn: A function mapping images to logits
   :param dataset_iter: An iterable that returns (batched_images, batched_labels)
   :param model_name: An optional model_fn name
   """
+  if dataset_iter is None:
+    raise NotImplementedError("TODO: add default tcu_mnist iterator")
 
   def _mnist_valid_check(before, after):
     weight_before = np.sum(np.abs(before), axis=(1, 2, 3))
@@ -128,13 +131,16 @@ def evaluate_tcu_mnist_model(model_fn, dataset_iter, model_name=None):
                             attack_list=attack_list)
 
 
-def evaluate_tcu_images_model(model_fn, dataset_iter, model_name=None):
+def evaluate_tcu_images_model(model_fn, dataset_iter=None, model_name=None):
   """
   Evaluates an TCU-Images model_fn on a default set of attacks and creates plots
   :param model_fn: A function mapping images to logits
   :param dataset_iter: An iterable that returns (batched_images, batched_labels)
   :param model_name: An optional model_fn name
   """
+  if dataset_iter is None:
+    dataset_iter = tcu_images.get_iterator('test')
+
   attack_list = [
     attacks.NullAttack(),
     attacks.SpsaAttack(
