@@ -96,6 +96,10 @@ For ease of evaluation, your model must also maintain a throughput of at least *
 - The 20% of images that resulted in logits with the lowest `confidence` are abstained on by the model and are discarded.
 - The model’s score is the **accuracy on points that were not abstained on**.
 
+##### Submitting your defense to the leaderboard
+
+After evaluating your defense you can submit it to [the leaderboard](#user-content-leaderboard) by [editing the table](https://github.com/google/unrestricted-adversarial-examples/edit/master/README.md) and creating a pull request that links to your defense. The challenge organizers will respond to the pull request within five business days.
+
 ## Contest phase
 
 The contest phase will begin after the warm-up attacks have been conclusively solved. We have published the [contest proposal](https://github.com/google/unrestricted-adversarial-examples/blob/master/contest_proposal.md) and are soliciting feedback from the community.
