@@ -100,6 +100,15 @@ For ease of evaluation, your model must also maintain a throughput of at least *
 
 After evaluating your defense you can submit it to [the leaderboard](#user-content-leaderboard) by [editing the table](https://github.com/google/unrestricted-adversarial-examples/edit/master/README.md) and creating a pull request that links to your defense. The challenge organizers will respond to the pull request within five business days.
 
+##### A note on uninteresting defenses that break the default attacks
+We expect there to be several uninteresting defenses that are “robust” against the fixed set of attacks we have developed. By “uninteresting” we mean defenses that were designed explicitly to stop the attacks we have developed, but not necessarily other attacks. 
+
+For example, it would be possible to break the confidence-based SPSA attack through gradient masking and not returning the true models’ confidence, but either 100% confidence or 0% for each input.
+
+We encourage defense creators to not design defenses that are intentionally uninteresting.
+ 
+
+
 ## Contest phase
 
 The contest phase will begin after the warm-up attacks have been conclusively solved. We have published the [contest proposal](https://github.com/google/unrestricted-adversarial-examples/blob/master/contest_proposal.md) and are soliciting feedback from the community.
