@@ -40,7 +40,6 @@ def show(img):
 def main(_):
   with tf.Session() as sess:
     model = mnist_convnet.Model(FLAGS.model_dir, sess)
-    # mnist_model = mnist_model.Model("models/clean/", sess)
     tcu_model = TCUWrapper(model)
     logits = tcu_model(x_input)
 
