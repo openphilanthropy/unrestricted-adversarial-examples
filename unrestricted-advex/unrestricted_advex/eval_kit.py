@@ -13,7 +13,7 @@ from unrestricted_advex import attacks, plotting
 EVAL_WITH_ATTACKS_DIR = '/tmp/eval_with_attacks'
 
 
-def run_attack(model, data_iter, attack_fn, ):
+def run_attack(model, data_iter, attack_fn):
   """ Runs an attack on the model_fn and returns the results
 
   :param model: Callable batch-input -> batch-probability in [0, 1]
@@ -49,11 +49,10 @@ def evaluate_tcu_model(model_fn, data_iter, attack_list, model_name=None):
   :param attack_list: A list of callable Attacks
   :param model_name: An optional model_fn name
   """
-  dataset = list(data_iter)
   for attack in attack_list:
     print("Executing attack: %s" % attack.name)
 
-    logits, labels, x_adv = run_attack(model_fn, dataset, attack)
+    logits, labels, x_adv = run_attack(model_fn, data_iter, attack)
 
     preds = (logits[:, 0] < logits[:, 1]).astype(np.int64)
     correct = np.equal(preds, labels).astype(np.float32)

@@ -56,7 +56,7 @@ Confirm that your setup runs correctly by training and evaluating an MNIST model
 ```bash
 cd unrestricted-advex/unrestricted_advex/mnist_baselines
 CUDA_VISIBLE_DEVICES=0 python train_tcu_mnist.py --total_batches 10000
-# Outputs look like
+# Outputs look like (specific numbers may vary)
 # 0 Clean accuracy 0.046875 loss 2.3123064
 # 100 Clean accuracy 0.9140625 loss 0.24851117
 # 200 Clean accuracy 0.953125 loss 0.1622512
@@ -65,14 +65,18 @@ CUDA_VISIBLE_DEVICES=0 python train_tcu_mnist.py --total_batches 10000
 # 9900 Clean accuracy 1.0 loss 0.00033166306
 
 CUDA_VISIBLE_DEVICES=0 python evaluate_tcu_mnist.py
+# Outputs look like (specific numbers may vary)
+# Executing attack: null_attack
+# Fraction correct under null_attack: 1.000
+# Executing attack: spsa_attack
+# Fraction correct under spsa_attack: 0.016
+# Executing attack: spatial
+# Fraction correct under spatial: 0.117
 ```
 
-You can also run our attacks that
-It should print scores that match the leaderboard above.
+#### To be evaluated against our fixed warm-up attacks, your defense must implement the following API
 
-##### To be evaluated against our fixed warm-up attacks, your defense must implement the following API
-
-It must be a function that takes in batched images, and returns two scalar logits between `[-inf, inf]`. These correspond to the likelihood the image corresponds to each of the two classes (e.g. the bicycle and bird class)
+It must be a function that takes in batched images, and returns two scalar (e.g. logits) between `(-inf, inf)`. These correspond to the likelihood the image corresponds to each of the two classes (e.g. the bicycle and bird class)
 
 ```python
 import numpy as np
