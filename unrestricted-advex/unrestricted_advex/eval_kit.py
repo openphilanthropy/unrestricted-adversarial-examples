@@ -101,6 +101,7 @@ def evaluate_tcu_mnist_model(model_fn, dataset_iter=None, model_name=None):
   :param model_name: An optional model_fn name
   """
   if dataset_iter is None:
+    # TODO: use iter_mnist_testset() from mnist_baselines.evaluate_tcu_mnist
     raise NotImplementedError("TODO: add default tcu_mnist iterator")
 
   def _mnist_valid_check(before, after):
