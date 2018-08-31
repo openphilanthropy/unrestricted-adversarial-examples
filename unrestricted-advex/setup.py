@@ -9,8 +9,8 @@ setup(
     url='https://github.com/google/unrestricted-advex',
     packages=['unrestricted_advex'],
     install_requires=[
-        'tqdm',
-        'cleverhans',
-        'foolbox',
+        'tqdm ~= 4.0',
+        'cleverhans ~= 2.1',
+        'foolbox ~= 1.3',
     ],
 )

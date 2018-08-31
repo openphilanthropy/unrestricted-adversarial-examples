@@ -22,8 +22,8 @@ setup(
   url='https://github.com/google/unrestricted-adversarial-examples/tcu-images',
   packages=['tcu_images'],
   install_requires=[
-    'awscli',
-    'torchvision',
+    'awscli ~= 1.0',
+    'torchvision ~= 0.2.0',
   ],
   scripts=[
     'bin/tcu-images-download',
