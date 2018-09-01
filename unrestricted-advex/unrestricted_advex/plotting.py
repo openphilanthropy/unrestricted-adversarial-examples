@@ -31,7 +31,9 @@ def save_correct_and_incorrect_adv_images(x_adv, correct, results_dir):
 
 def save_image_to_png(image_np, filename):
   from PIL import Image
-  os.makedirs(os.path.dirname(filename), exist_ok=True)
+  dirname = os.path.dirname(filename)
+  if not os.path.exists(dirname):
+    os.makedirs(dirname)
   if image_np.shape[-1] == 3:
     img = Image.fromarray(np.uint8(image_np * 255.), 'RGB')
   else:
