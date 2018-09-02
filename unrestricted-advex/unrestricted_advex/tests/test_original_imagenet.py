@@ -129,10 +129,10 @@ def evaluate_imagenet_model(model_fn, dataset_iter):
 
 
 def main():
-  tcu_dataset_iter = get_torch_imagenet_dataset_iter(batch_size=32)
+  dataset_iter = get_torch_imagenet_dataset_iter(batch_size=32)
   # model_fn = get_torch_imagenet_model()
   model_fn = get_keras_imagenet_model()
-  evaluate_imagenet_model(model_fn, tcu_dataset_iter)
+  evaluate_imagenet_model(model_fn, dataset_iter)
 
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ from examples.undefended_tf_resnet import BIRD_CLASSES, \
   BICYCLE_CLASSES
 from examples.undefended_tf_resnet import EvalModeAttackableModel
 from examples.undefended_tf_resnet import sess_with_loaded_model
-from examples.undefended_tf_resnet import tcu_imagenet_pipeline
+from examples.undefended_tf_resnet import bird_or_bicycle_tf_pipeline
 
 FLAGS = flags.FLAGS
 
@@ -21,7 +21,7 @@ def main(argv):
   model = EvalModeAttackableModel()
 
   # TODO: add optional shuffling
-  x_input, y_input = tcu_imagenet_pipeline.input_fn(
+  x_input, y_input = bird_or_bicycle_tf_pipeline.input_fn(
     shuffle=True).make_one_shot_iterator().get_next()
 
   with sess_with_loaded_model() as sess:

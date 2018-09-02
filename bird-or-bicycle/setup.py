@@ -14,13 +14,13 @@
 from setuptools import setup
 
 setup(
-  name='tcu-images',
+  name='bird-or-bicycle',
   version='0.0.2',
   description='Two-class unambiguous images. Follow the same dimensionality as ILSVRC 2012',
   author='Tom Brown',
   author_email='tombrown@google.com',
-  url='https://github.com/google/unrestricted-adversarial-examples/tcu-images',
-  packages=['tcu_images'],
+  url='https://github.com/google/unrestricted-adversarial-examples/bird-or-bicycle',
+  packages=['bird_or_bicyle'],
   install_requires=[
     # Use semantic versioning of dependencies
     # https://stackoverflow.com/questions/39590187/in-requirements-txt-what-does-tilde-equals-mean
@@ -28,7 +28,7 @@ setup(
     'torchvision ~= 0.2.0',
   ],
   scripts=[
-    'bin/tcu-images-download',
-    'bin/tcu-images-verify',
+    'bin/bird-or-bicycle-download',
+    'bin/bird-or-bicycle-verify',
   ]
 )

@@ -16,13 +16,7 @@ pip uninstall tensorboard-tensorflow tensorflow tensorflow-gpu
 pip install tensorflow-gpu==1.10.0rc1
 ```
 
-[Optional] Fetch checkpoints
-```bash
-mkdir -p /root/tb/tcu-imagenet/
-gsutil -m rsync -r gs://tomfeelslucky-experiments/tb/tcu-imagenet/ /root/tb/tcu-imagenet/
-```
-
-## Train resnet-50 on imagenet
+## Train resnet-50 on full imagenet
 
 This should take about 11 hours on 8 V100 GPUs and should result in an accuracy of 75.56%
 

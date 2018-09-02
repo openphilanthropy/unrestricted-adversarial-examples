@@ -1,7 +1,7 @@
-import tcu_images
+import bird_or_bicyle
 import torch
 import torchvision
-from tcu_images import BICYCLE_IDX, BIRD_IDX
+from bird_or_bicyle import BICYCLE_IDX, BIRD_IDX
 
 
 def get_iterator(split='train', batch_size=32, shuffle=True):
@@ -12,7 +12,7 @@ def get_iterator(split='train', batch_size=32, shuffle=True):
   :param shuffle: Whether or not to shuffle
   :return:  An iterable that returns (batched_images, batched_labels)
   """
-  data_dir = tcu_images.get_dataset(split)
+  data_dir = bird_or_bicyle.get_dataset(split)
 
   train_dataset = torchvision.datasets.ImageFolder(
     data_dir,

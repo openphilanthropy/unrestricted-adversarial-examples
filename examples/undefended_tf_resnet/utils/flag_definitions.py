@@ -42,7 +42,7 @@ def define_base():
   flags.DEFINE_string(
     name='eval_checkpoint_path',
     help='Path to load checkpoint from',
-    default="/root/tb/tcu-imagenet/full-imagenet-72b3e7c/model.ckpt-61250")
+    default="/root/tb/imagenet/full-imagenet-72b3e7c/model.ckpt-61250")
 
   flags.DEFINE_boolean(
     name="clean", default=False,

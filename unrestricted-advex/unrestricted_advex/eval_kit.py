@@ -5,8 +5,8 @@ from __future__ import print_function
 
 import os
 
+import bird_or_bicyle
 import numpy as np
-import tcu_images
 from tqdm import tqdm
 from unrestricted_advex import attacks, plotting
 
@@ -41,7 +41,7 @@ def run_attack(model, data_iter, attack_fn):
           np.concatenate(all_xadv))
 
 
-def evaluate_tcu_model(model_fn, data_iter, attack_list, model_name=None):
+def _evaluate_two_class_unambiguous_model(model_fn, data_iter, attack_list, model_name=None):
   """
   Evaluates a model_fn on a set of attacks and creates plots
   :param model_fn: A function mapping images to logits
@@ -93,16 +93,13 @@ def _get_coverage_to_confident_error_idxs(coverages, preds, confidences, y_true)
   return cov_to_confident_error_idxs
 
 
-def evaluate_tcu_mnist_model(model_fn, dataset_iter=None, model_name=None):
+def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None):
   """
-  Evaluates a TCU-MNIST model_fn on a default set of attacks and creates plots
+  Evaluates a two-class MNIST model_fn on a default set of attacks and creates plots
   :param model_fn: A function mapping images to logits
   :param dataset_iter: An iterable that returns (batched_images, batched_labels)
   :param model_name: An optional model_fn name
   """
-  if dataset_iter is None:
-    # TODO: use iter_mnist_testset() from mnist_baselines.evaluate_tcu_mnist
-    raise NotImplementedError("TODO: add default tcu_mnist iterator")
 
   def _mnist_valid_check(before, after):
     weight_before = np.sum(np.abs(before), axis=(1, 2, 3))
@@ -126,20 +123,21 @@ def evaluate_tcu_mnist_model(model_fn, dataset_iter=None, model_name=None):
       valid_check=_mnist_valid_check),
   ]
 
-  return evaluate_tcu_model(model_fn, dataset_iter,
-                            model_name=model_name,
-                            attack_list=attack_list)
+  return _evaluate_two_class_unambiguous_model(
+    model_fn, dataset_iter,
+    model_name=model_name,
+    attack_list=attack_list)
 
 
-def evaluate_tcu_images_model(model_fn, dataset_iter=None, model_name=None):
+def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None):
   """
-  Evaluates an TCU-Images model_fn on a default set of attacks and creates plots
+  Evaluates a bird_or_bicycle classifier on a default set of attacks and creates plots
   :param model_fn: A function mapping images to logits
   :param dataset_iter: An iterable that returns (batched_images, batched_labels)
   :param model_name: An optional model_fn name
   """
   if dataset_iter is None:
-    dataset_iter = tcu_images.get_iterator('test')
+    dataset_iter = bird_or_bicyle.get_iterator('test')
 
   attack_list = [
     attacks.NullAttack(),
@@ -153,6 +151,6 @@ def evaluate_tcu_images_model(model_fn, dataset_iter=None, model_name=None):
       grid_granularity=[5, 5, 31],
       black_border_size=0)
   ]
-  return evaluate_tcu_model(model_fn, dataset_iter,
-                            model_name=model_name,
-                            attack_list=attack_list)
+  return _evaluate_two_class_unambiguous_model(model_fn, dataset_iter,
+                                               model_name=model_name,
+                                               attack_list=attack_list)

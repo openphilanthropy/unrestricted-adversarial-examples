@@ -1,23 +1,33 @@
 import math
 
+import numpy as np
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 from unrestricted_advex import eval_kit
 from unrestricted_advex.mnist_baselines import mnist_convnet
-from unrestricted_advex.mnist_baselines.tcu_model import TCUWrapper
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string("model_dir", "/tmp/tcu-mnist/vanilla",
+flags.DEFINE_string("model_dir", "/tmp/two-class-mnist/vanilla",
                     "Where to put the trained model checkpoint")
-
 
 x_input = tf.placeholder(tf.float32, (None, 28, 28, 1))
 y_input = tf.placeholder(tf.int64, [None])
 
 
-def iter_mnist_testset(num_datapoints, batch_size, class1=7, class2=6):
+class TwoClassWrapper(object):
+  def __init__(self, mnist_model, classes=(6, 7)):
+    self.mnist_model = mnist_model
+    self.classes = classes
+
+  def __call__(self, xs):
+    logits = self.mnist_model(xs)
+    return tf.stack([logits[:, self.classes[0]], logits[:, self.classes[1]]], axis=1)
+
+
+def two_class_mnist_iter(num_datapoints, batch_size, class1=7, class2=6):
+  """Filter MNIST to only sevens and eights"""
   mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
   which = (mnist.test.labels == class1) | (mnist.test.labels == class2)
   images_2class = mnist.test.images[which].astype(np.float32)
@@ -40,15 +50,15 @@ def show(img):
 def main(_):
   with tf.Session() as sess:
     model = mnist_convnet.Model(FLAGS.model_dir, sess)
-    tcu_model = TCUWrapper(model)
-    logits = tcu_model(x_input)
+    two_class_model = TwoClassWrapper(model)
+    logits = two_class_model(x_input)
 
-    def np_tcu_model(x):
+    def np_model(x):
       return sess.run(logits, {x_input: x})
 
-    eval_kit.evaluate_tcu_mnist_model(
-      np_tcu_model,
-      iter_mnist_testset(num_datapoints=128, batch_size=128))
+    eval_kit.evaluate_two_class_mnist_model(
+      np_model,
+      two_class_mnist_iter(num_datapoints=128, batch_size=128))
 
 
 if __name__ == "__main__":

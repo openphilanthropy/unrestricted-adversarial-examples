@@ -8,15 +8,15 @@ import numpy as np
 import tensorflow as tf
 from absl import app as absl_app
 from absl import flags
-from keras.applications.resnet50 import preprocess_input
+from tensorflow.keras.applications.resnet50 import preprocess_input
 from tensorflow.keras.preprocessing import image as keras_image
 
 from examples.undefended_tf_resnet import IM_SHAPE
 
 flags.DEFINE_string(
-  name='tcu_imagenet_data',
-  help='Path to load TCU imagenet from',
-  default="/root/datasets/tcu-imagenet/v0.0.2")
+  name='bird_or_bicycle_data',
+  help='Path to load dataset from',
+  default="/root/datasets/bird-or-bicycle/v0.0.2")
 
 FLAGS = flags.FLAGS
 
@@ -48,7 +48,7 @@ def _process_input(filename_op):
 
 def input_fn(shuffle=False):
   ds = tf.data.Dataset.list_files(
-    os.path.join(FLAGS.tcu_imagenet_data, '*/*'),
+    os.path.join(FLAGS.bird_or_bicycle_data, '*/*'),
     shuffle=shuffle)
   ds = ds.map(_process_input)
 

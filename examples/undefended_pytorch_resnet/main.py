@@ -17,7 +17,7 @@ import warnings
 
 import matplotlib
 import numpy as np
-import tcu_images
+import bird_or_bicyle
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
@@ -78,7 +78,7 @@ def main():
   args.workers = int(4 * (args.batch_size / 256))
 
   if args.data == '':
-    args.data = tcu_images.dataset.default_data_root()
+    args.data = bird_or_bicyle.dataset.default_data_root()
     # args.data = "/root/datasets/unpacked_imagenet_pytorch"
 
   if args.gpu is not None:

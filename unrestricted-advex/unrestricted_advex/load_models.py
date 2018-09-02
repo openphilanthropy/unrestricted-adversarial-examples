@@ -1,18 +1,16 @@
-"""Load datasets and models for TCU-ImageNet and TCU-MNIST"""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-import tcu_images
 import tensorflow as tf
 import torch
 import torchvision
-from tcu_images import CLASS_NAME_TO_IMAGENET_CLASS, BICYCLE_IDX, BIRD_IDX
+from bird_or_bicyle import CLASS_NAME_TO_IMAGENET_CLASS
 from tensorflow.keras.applications.resnet50 import preprocess_input
 
 
-def get_torch_tcu_model():
+def get_torch_bird_or_bicycle_model():
   print(
     "WARNING: Torch model currently only gets 50% top1 accuracy and may have a preprocessing issue")
 
@@ -37,7 +35,7 @@ def get_torch_tcu_model():
   return model_fn
 
 
-def get_keras_tcu_model():
+def get_keras_bird_or_bicycle_model():
   tf.keras.backend.set_image_data_format('channels_last')
   _graph = tf.Graph()
   with _graph.as_default():

@@ -6,16 +6,16 @@ This repository contains the Two-Class Unambiguous images required for evaluatio
 ### Installation
 ```bash
 git clone https://github.com/google/unrestricted-adversarial-examples
-pip install -e unrestricted-adversarial-examples/tcu-images
+pip install -e unrestricted-adversarial-examples/bird-or-bicycle
 
 apt-get install imagemagick
-download-tcu-images 
+bird-or-bicycle-download
 ```
 
 ### Usage
 ```python
-import tcu_images 
-train_dataset_folder = tcu_images.download_dataset('train')
+import bird_or_bicycle 
+train_dataset_folder = bird_or_bicycle.download_dataset('train')
 
 # Use a pytorch directory-based dataset loader
 import torchvision.datasets

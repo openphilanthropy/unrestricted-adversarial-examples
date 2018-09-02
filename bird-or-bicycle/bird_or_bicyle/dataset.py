@@ -19,7 +19,7 @@ import subprocess
 from multiprocessing import Pool
 from subprocess import check_output
 
-from tcu_images import metadata
+from bird_or_bicyle import metadata
 from tqdm import tqdm
 
 VERSION = '0.0.2'
@@ -103,7 +103,7 @@ def _get_extras_image_ids():
 
   print("Removing any images that show up in train or test set...")
   for split in ['train', 'test']:
-    label_to_used_images = _get_tcu_image_ids(split)
+    label_to_used_images = _get_bird_and_bicycle_image_ids(split)
     for label_name in ['bird', 'bicycle']:
       label_to_extras[label_name] -= label_to_used_images[label_name]
 
@@ -166,7 +166,7 @@ def _crop_and_resize_images(split_root):
     raise (e)
 
 
-def _get_tcu_image_ids(split):
+def _get_bird_and_bicycle_image_ids(split):
   """Return a map from label to set of image ids"""
   label_name_to_image_ids = {}
   for label_name in ['bird', 'bicycle']:
@@ -185,7 +185,7 @@ def _get_tcu_image_ids(split):
 
 
 def default_data_root():
-  return os.path.expanduser('~/datasets/tcu_images')
+  return os.path.expanduser('~/datasets/bird_or_bicyle')
 
 
 def verify_dataset_integrity(split, data_root=None):
@@ -220,9 +220,9 @@ def get_dataset(split, data_root=None, force_download=False, verify=True):
     return split_root
 
   if split == 'train':
-    label_name_to_image_ids = _get_tcu_image_ids(split)
+    label_name_to_image_ids = _get_bird_and_bicycle_image_ids(split)
   elif split == 'test':
-    label_name_to_image_ids = _get_tcu_image_ids(split)
+    label_name_to_image_ids = _get_bird_and_bicycle_image_ids(split)
   elif split == 'extras':
     label_name_to_image_ids = _get_extras_image_ids()
   else:

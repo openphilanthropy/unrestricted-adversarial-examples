@@ -10,7 +10,7 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string("train_mode", "vanilla", "Model type (either 'vanilla' or 'adversarial')")
-flags.DEFINE_string("model_dir", "/tmp/tcu-mnist/vanilla",
+flags.DEFINE_string("model_dir", "/tmp/two-class-mnist/vanilla",
                     "Where to put the trained model checkpoint")
 flags.DEFINE_integer("batch_size", 128, "Batch size for training the model")
 flags.DEFINE_integer("total_batches", 1000000, "Total number of batches to train for")

@@ -244,12 +244,13 @@ def apply_transformation(x, transform, image_height, image_width):
 
 
 class CleverhansPyfuncModelWrapper(Model):
+  nb_classes = 2
+
   def __init__(self, model_fn):
     """
     Wrap a callable function that takes a numpy array of shape (N, C, H, W),
     and outputs a numpy vector of length N, with each element in range [0, 1].
     """
-    self.num_classes = 2
     self.model_fn = model_fn
 
   def fprop(self, x, **kwargs):

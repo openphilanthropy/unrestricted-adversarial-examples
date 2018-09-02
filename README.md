@@ -23,13 +23,13 @@ We include three attacks in the warm-up phase of the challenge:
 
 The top five distinct models for each dataset are shown below. You can see all submissions in [the full scoreboard](scoreboard.md). 
 
-##### TCU-MNIST
+##### Two-Class MNIST
 | Defense               | Submitted by  | Spatial acc.<br>at 80% cov. | SPSA acc.<br>at 80% cov. | L2-ball acc.<br>at 80% cov. |  Submission Date |
 | --------------------- | ------------- | ------------ |--------------- |--------------- | --------------- |
 | [MadryPGD LeNet Baseline](#)  |  ?? |    **??**    |     **??**   |     **??**     |  Aug 28th, 2018 |
 | [Undefended LeNet Baseline](#)   |  Google Brain   |    0.0%    |     0.0%    |     0.0%     |  Aug 27th, 2018 |
 
-##### TCU-Images
+##### Bird or Bicycle
 | Defense               | Submitted by  | Spatial acc.<br>at 80% cov. | SPSA acc.<br>at 80% cov. | L2-ball acc.<br>at 80% cov. |  Submission Date |
 | --------------------- | ------------- | ------------ |--------------- |--------------- | --------------- |
 | [Worst-of-10-Spatial Baseline](#)  |  ?? |    **??**    |     **??**   |     **??**     |  Aug 28th, 2018 |
@@ -48,14 +48,14 @@ cd unrestricted-adversarial-examples
 
 apt-get install imagemagick
 
-pip install -e tcu-images
+pip install -e bird-or-bicycle
 pip install -e unrestricted-advex
 ```
 
 Confirm that your setup runs correctly by training and evaluating an MNIST model.
 ```bash
 cd unrestricted-advex/unrestricted_advex/mnist_baselines
-CUDA_VISIBLE_DEVICES=0 python train_tcu_mnist.py --total_batches 10000
+CUDA_VISIBLE_DEVICES=0 python train_two_class_mnist.py --total_batches 10000
 # Outputs look like (specific numbers may vary)
 # 0 Clean accuracy 0.046875 loss 2.3123064
 # 100 Clean accuracy 0.9140625 loss 0.24851117
@@ -64,7 +64,7 @@ CUDA_VISIBLE_DEVICES=0 python train_tcu_mnist.py --total_batches 10000
 # 9800 Clean accuracy 1.0 loss 0.004472881
 # 9900 Clean accuracy 1.0 loss 0.00033166306
 
-CUDA_VISIBLE_DEVICES=0 python evaluate_tcu_mnist.py
+CUDA_VISIBLE_DEVICES=0 python evaluate_two_class_mnist.py
 # Outputs look like (specific numbers may vary)
 # Executing attack: null_attack
 # Fraction correct under null_attack: 1.000
@@ -82,16 +82,20 @@ It must be a function that takes in batched images, and returns two scalar (e.g.
 import numpy as np
 
 def my_very_robust_model(images_batch_nchw):
-  """This function implements a valid unrestricted advex defense"""
+  """ This function implements a valid unrestricted advex defense.
+   
+  :param images_batch_nchw: A numpy array representing a batch of images
+  :return: A batch of logits
+  """
   batch_size = len(images_batch_nchw)
-  logits = np.random.randn(batch_size, 2)
-  return logits
+  logits_np = np.random.randn(batch_size, 2)
+  return logits_np
 
 from unrestricted_advex import eval_kit
-eval_kit.evaluate_tcu_images_model(my_very_robust_model)
+eval_kit.evaluate_bird_or_bicycle_model(my_very_robust_model)
 ```
 
-For ease of evaluation, your model must also maintain a throughput of at least **100 images per second** when evaluated on a P100 GPU on TCU-Images
+For ease of evaluation, your model must also maintain a throughput of at least **100 images per second** when evaluated on a P100 GPU on the `bird-or-bicyle` dataset
 
 ##### Your defense will be evaluated with the following mechanism
 

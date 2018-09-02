@@ -1,7 +1,7 @@
 #! /bin/python
 import argparse
 
-import tcu_images
+import bird_or_bicyle
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
@@ -10,6 +10,6 @@ if __name__ == '__main__':
 
   if args.split == 'all':
     for split in ['train', 'test', 'extras']:
-      tcu_images.verify_dataset_integrity(split)
+      bird_or_bicyle.verify_dataset_integrity(split)
   else:
-    tcu_images.verify_dataset_integrity(args.split)
+    bird_or_bicyle.verify_dataset_integrity(args.split)
