@@ -94,7 +94,7 @@ class BoundaryAttack(object):
       if distortion > self.max_l2_distortion:
         # project to the surface of the L2 ball
         adv = x_np[i] + (adv - x_np[i]) / distortion * self.max_l2_distortion
-        distortion = np.sum((x_np[i] - adv) ** 2) ** .5
+
       r.append(adv)
     return r
 
