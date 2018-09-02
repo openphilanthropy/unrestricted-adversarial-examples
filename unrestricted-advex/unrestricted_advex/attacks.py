@@ -67,23 +67,22 @@ class SpsaAttack(Attack):
         all_x_adv_np.append(x_adv_np)
       return np.concatenate(all_x_adv_np)
 
+
 class BoundaryAttack(object):
   name = "boundary"
-  
+
   def __init__(self, model, max_l2_distortion=4):
     self.max_l2_distortion = max_l2_distortion
 
     class Model:
       def bounds(self):
-        return [0,1]
+        return [0, 1]
 
       def predictions(self, img):
-        r = model(img[np.newaxis,:,:,:])[0]
-        return r
+        return model(img[np.newaxis, :, :, :])[0]
 
       def batch_predictions(self, img):
-        r = model(img)
-        return r
+        return model(img)
 
     self.attack = FoolboxBoundaryAttack(model=Model())
 
@@ -91,11 +90,11 @@ class BoundaryAttack(object):
     r = []
     for i in range(len(x_np)):
       adv = self.attack(x_np[i], y_np[i])
-      distortion = np.sum((x_np[i]-adv)**2)**.5
+      distortion = np.sum((x_np[i] - adv) ** 2) ** .5
       if distortion > self.max_l2_distortion:
         # project to the surface of the L2 ball
-        adv = x_np[i]+(adv-x_np[i])/distortion*self.max_l2_distortion
-        distortion = np.sum((x_np[i]-adv)**2)**.5
+        adv = x_np[i] + (adv - x_np[i]) / distortion * self.max_l2_distortion
+        distortion = np.sum((x_np[i] - adv) ** 2) ** .5
       r.append(adv)
     return r
 
