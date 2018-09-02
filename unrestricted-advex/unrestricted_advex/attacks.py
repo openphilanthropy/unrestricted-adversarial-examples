@@ -100,6 +100,11 @@ class BoundaryAttack(object):
 
 
 class SpatialGridAttack(Attack):
+  """Attack from "A Rotation and a Translation Suffice: Fooling CNNs with
+  Simple Transformations", Engstrom et al. 2018
+
+  https://arxiv.org/pdf/1712.02779.pdf
+  """
   name = 'spatial'
 
   def __init__(self, image_shape_hwc,
