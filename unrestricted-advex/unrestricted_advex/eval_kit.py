@@ -13,6 +13,19 @@ from unrestricted_advex import attacks, plotting
 EVAL_WITH_ATTACKS_DIR = '/tmp/eval_with_attacks'
 
 
+def _validate_logits(logits, batch_size):
+  """Validate the model_fn to help the researcher with debugging"""
+
+  desired_logits_shape = (batch_size, 2)
+  assert logits.shape == desired_logits_shape, \
+    "Your model_fn must return logits with shape %s. Got %s instead." % (
+      desired_logits_shape, logits.shape)
+
+  assert logits.dtype == np.float32, \
+    "Your model_fn must return logits as np.float32. Got %s instead. \
+    Try using logits_np.astype(np.float32)" % logits.dtype
+
+
 def run_attack(model, data_iter, attack_fn):
   """ Runs an attack on the model_fn and returns the results
 
@@ -25,12 +38,15 @@ def run_attack(model, data_iter, attack_fn):
   all_logits = []
   all_xadv = []
 
+  # TODO: Add assertion about the model's throughput
   for i_batch, (x_np, y_np) in enumerate(tqdm(data_iter)):
     assert x_np.shape[-1] == 3 or x_np.shape[-1] == 1, "Data was {}, should be NHWC".format(
       x_np.shape)
 
     x_adv = attack_fn(model, x_np, y_np)
     logits = model(x_adv)
+    
+    _validate_logits(logits, batch_size=len(x_np))
 
     all_labels.append(y_np)
     all_logits.append(logits)

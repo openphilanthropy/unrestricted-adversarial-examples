@@ -22,9 +22,9 @@ class Attack(object):
 class NullAttack(Attack):
   name = 'null_attack'
 
-  def __call__(self, model_fn, x_np, y_np):
-    del model_fn, y_np  # unused
-    return x_np
+  def __call__(self, model_fn, images_batch_nchw, y_np):
+    del y_np, model_fn  # unused
+    return images_batch_nchw
 
 
 class SpsaAttack(Attack):
@@ -90,7 +90,7 @@ class BoundaryAttack(object):
     r = []
     for i in range(len(x_np)):
       adv = self.attack(x_np[i], y_np[i],
-                        log_every_n_steps=100, # Reduce verbosity of the attack
+                        log_every_n_steps=100,  # Reduce verbosity of the attack
                         )
       distortion = np.sum((x_np[i] - adv) ** 2) ** .5
       if distortion > self.max_l2_distortion:
