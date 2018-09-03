@@ -46,8 +46,6 @@ of Tensorflow or pytorch)
 git clone git@github.com:google/unrestricted-adversarial-examples.git
 cd unrestricted-adversarial-examples
 
-apt-get install imagemagick
-
 pip install -e bird-or-bicycle
 pip install -e unrestricted-advex
 ```
