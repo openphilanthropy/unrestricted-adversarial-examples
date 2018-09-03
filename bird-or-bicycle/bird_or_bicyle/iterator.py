@@ -14,13 +14,15 @@ def get_iterator(split='train', batch_size=32, shuffle=True):
   """
   data_dir = bird_or_bicyle.get_dataset(split)
 
+  image_preprocessing = torchvision.transforms.Compose([
+    torchvision.transforms.Resize(224),
+    torchvision.transforms.ToTensor(),
+    lambda x: torch.einsum('chw->hwc', [x]),
+  ])
+
   train_dataset = torchvision.datasets.ImageFolder(
-    data_dir,
-    torchvision.transforms.Compose([
-      torchvision.transforms.Resize(224),
-      torchvision.transforms.ToTensor(),
-      lambda x: torch.einsum('chw->hwc', [x]),
-    ]))
+    data_dir, transform=image_preprocessing
+  )
 
   data_loader = torch.utils.data.DataLoader(
     train_dataset,

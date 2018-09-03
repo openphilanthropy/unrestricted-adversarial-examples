@@ -19,6 +19,7 @@ import subprocess
 from multiprocessing import Pool
 from subprocess import check_output
 
+from PIL import Image
 from bird_or_bicyle import metadata
 from tqdm import tqdm
 
@@ -189,7 +190,8 @@ def default_data_root():
 
 
 def verify_dataset_integrity(split, data_root=None):
-  """Check the sha1sum to make sure we have prepared the dataset correctly"""
+  """Check the sha1sum of image names and the size of all images
+  to make sure we have prepared the dataset correctly"""
   if data_root is None:
     data_root = default_data_root()
 
@@ -198,13 +200,21 @@ def verify_dataset_integrity(split, data_root=None):
     class_dir = os.path.join(split_root, label_name)
     images_in_class = os.listdir(class_dir)
     expected_images = metadata.NUM_IMAGES_PER_CLASS[VERSION][split]
+
+    for image_name in images_in_class:
+      image_path = os.path.join(class_dir, image_name)
+      image = Image.open(image_path)
+      assert image.size == (299, 299), "Found image of wrong size at %s. \
+      Wanted (299,299) but got %s" % (image_path, image.size)
+
     assert len(images_in_class) == expected_images, \
-      "Incomplete dataset in %s: Expected %s images and found %s" % (
+      "Incomplete dataset in %s: Expected %s images and found %s. \
+      Please remove the corrupt dataset and try again" % (
         class_dir, expected_images, len(images_in_class))
 
   shasum = _compute_sha1sum_of_directory(split_root)
   assert shasum == metadata.SHASUMS[
-    VERSION][split], "sha1sum mismatch (%s). Please remove the files in %s" % (
+    VERSION][split], "sha1sum mismatch (got: %s). Please remove the files in %s" % (
     shasum, split_root)
   print("sha1sum match. Dataset is correctly prepared.")
 
