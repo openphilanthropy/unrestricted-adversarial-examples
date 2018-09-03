@@ -11,7 +11,7 @@ def get_tiny_iterator():
   return itertools.islice(dataset_iter, 1)
 
 
-def test_readme_example():
+def test_readme_example_for_smoke():
   def my_very_robust_model(images_batch_nchw):
     """ This function implements a valid unrestricted advex defense that always returns higher
     logits for the second class """
@@ -25,4 +25,4 @@ def test_readme_example():
 
 
 if __name__ == '__main__':
-  test_readme_example()
+  test_readme_example_for_smoke()
