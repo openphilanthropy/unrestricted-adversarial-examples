@@ -80,9 +80,10 @@ It must be a function that takes in batched images (as a numpy array), and retur
 import numpy as np
 
 def my_very_robust_model(images_batch_nchw):
-  """ This function implements a valid unrestricted advex defense."""
+  """ This function implements a valid unrestricted advex defense that always returns higher
+  logits for the second class """
   batch_size = len(images_batch_nchw)
-  logits_np = np.random.randn(batch_size, 2)
+  logits_np = np.array([[-5.0, 5.0]] * batch_size)
   return logits_np.astype(np.float32)
 
 from unrestricted_advex import eval_kit
@@ -114,5 +115,11 @@ We encourage defense creators to not design defenses that are intentionally unin
 ## Contest phase
 
 The contest phase will begin after the warm-up attacks have been conclusively solved. We have published the [contest proposal](https://github.com/google/unrestricted-adversarial-examples/blob/master/contest_proposal.md) and are soliciting feedback from the community.
+
+## Running tests
+
+```bash
+pytest
+```
 
 ## Authors

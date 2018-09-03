@@ -3,3 +3,5 @@ image_ids
 crowd_compute_requests
 
 **/*urls.csv
+
+.pytest*

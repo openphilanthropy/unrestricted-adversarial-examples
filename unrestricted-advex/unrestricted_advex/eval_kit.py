@@ -65,6 +65,8 @@ def _evaluate_two_class_unambiguous_model(model_fn, data_iter, attack_list, mode
   :param attack_list: A list of callable Attacks
   :param model_name: An optional model_fn name
   """
+  # Load the whole data_iter into memory because we will iterate through the iterator multiple times
+  data_iter = list(data_iter)
   for attack in attack_list:
     print("Executing attack: %s" % attack.name)
 
@@ -123,9 +125,6 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
     return np.abs(weight_after - weight_before) < weight_before * .1
 
   attack_list = [
-    attacks.BoundaryAttack(
-      model_fn,
-      max_l2_distortion=4),
     attacks.NullAttack(),
     attacks.SpsaAttack(
       model_fn,
@@ -137,6 +136,9 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
       grid_granularity=[10, 10, 10],
       black_border_size=4,
       valid_check=_mnist_valid_check),
+    attacks.BoundaryAttack(
+      model_fn,
+      max_l2_distortion=4),
   ]
 
   return _evaluate_two_class_unambiguous_model(
@@ -165,7 +167,10 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       image_shape_hwc=(224, 224, 3),
       spatial_limits=[18, 18, 30],
       grid_granularity=[5, 5, 31],
-      black_border_size=0)
+      black_border_size=0),
+    attacks.BoundaryAttack(
+      model_fn,
+      max_l2_distortion=4),
   ]
   return _evaluate_two_class_unambiguous_model(model_fn, dataset_iter,
                                                model_name=model_name,
