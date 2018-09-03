@@ -76,20 +76,16 @@ CUDA_VISIBLE_DEVICES=0 python evaluate_two_class_mnist.py
 
 #### To be evaluated against our fixed warm-up attacks, your defense must implement the following API
 
-It must be a function that takes in batched images, and returns two scalar (e.g. logits) between `(-inf, inf)`. These correspond to the likelihood the image corresponds to each of the two classes (e.g. the bicycle and bird class)
+It must be a function that takes in batched images (as a numpy array), and returns two scalar (e.g. logits) between `(-inf, inf)`. These correspond to the likelihood the image corresponds to each of the two classes (e.g. the bicycle and bird class)
 
 ```python
 import numpy as np
 
 def my_very_robust_model(images_batch_nchw):
-  """ This function implements a valid unrestricted advex defense.
-   
-  :param images_batch_nchw: A numpy array representing a batch of images
-  :return: A batch of logits
-  """
+  """ This function implements a valid unrestricted advex defense."""
   batch_size = len(images_batch_nchw)
   logits_np = np.random.randn(batch_size, 2)
-  return logits_np
+  return logits_np.astype(np.float32)
 
 from unrestricted_advex import eval_kit
 eval_kit.evaluate_bird_or_bicycle_model(my_very_robust_model)

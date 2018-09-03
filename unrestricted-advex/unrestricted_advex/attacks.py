@@ -113,7 +113,7 @@ class SpatialGridAttack(Attack):
                spatial_limits,
                grid_granularity,
                black_border_size,
-               valid_check=False,
+               valid_check=None,
                ):
     """
     :param model_fn: a callable: batch-input -> batch-probability in [0, 1]
@@ -186,7 +186,7 @@ class SpatialGridAttack(Attack):
       cur_xent = np.asarray(cur_xent)
       cur_correct = np.equal(y_np, preds)
 
-      if self.valid_check is not None:
+      if self.valid_check:
         is_valid = self.valid_check(x_downsize_np, x_np)
         cur_correct |= ~is_valid
         cur_xent -= is_valid * 1e9
