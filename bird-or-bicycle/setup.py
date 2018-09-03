@@ -26,6 +26,7 @@ setup(
     # https://stackoverflow.com/questions/39590187/in-requirements-txt-what-does-tilde-equals-mean
     'awscli ~= 1.0',
     'torchvision ~= 0.2.0',
+    'Pillow ~= 5.2'
   ],
   scripts=[
     'bin/bird-or-bicycle-download',
