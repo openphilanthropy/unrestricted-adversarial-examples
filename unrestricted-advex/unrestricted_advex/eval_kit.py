@@ -27,7 +27,7 @@ def _validate_logits(logits, batch_size):
 
 
 def run_attack(model, data_iter, attack_fn):
-  """ Runs an attack on the model_fn and returns the results
+  """ Runs an attack on the model_fn for every batch in data_iter and returns the results
 
   :param model: Callable batch-input -> batch-probability in [0, 1]
   :param data_iter: NHWC data iterator
@@ -45,7 +45,7 @@ def run_attack(model, data_iter, attack_fn):
 
     x_adv = attack_fn(model, x_np, y_np)
     logits = model(x_adv)
-    
+
     _validate_logits(logits, batch_size=len(x_np))
 
     all_labels.append(y_np)
