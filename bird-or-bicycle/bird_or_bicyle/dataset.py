@@ -19,6 +19,7 @@ import subprocess
 from multiprocessing import Pool
 from subprocess import check_output
 
+import torchvision
 from PIL import Image
 from bird_or_bicyle import metadata
 from tqdm import tqdm
@@ -124,25 +125,29 @@ def _download_image(src_and_dest_dir):
     pass
 
 
+def _map_with_tqdm(fn, iterable, n_workers=N_WORKERS, total=None):
+  pool = Pool(n_workers)
+
+  # Multiprocess map with a tqdm progress bar
+  # https://github.com/tqdm/tqdm/issues/484#issuecomment-351001534
+  for _ in tqdm(pool.imap_unordered(fn, iterable), total=total):
+    pass  # Process work
+  pool.close()
+  pool.join()
+
+
 def _download_to_dir(image_ids, dest_dir, split):
   print("Saving {n_images} images to {dest_dir} \
     (using {N_WORKERS} parallel processes)".format(
     n_images=len(image_ids), dest_dir=dest_dir, N_WORKERS=N_WORKERS))
   os.makedirs(dest_dir, exist_ok=True)
 
-  pool = Pool(N_WORKERS)
   srcs = ["s3://open-images-dataset/train/%s.jpg" % (image_id)
           for image_id in image_ids]
-
   srcs_and_dest_dirs = zip(srcs, [dest_dir] * len(srcs))
 
-  # Multiprocess map with a tqdm progress bar
-  # https://github.com/tqdm/tqdm/issues/484#issuecomment-351001534
-  for _ in tqdm(pool.imap_unordered(_download_image, srcs_and_dest_dirs),
-                total=len(image_ids)):
-    pass  # Process work
-  pool.close()
-  pool.join()
+  _map_with_tqdm(_download_image, srcs_and_dest_dirs,
+                 total=len(image_ids))
 
 
 def _compute_sha1sum_of_directory(dir):
@@ -151,20 +156,22 @@ def _compute_sha1sum_of_directory(dir):
   return check_output(cmd, shell=True).decode('utf-8')[:40]
 
 
+def _resize_and_centercrop_image(image_path):
+  image = Image.open(image_path)
+
+  image = torchvision.transforms.Resize(299)(image)
+  image = torchvision.transforms.CenterCrop(299)(image)
+  image.save(image_path)
+
+
 def _crop_and_resize_images(split_root):
   print("Cropping images to correct shape and size...")
-
-  try:
-    cmd = 'find {data_dir} -name \"*.jpg\" | \
-     xargs -P{N_WORKERS} -I % convert % \
-     -resize \"299^>\" \
-     -gravity center \
-     -crop 299x299+0+0 %'.format(data_dir=split_root, N_WORKERS=N_WORKERS)
-
-    subprocess.check_call(cmd, shell=True)
-  except subprocess.CalledProcessError as e:
-    print("\nERROR: convert command failed.\nTry 'sudo apt-get install imagemagick'\n")
-    raise (e)
+  for label_name in ['bird', 'bicycle']:
+    class_dir = os.path.join(split_root, label_name)
+    images_in_class = os.listdir(class_dir)
+    image_paths = [os.path.join(class_dir, image_name) for image_name in images_in_class]
+    _map_with_tqdm(_resize_and_centercrop_image, image_paths,
+                   total=len(image_paths))
 
 
 def _get_bird_and_bicycle_image_ids(split):

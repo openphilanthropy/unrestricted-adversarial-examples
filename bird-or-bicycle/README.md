@@ -8,7 +8,6 @@ This repository contains the Two-Class Unambiguous images required for evaluatio
 git clone https://github.com/google/unrestricted-adversarial-examples
 pip install -e unrestricted-adversarial-examples/bird-or-bicycle
 
-apt-get install imagemagick
 bird-or-bicycle-download
 ```
 
