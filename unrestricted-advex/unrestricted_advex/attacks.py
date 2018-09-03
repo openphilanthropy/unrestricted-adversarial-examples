@@ -89,7 +89,9 @@ class BoundaryAttack(object):
   def __call__(self, model, x_np, y_np):
     r = []
     for i in range(len(x_np)):
-      adv = self.attack(x_np[i], y_np[i])
+      adv = self.attack(x_np[i], y_np[i],
+                        log_every_n_steps=100, # Reduce verbosity of the attack
+                        )
       distortion = np.sum((x_np[i] - adv) ** 2) ** .5
       if distortion > self.max_l2_distortion:
         # project to the surface of the L2 ball
