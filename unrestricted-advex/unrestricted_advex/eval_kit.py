@@ -9,6 +9,7 @@ import bird_or_bicyle
 import numpy as np
 from tqdm import tqdm
 from unrestricted_advex import attacks, plotting
+from unrestricted_advex.two_class_mnist_dataset import two_class_mnist_dataset
 
 EVAL_WITH_ATTACKS_DIR = '/tmp/eval_with_attacks'
 
@@ -110,7 +111,6 @@ def _get_coverage_to_confident_error_idxs(coverages, preds, confidences, y_true)
 
   return cov_to_confident_error_idxs
 
-
 def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None):
   """
   Evaluates a two-class MNIST model_fn on a default set of attacks and creates plots
@@ -124,21 +124,29 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
     weight_after = np.sum(np.abs(after), axis=(1, 2, 3))
     return np.abs(weight_after - weight_before) < weight_before * .1
 
+  images_2class, labels_2class = two_class_mnist_dataset()
+
+  mnist_label_to_examples = {0: images_2class[0==labels_2class],
+                             1: images_2class[1==labels_2class]}
+
+  print(list(map(len,mnist_label_to_examples.values())))
+  
   attack_list = [
-    attacks.NullAttack(),
-    attacks.SpsaAttack(
-      model_fn,
-      image_shape_hwc=(28, 28, 1),
-      epsilon=0.3),
-    attacks.SpatialGridAttack(
-      image_shape_hwc=(28, 28, 1),
-      spatial_limits=[10, 10, 10],
-      grid_granularity=[10, 10, 10],
-      black_border_size=4,
-      valid_check=_mnist_valid_check),
+    #attacks.NullAttack(),
+    #attacks.SpsaAttack(
+    #  model_fn,
+    #  image_shape_hwc=(28, 28, 1),
+    #  epsilon=0.3),
+    #attacks.SpatialGridAttack(
+    #  image_shape_hwc=(28, 28, 1),
+    #  spatial_limits=[10, 10, 10],
+    #  grid_granularity=[10, 10, 10],
+    #  black_border_size=4,
+    #  valid_check=_mnist_valid_check),
     attacks.BoundaryAttack(
       model_fn,
-      max_l2_distortion=4),
+      max_l2_distortion=4,
+      label_to_examples=mnist_label_to_examples),
   ]
 
   return _evaluate_two_class_unambiguous_model(
@@ -170,7 +178,8 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       black_border_size=0),
     attacks.BoundaryAttack(
       model_fn,
-      max_l2_distortion=4),
+      max_l2_distortion=4,
+      label_to_example=bird_or_bicycle_label_to_examples),
   ]
   return _evaluate_two_class_unambiguous_model(model_fn, dataset_iter,
                                                model_name=model_name,

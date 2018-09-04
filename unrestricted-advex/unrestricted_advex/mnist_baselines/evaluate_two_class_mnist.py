@@ -2,9 +2,9 @@ import math
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.examples.tutorials.mnist import input_data
 from unrestricted_advex import eval_kit
 from unrestricted_advex.mnist_baselines import mnist_convnet
+from unrestricted_advex.two_class_mnist_dataset import two_class_mnist_iter
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -26,19 +26,6 @@ class TwoClassWrapper(object):
     return tf.stack([logits[:, self.classes[0]], logits[:, self.classes[1]]], axis=1)
 
 
-def two_class_mnist_iter(num_datapoints, batch_size, class1=7, class2=6):
-  """Filter MNIST to only sevens and eights"""
-  mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
-  which = (mnist.test.labels == class1) | (mnist.test.labels == class2)
-  images_2class = mnist.test.images[which].astype(np.float32)
-  labels_2class = mnist.test.labels[which]
-  num_batches = math.ceil(num_datapoints / batch_size)
-  for i in range(int(num_batches)):
-    images = images_2class[i:i + batch_size].reshape((batch_size, 28, 28, 1))
-    labels = labels_2class[i:i + batch_size] == class1
-    yield images, labels
-
-
 def show(img):
   remap = " .*#" + "#" * 100
   img = (img.flatten()) * 3
@@ -58,7 +45,7 @@ def main(_):
 
     eval_kit.evaluate_two_class_mnist_model(
       np_model,
-      two_class_mnist_iter(num_datapoints=128, batch_size=128))
+      two_class_mnist_iter(num_datapoints=4, batch_size=2))
 
 
 if __name__ == "__main__":

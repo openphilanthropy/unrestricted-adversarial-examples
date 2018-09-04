@@ -5,6 +5,7 @@ from __future__ import print_function
 from itertools import product, repeat
 
 import numpy as np
+import random
 import tensorflow as tf
 from cleverhans.attacks import SPSA
 from cleverhans.model import Model
@@ -67,11 +68,18 @@ class SpsaAttack(Attack):
         all_x_adv_np.append(x_adv_np)
       return np.concatenate(all_x_adv_np)
 
+def show(img):
+  remap = " .*#" + "#" * 100
+  img = (img.flatten()) * 3
+  print("START")
+  for i in range(28):
+    print("".join([remap[int(round(x))] for x in img[i * 28:i * 28 + 28]]))
+
 
 class BoundaryAttack(object):
   name = "boundary"
 
-  def __init__(self, model, max_l2_distortion=4):
+  def __init__(self, model, max_l2_distortion=4, label_to_examples={}):
     self.max_l2_distortion = max_l2_distortion
 
     class Model:
@@ -84,14 +92,19 @@ class BoundaryAttack(object):
       def batch_predictions(self, img):
         return model(img)
 
+    self.label_to_examples = label_to_examples
     self.attack = FoolboxBoundaryAttack(model=Model())
 
   def __call__(self, model, x_np, y_np):
     r = []
     for i in range(len(x_np)):
+      other = 1-y_np[i]
+      initial_adv = random.choice(self.label_to_examples[other])
       adv = self.attack(x_np[i], y_np[i],
                         log_every_n_steps=100,  # Reduce verbosity of the attack
+                        starting_point=initial_adv
                         )
+      print('adv', adv.shape)
       distortion = np.sum((x_np[i] - adv) ** 2) ** .5
       if distortion > self.max_l2_distortion:
         # project to the surface of the L2 ball
@@ -251,6 +264,7 @@ def apply_transformation(x, transform, image_height, image_width):
 
 class CleverhansPyfuncModelWrapper(Model):
   nb_classes = 2
+  num_classes = 2
 
   def __init__(self, model_fn):
     """
