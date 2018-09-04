@@ -9,7 +9,7 @@ import numpy as np
 import tensorflow as tf
 import torch
 import torchvision
-from tensorflow.keras.applications.resnet50 import preprocess_input
+from keras.applications.resnet50 import preprocess_input
 from unrestricted_advex import attacks
 
 

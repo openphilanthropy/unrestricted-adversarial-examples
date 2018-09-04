@@ -18,7 +18,13 @@ flags.DEFINE_integer("total_batches", 1000000, "Total number of batches to train
 
 def main(_):
   mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
+  next_batch_fn = mnist.train.next_batch
+  train_two_class_mnist(FLAGS.model_dir, next_batch_fn, FLAGS.batch_size,
+                        FLAGS.total_batches, FLAGS.train_mode)
 
+
+def train_two_class_mnist(model_dir, next_batch_fn, batch_size, total_batches,
+                          train_mode):
   x_input = tf.placeholder(tf.float32, (None, 28, 28, 1))
   y_input = tf.placeholder(tf.float32, [None, 10])
 
@@ -50,15 +56,15 @@ def main(_):
   with tf.Session() as sess:
     attack = MadryEtAl(model, sess=sess)
 
-    summary_writer = tf.summary.FileWriter(FLAGS.model_dir, sess.graph)
+    summary_writer = tf.summary.FileWriter(model_dir, sess.graph)
     sess.run(tf.global_variables_initializer())
     training_time = 0.0
 
-    for batch_num in range(FLAGS.total_batches):
-      x_batch, y_batch = mnist.train.next_batch(FLAGS.batch_size)
+    for batch_num in range(total_batches):
+      x_batch, y_batch = next_batch_fn(batch_size)
       x_batch = np.reshape(x_batch, (-1, 28, 28, 1))
 
-      if FLAGS.train_mode == "adversarial" and batch_num > 1000:
+      if train_mode == "adversarial" and batch_num > 1000:
         x_batch_adv = attack.generate_np(x_batch, y=y_batch, eps=.3,
                                          nb_iter=40, eps_iter=.01,
                                          rand_init=True,
@@ -77,13 +83,13 @@ def main(_):
         a, l, s = sess.run((accuracy, loss, nat_summaries), nat_dict)
         summary_writer.add_summary(s, sess.run(global_step))
         print(batch_num, "Clean accuracy", a, "loss", l)
-        if FLAGS.train_mode == "adversarial":
+        if train_mode == "adversarial":
           a, l, s = sess.run((accuracy, loss, adv_summaries), adv_dict)
           summary_writer.add_summary(s, sess.run(global_step))
           print(batch_num, "Adv accuracy", a, "loss", l)
 
       if batch_num % 1000 == 0:
-        saver.save(sess, os.path.join(FLAGS.model_dir, "checkpoint"),
+        saver.save(sess, os.path.join(model_dir, "checkpoint"),
                    global_step=global_step)
 
       sess.run(train_step, nat_dict)

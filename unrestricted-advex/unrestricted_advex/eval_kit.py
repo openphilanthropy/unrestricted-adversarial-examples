@@ -26,6 +26,10 @@ def _validate_logits(logits, batch_size):
     Try using logits_np.astype(np.float32)" % logits.dtype
 
 
+def logits_to_preds(logits):
+  return (logits[:, 0] < logits[:, 1]).astype(np.int64)
+
+
 def run_attack(model, data_iter, attack_fn):
   """ Runs an attack on the model_fn for every batch in data_iter and returns the results
 
@@ -36,6 +40,7 @@ def run_attack(model, data_iter, attack_fn):
   """
   all_labels = []
   all_logits = []
+  all_correct = []
   all_xadv = []
 
   # TODO: Add assertion about the model's throughput
@@ -45,15 +50,18 @@ def run_attack(model, data_iter, attack_fn):
 
     x_adv = attack_fn(model, x_np, y_np)
     logits = model(x_adv)
+    correct = np.equal(logits_to_preds(logits), y_np).astype(np.float32)
 
     _validate_logits(logits, batch_size=len(x_np))
 
     all_labels.append(y_np)
     all_logits.append(logits)
+    all_correct.append(correct)
     all_xadv.append(x_adv)
 
   return (np.concatenate(all_logits),
           np.concatenate(all_labels),
+          np.concatenate(all_correct),
           np.concatenate(all_xadv))
 
 
@@ -70,10 +78,7 @@ def _evaluate_two_class_unambiguous_model(model_fn, data_iter, attack_list, mode
   for attack in attack_list:
     print("Executing attack: %s" % attack.name)
 
-    logits, labels, x_adv = run_attack(model_fn, data_iter, attack)
-
-    preds = (logits[:, 0] < logits[:, 1]).astype(np.int64)
-    correct = np.equal(preds, labels).astype(np.float32)
+    logits, labels, correct, x_adv = run_attack(model_fn, data_iter, attack)
     correct_fracs = np.sum(correct, axis=0) / len(labels)
     print("Fraction correct under %s: %.3f" % (attack.name, correct_fracs))
 
@@ -86,6 +91,7 @@ def _evaluate_two_class_unambiguous_model(model_fn, data_iter, attack_list, mode
     # We will plot accuracy at various coverages
     coverages = np.linspace(0.01, .99, 99)
 
+    preds = logits_to_preds(logits)
     cov_to_confident_error_idxs = _get_coverage_to_confident_error_idxs(
       coverages, preds, confidences, labels, )
 

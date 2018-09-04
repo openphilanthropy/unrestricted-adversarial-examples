@@ -12,9 +12,6 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string("model_dir", "/tmp/two-class-mnist/vanilla",
                     "Where to put the trained model checkpoint")
 
-x_input = tf.placeholder(tf.float32, (None, 28, 28, 1))
-y_input = tf.placeholder(tf.int64, [None])
-
 
 class TwoClassWrapper(object):
   def __init__(self, mnist_model, classes=(6, 7)):
@@ -27,7 +24,7 @@ class TwoClassWrapper(object):
 
 
 def two_class_mnist_iter(num_datapoints, batch_size, class1=7, class2=6):
-  """Filter MNIST to only sevens and eights"""
+  """Filter MNIST to only two classes (e.g. sixes and sevens)"""
   mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
   which = (mnist.test.labels == class1) | (mnist.test.labels == class2)
   images_2class = mnist.test.images[which].astype(np.float32)
@@ -47,18 +44,23 @@ def show(img):
     print("".join([remap[int(round(x))] for x in img[i * 28:i * 28 + 28]]))
 
 
-def main(_):
-  with tf.Session() as sess:
-    model = mnist_convnet.Model(FLAGS.model_dir, sess)
+def np_two_class_mnist_model(model_dir):
+  with tf.Graph().as_default():
+    x_input = tf.placeholder(tf.float32, (None, 28, 28, 1))
+    sess = tf.Session()
+    model = mnist_convnet.Model(model_dir, sess)
     two_class_model = TwoClassWrapper(model)
     logits = two_class_model(x_input)
 
     def np_model(x):
       return sess.run(logits, {x_input: x})
 
-    eval_kit.evaluate_two_class_mnist_model(
-      np_model,
-      two_class_mnist_iter(num_datapoints=128, batch_size=128))
+    return np_model
+
+def main(_):
+  eval_kit.evaluate_two_class_mnist_model(
+    np_two_class_mnist_model(FLAGS.model_dir),
+    two_class_mnist_iter(num_datapoints=128, batch_size=128))
 
 
 if __name__ == "__main__":
