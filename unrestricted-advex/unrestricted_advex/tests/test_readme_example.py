@@ -12,6 +12,7 @@ def get_tiny_iterator():
 
 
 def test_readme_example_for_smoke():
+
   def my_very_robust_model(images_batch_nchw):
     """ This function implements a valid unrestricted advex defense that always returns higher
     logits for the second class """
