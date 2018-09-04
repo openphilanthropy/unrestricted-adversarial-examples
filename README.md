@@ -74,7 +74,7 @@ CUDA_VISIBLE_DEVICES=0 python evaluate_two_class_mnist.py
 
 #### To be evaluated against our fixed warm-up attacks, your defense must implement the following API
 
-It must be a function that takes in batched images (as a numpy array), and returns two scalar (e.g. logits) between `(-inf, inf)`. These correspond to the likelihood the image corresponds to each of the two classes (e.g. the bicycle and bird class)
+It must be a function that takes in batched images (as a numpy array), and returns two scalar (e.g. logits) between `(-inf, inf)`. These correspond to the likelihood the image corresponds to each of the two classes (e.g. the bird and bicycle class)
 
 ```python
 import numpy as np
@@ -95,7 +95,7 @@ For ease of evaluation, your model must also maintain a throughput of at least *
 ##### Your defense will be evaluated with the following mechanism
 
 - The test dataset is passed through the model and converted to logits.
-- `confidence` is defined as `max(bicycle_logit, bird_logit)` for each image.
+- `confidence` is defined as `max(bird_logit, bicycle_logit)` for each image.
 - The 20% of images that resulted in logits with the lowest `confidence` are abstained on by the model and are discarded.
 - The model’s score is the **accuracy on points that were not abstained on**.
 
