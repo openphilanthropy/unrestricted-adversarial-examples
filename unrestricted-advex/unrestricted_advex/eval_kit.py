@@ -129,20 +129,18 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
   mnist_label_to_examples = {0: images_2class[0==labels_2class],
                              1: images_2class[1==labels_2class]}
 
-  print(list(map(len,mnist_label_to_examples.values())))
-  
   attack_list = [
-    #attacks.NullAttack(),
-    #attacks.SpsaAttack(
-    #  model_fn,
-    #  image_shape_hwc=(28, 28, 1),
-    #  epsilon=0.3),
-    #attacks.SpatialGridAttack(
-    #  image_shape_hwc=(28, 28, 1),
-    #  spatial_limits=[10, 10, 10],
-    #  grid_granularity=[10, 10, 10],
-    #  black_border_size=4,
-    #  valid_check=_mnist_valid_check),
+    attacks.NullAttack(),
+    attacks.SpsaAttack(
+      model_fn,
+      image_shape_hwc=(28, 28, 1),
+      epsilon=0.3),
+    attacks.SpatialGridAttack(
+      image_shape_hwc=(28, 28, 1),
+      spatial_limits=[10, 10, 10],
+      grid_granularity=[10, 10, 10],
+      black_border_size=4,
+      valid_check=_mnist_valid_check),
     attacks.BoundaryAttack(
       model_fn,
       max_l2_distortion=4,

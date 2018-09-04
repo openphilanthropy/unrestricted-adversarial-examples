@@ -68,14 +68,6 @@ class SpsaAttack(Attack):
         all_x_adv_np.append(x_adv_np)
       return np.concatenate(all_x_adv_np)
 
-def show(img):
-  remap = " .*#" + "#" * 100
-  img = (img.flatten()) * 3
-  print("START")
-  for i in range(28):
-    print("".join([remap[int(round(x))] for x in img[i * 28:i * 28 + 28]]))
-
-
 class BoundaryAttack(object):
   name = "boundary"
 
@@ -104,7 +96,6 @@ class BoundaryAttack(object):
                         log_every_n_steps=100,  # Reduce verbosity of the attack
                         starting_point=initial_adv
                         )
-      print('adv', adv.shape)
       distortion = np.sum((x_np[i] - adv) ** 2) ** .5
       if distortion > self.max_l2_distortion:
         # project to the surface of the L2 ball
