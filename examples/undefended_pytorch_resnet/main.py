@@ -1,9 +1,8 @@
 """
 python main.py
 
-train resnet50 (weight decay 5e-4) on extras, test on train: Prec@1 97.300
-
-Prec@1 93.100
+train resnet50 (weight decay 5e-4) on extras + train, eval on test:
+Prec@1 95.200
 """
 import argparse
 import os
@@ -29,8 +28,8 @@ from unrestricted_advex import eval_kit
 
 
 model_names = sorted(name for name in models.__dict__
-                     if name.islower() and not name.startswith("__")
-                     and callable(models.__dict__[name]))
+                     if name.islower() and not name.startswith("__") and
+                     callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('--data', metavar='DIR', default='',
@@ -80,6 +79,11 @@ def main():
 
   # create model
   model = getattr(models, args.arch)(num_classes=2, pretrained=args.pretrained)
+  # prepend a BN layer w/o learnable params to perform data normalization
+  # as we disabled data normalization in data iter in order to make the
+  # interface compatible with attack APIs that requires data in [0.0, 1.0]
+  # range.
+  model = nn.Sequential(nn.BatchNorm2d(num_features=3, affine=False), model)
 
   if args.gpu is not None:
     model = model.cuda(args.gpu)
@@ -119,6 +123,11 @@ def main():
   traindirs = [os.path.join(args.data, partition)
                for partition in ['train', 'extras']]
   valdir = os.path.join(args.data, 'test')
+
+  # this normalization is NOT used, as the attack API requires
+  # the images to be in [0, 1] range. So we prepend a BatchNorm
+  # layer to the model instead of normalizing the images in the
+  # data iter.
   normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                    std=[0.229, 0.224, 0.225])
 
@@ -128,7 +137,7 @@ def main():
           transforms.RandomResizedCrop(224),
           transforms.RandomHorizontalFlip(),
           transforms.ToTensor(),
-          normalize,
+          # normalize,
       ]))
       for traindir in traindirs]
   if len(train_dataset) == 1:
@@ -148,7 +157,7 @@ def main():
           transforms.Resize(256),
           transforms.CenterCrop(224),
           transforms.ToTensor(),
-          normalize,
+          # normalize,
       ])),
       batch_size=args.batch_size, shuffle=False,
       num_workers=args.workers, pin_memory=True)
