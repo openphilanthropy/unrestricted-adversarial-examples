@@ -1,13 +1,9 @@
 """
-python pytorch_undefended.py --evaluate
+python main.py
 
-train on extras, test on train:
-without stage-wise lr decay: Prec@1 90.900 at epoch 89
-with stage-wise lr decay: Prec@1 93.400 at epoch 89
+train resnet50 (weight decay 5e-4) on extras, test on train: Prec@1 97.300
 
-train on extras+train, test on test: Prec@1 95.600
-
-train with resnet 50, weight decay 5e-4: Prec@1 97.300
+Prec@1 93.100
 """
 import argparse
 import os
@@ -29,8 +25,8 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 import torchvision.transforms as transforms
 
-matplotlib.use('PDF')
-from matplotlib import pyplot as plt
+from unrestricted_advex import eval_kit
+
 
 model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
@@ -39,11 +35,11 @@ model_names = sorted(name for name in models.__dict__
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('--data', metavar='DIR', default='',
                     help='path to dataset')
-parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet18',
+parser.add_argument('--arch', '-a', metavar='ARCH', default='resnet50',
                     choices=model_names,
                     help='model architecture: ' +
                          ' | '.join(model_names) +
-                         ' (default: resnet18)')
+                         ' (default: resnet50)')
 parser.add_argument('--epochs', default=90, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
@@ -58,12 +54,10 @@ parser.add_argument('--print-freq', '-p', default=10, type=int,
                     metavar='N', help='print frequency (default: 10)')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
-parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
-                    help='evaluate model on validation set')
 parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                     help='use pre-trained model')
-parser.add_argument('--predict', dest='predict', action='store_true',
-                    help='Compute and output predictions.')
+parser.add_argument('--evaluate', dest='evaluate', action='store_true',
+                    help='Evaluate the model.')
 parser.add_argument('--gpu', default=None, type=int,
                     help='GPU id to use.')
 
@@ -79,14 +73,13 @@ def main():
 
   if args.data == '':
     args.data = bird_or_bicyle.dataset.default_data_root()
-    # args.data = "/root/datasets/unpacked_imagenet_pytorch"
 
   if args.gpu is not None:
     warnings.warn('You have chosen a specific GPU. This will completely '
                   'disable data parallelism.')
 
   # create model
-  model = models.resnet50(num_classes=2, pretrained=args.pretrained)
+  model = getattr(models, args.arch)(num_classes=2, pretrained=args.pretrained)
 
   if args.gpu is not None:
     model = model.cuda(args.gpu)
@@ -104,7 +97,7 @@ def main():
                               momentum=args.momentum,
                               weight_decay=args.weight_decay)
   lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-    optimizer, milestones=[30, 60, 80], gamma=0.2)
+      optimizer, milestones=[30, 60, 80], gamma=0.2)
 
   # optionally resume from a checkpoint
   if args.resume:
@@ -130,14 +123,14 @@ def main():
                                    std=[0.229, 0.224, 0.225])
 
   train_dataset = [datasets.ImageFolder(
-    traindir,
-    transforms.Compose([
-      transforms.RandomResizedCrop(224),
-      transforms.RandomHorizontalFlip(),
-      transforms.ToTensor(),
-      normalize,
-    ]))
-    for traindir in traindirs]
+      traindir,
+      transforms.Compose([
+          transforms.RandomResizedCrop(224),
+          transforms.RandomHorizontalFlip(),
+          transforms.ToTensor(),
+          normalize,
+      ]))
+      for traindir in traindirs]
   if len(train_dataset) == 1:
     train_dataset = train_dataset[0]
   else:
@@ -147,50 +140,49 @@ def main():
   # train_dataset.samples = train_dataset.samples * 100
 
   train_loader = torch.utils.data.DataLoader(
-    train_dataset, batch_size=args.batch_size, shuffle=True,
-    num_workers=args.workers, pin_memory=True)
+      train_dataset, batch_size=args.batch_size, shuffle=True,
+      num_workers=args.workers, pin_memory=True)
 
   val_loader = torch.utils.data.DataLoader(
-    datasets.ImageFolder(valdir, transforms.Compose([
-      transforms.Resize(256),
-      transforms.CenterCrop(224),
-      transforms.ToTensor(),
-      normalize,
-    ])),
-    batch_size=args.batch_size, shuffle=False,
-    num_workers=args.workers, pin_memory=True)
-
-  if args.predict:
-    predict(val_loader, model)
-    return
+      datasets.ImageFolder(valdir, transforms.Compose([
+          transforms.Resize(256),
+          transforms.CenterCrop(224),
+          transforms.ToTensor(),
+          normalize,
+      ])),
+      batch_size=args.batch_size, shuffle=False,
+      num_workers=args.workers, pin_memory=True)
 
   if args.evaluate:
-    validate(val_loader, model, criterion)
+    if not args.resume:
+      print('WARNING: evaluating without loading a checkpoint, use --resume '
+            'to load a previously trained checkpoint if needed.')
+    evaluate(val_loader, model)
+    return
 
   for epoch in range(args.start_epoch, args.epochs):
     adjust_learning_rate(optimizer, epoch)
 
     # train for one epoch
-    train(train_loader, model, criterion, optimizer, epoch)
+    train_epoch(train_loader, model, criterion, optimizer, epoch)
     lr_scheduler.step()
 
     # evaluate on validation set
-    if args.evaluate:
-      prec1 = validate(val_loader, model, criterion)
+    prec1 = validate_epoch(val_loader, model, criterion)
 
-      # remember best prec@1 and save checkpoint
-      is_best = prec1 > best_prec1
-      best_prec1 = max(prec1, best_prec1)
-      save_checkpoint({
+    # remember best prec@1 and save checkpoint
+    is_best = prec1 > best_prec1
+    best_prec1 = max(prec1, best_prec1)
+    save_checkpoint({
         'epoch': epoch + 1,
         'arch': args.arch,
         'state_dict': model.state_dict(),
         'best_prec1': best_prec1,
         'optimizer': optimizer.state_dict(),
-      }, is_best)
+    }, is_best)
 
 
-def train(train_loader, model, criterion, optimizer, epoch):
+def train_epoch(train_loader, model, criterion, optimizer, epoch):
   batch_time = AverageMeter()
   data_time = AverageMeter()
   losses = AverageMeter()
@@ -233,11 +225,11 @@ def train(train_loader, model, criterion, optimizer, epoch):
             'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
             'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
             'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t)'.format(
-        epoch, i, len(train_loader), batch_time=batch_time,
-        data_time=data_time, loss=losses, top1=top1))
+                epoch, i, len(train_loader), batch_time=batch_time,
+                data_time=data_time, loss=losses, top1=top1))
 
 
-def validate(val_loader, model, criterion):
+def validate_epoch(val_loader, model, criterion):
   batch_time = AverageMeter()
   losses = AverageMeter()
   top1 = AverageMeter()
@@ -270,40 +262,17 @@ def validate(val_loader, model, criterion):
               'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
               'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
               'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'.format(
-          i, len(val_loader), batch_time=batch_time, loss=losses,
-          top1=top1))
+                  i, len(val_loader), batch_time=batch_time, loss=losses,
+                  top1=top1))
 
     print(' * Prec@1 {top1.avg:.3f}'.format(top1=top1))
 
   return top1.avg
 
 
-def predict(val_loader, model):
-  model.eval()
-  with torch.no_grad():
-    outputs_all = []
-    targets_all = []
-    for inputs, targets in val_loader:
-      if args.gpu is not None:
-        inputs = inputs.cuda(args.gpu, non_blocking=True)
-      targets = targets.cuda(args.gpu, non_blocking=True)
-
-      outputs = model(inputs)
-      outputs_all.append(outputs.cpu().numpy())
-      targets_all.append(targets.cpu().numpy())
-
-    outputs_all = np.concatenate(outputs_all)
-    targets_all = np.concatenate(targets_all)
-    np.savez('predictions.npz', predictions=outputs_all, targets=targets_all)
-
-    # TODO: agree on model API and how confidences are computed
-    predictions_01 = np.argmax(outputs_all, axis=1)
-    confidences = np.abs(outputs_all[:, 0] - outputs_all[:, 1])
-    idxs = get_cov_to_confident_error_idxs(predictions_01, confidences,
-                                           targets_all)
-    plt.figure()
-    plot_cov_to_confident_error_idxs(idxs, len(predictions_01))
-    plt.savefig('cov_to_confident_error_curve.pdf')
+def evaluate(val_loader, model):
+  eval_kit.evaluate_bird_or_bicycle_model(
+      model, dataset_iter=val_loader)
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
