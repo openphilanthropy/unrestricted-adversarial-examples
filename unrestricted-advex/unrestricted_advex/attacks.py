@@ -102,7 +102,7 @@ class BoundaryAttack(object):
         adv = x_np[i] + (adv - x_np[i]) / distortion * self.max_l2_distortion
 
       r.append(adv)
-    return r
+    return np.array(r)
 
 
 class SpatialGridAttack(Attack):
