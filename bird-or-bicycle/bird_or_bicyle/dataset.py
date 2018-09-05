@@ -196,7 +196,7 @@ def _get_bird_and_bicycle_image_ids(split):
 
 
 def default_data_root():
-  return os.path.expanduser('~/datasets/bird_or_bicyle')
+  return os.path.join(os.path.expanduser('~/datasets/bird_or_bicyle'), VERSION)
 
 
 def verify_dataset_integrity(split, data_root=None):
