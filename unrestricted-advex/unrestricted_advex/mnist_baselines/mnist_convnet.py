@@ -3,12 +3,14 @@ import tensorflow as tf
 
 
 class Model(object):
-  def __init__(self, restore=None, sess=None, tiny=False, name='model'):
+  def __init__(self, restore=None, sess=None, tiny=False, name='model',
+               num_classes=10):
     self.tiny = tiny
     self.name = name
 
     with tf.variable_scope(self.name, reuse=tf.AUTO_REUSE):
-      self._build_model(tf.constant(np.zeros((1, 28, 28, 1)), dtype=tf.float32))
+      self._build_model(tf.constant(np.zeros((1, 28, 28, 1)), dtype=tf.float32),
+                        num_classes=num_classes)
     if restore:
       path = tf.train.latest_checkpoint(restore)
       saver = tf.train.Saver()
@@ -22,7 +24,7 @@ class Model(object):
     """Map a stride scalar to the stride array for tf.nn.conv2d."""
     return [1, stride, stride, 1]
 
-  def _build_model(self, x=None):
+  def _build_model(self, x=None, num_classes=10):
     start = 8 if self.tiny else 32
 
     x = tf.nn.relu(self._conv('conv1', x, 5, 1, start, self._stride_arr(1)))
@@ -36,7 +38,7 @@ class Model(object):
     x = self._fully_connected(x, 64 if self.tiny else 512)
 
     with tf.variable_scope('logit'):
-      pre_softmax = self._fully_connected(x, 10)
+      pre_softmax = self._fully_connected(x, num_classes)
 
     return pre_softmax
 
