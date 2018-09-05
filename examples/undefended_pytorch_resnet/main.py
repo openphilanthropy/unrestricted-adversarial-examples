@@ -271,6 +271,22 @@ def validate_epoch(val_loader, model, criterion):
 
 
 def evaluate(val_loader, model):
+  # ----------------------------------------
+  # Workaround: tensorflow claims all the visible
+  # GPU memory upon starting. We use hacky patch
+  # to disable this feature
+  import tensorflow as tf
+  oldinit = tf.Session.__init__
+
+  def myinit(session_object, target='', graph=None, config=None):
+    print("Intercepted!")
+    if config is None:
+      config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    oldinit(session_object, target, graph, config)
+  tf.Session.__init__ = myinit
+  # ----------------------------------------
+
   def dataiter_wrapper(pytorch_loader, max_num_batches=-1):
     for i, (x_t, y_t) in enumerate(pytorch_loader):
       # transpose from NCHW to NHWC format
@@ -284,7 +300,9 @@ def evaluate(val_loader, model):
   def wrapped_model(x_np):
     x_np = x_np.transpose((0, 3, 1, 2))  # from NHWC to NCHW
     x_t = torch.from_numpy(x_np).cuda()
-    return model(x_t).cpu().numpy()
+    model.eval()
+    with torch.no_grad():
+      return model(x_t).cpu().numpy()
 
   eval_kit.evaluate_bird_or_bicycle_model(
       wrapped_model, dataset_iter=dataiter_wrapper(val_loader))
