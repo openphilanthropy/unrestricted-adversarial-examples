@@ -79,10 +79,10 @@ It must be a function that takes in batched images (as a numpy array), and retur
 ```python
 import numpy as np
 
-def my_very_robust_model(images_batch_nchw):
+def my_very_robust_model(images_batch_nhwc):
   """ This function implements a valid unrestricted advex defense that always returns higher
   logits for the second class """
-  batch_size = len(images_batch_nchw)
+  batch_size = len(images_batch_nhwc)
   logits_np = np.array([[-5.0, 5.0]] * batch_size)
   return logits_np.astype(np.float32)
 

@@ -23,9 +23,9 @@ class Attack(object):
 class NullAttack(Attack):
   name = 'null_attack'
 
-  def __call__(self, model_fn, images_batch_nchw, y_np):
+  def __call__(self, model_fn, images_batch_nhwc, y_np):
     del y_np, model_fn  # unused
-    return images_batch_nchw
+    return images_batch_nhwc
 
 
 class SpsaAttack(Attack):
