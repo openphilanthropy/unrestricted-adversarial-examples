@@ -174,10 +174,11 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       spatial_limits=[18, 18, 30],
       grid_granularity=[5, 5, 31],
       black_border_size=0),
-    attacks.BoundaryAttack(
-      model_fn,
-      max_l2_distortion=4,
-      label_to_example=bird_or_bicycle_label_to_examples),
+    # comment for now, bird_or_bicycle_label_to_example not defined
+    # attacks.BoundaryAttack(
+    #   model_fn,
+    #   max_l2_distortion=4,
+    #   label_to_example=bird_or_bicycle_label_to_examples),
   ]
   return _evaluate_two_class_unambiguous_model(model_fn, dataset_iter,
                                                model_name=model_name,

@@ -271,8 +271,23 @@ def validate_epoch(val_loader, model, criterion):
 
 
 def evaluate(val_loader, model):
+  def dataiter_wrapper(pytorch_loader, max_num_batches=-1):
+    for i, (x_t, y_t) in enumerate(pytorch_loader):
+      # transpose from NCHW to NHWC format
+      x_np = x_t.cpu().numpy().transpose((0, 2, 3, 1))
+      y_np = y_t.cpu().numpy()
+      yield x_np, y_np
+
+      if max_num_batches > 0 and i + 1 >= max_num_batches:
+        break
+
+  def wrapped_model(x_np):
+    x_np = x_np.transpose((0, 3, 1, 2))  # from NHWC to NCHW
+    x_t = torch.from_numpy(x_np).cuda()
+    return model(x_t).cpu().numpy()
+
   eval_kit.evaluate_bird_or_bicycle_model(
-      model, dataset_iter=val_loader)
+      wrapped_model, dataset_iter=dataiter_wrapper(val_loader))
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
