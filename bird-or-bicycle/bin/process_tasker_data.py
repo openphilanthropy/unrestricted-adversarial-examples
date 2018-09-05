@@ -71,6 +71,16 @@ class TaskerResponse:
            self.bicycle_label == 'definitely_yes'
 
 
+def _strip_name(image_id):
+  if image_id.startswith('/bird/'):
+    image_id = image_id[len('/bird/'):-len('.jpg')]
+  if image_id.startswith('/bicycle/'):
+    image_id = image_id[len('/bicycle/'):-len('.jpg')]
+
+  assert len(image_id) == len('86d47eaee77d6e33')
+  return image_id
+
+
 if __name__ == '__main__':
 
   unambiguous_bird_ids = []
@@ -116,12 +126,8 @@ if __name__ == '__main__':
 
   with open('/tmp/bird_image_ids.csv', 'w') as f:
     for bird_id in unambiguous_bird_ids:
-      bird_id = bird_id[len('/bird/'):-len('.jpg')]
-
-      f.write(bird_id + '\n')
+      f.write(_strip_name(bird_id) + '\n')
 
   with open('/tmp/bicycle_image_ids.csv', 'w') as f:
     for bicycle_id in unambiguous_bicycle_ids:
-      bicycle_id = bicycle_id[len('/bicycle/'):-len('.jpg')]
-
-      f.write(bicycle_id + '\n')
+      f.write(_strip_name(bicycle_id) + '\n')
