@@ -13,15 +13,13 @@ def test_two_class_mnist():
   model_dir = '/tmp/two-class-mnist/test'
   batch_size = 128
   dataset_total_n_batches = 1  # use a subset of the data
-  num_datapoints = batch_size * dataset_total_n_batches
   train_batches = 200
-  test_batches = 1
+  test_batches = 10
 
   # Train a little MNIST classifier from scratch
-  mnist = mnist_utils.mnist_dataset(one_hot=False)
-  two_class_iter = mnist_utils.two_class_iter(
-    mnist.train.images, mnist.train.labels,
-    num_datapoints=num_datapoints, batch_size=batch_size)
+  mnist = mnist_utils.mnist_dataset()
+  images = mnist.train.images[0:dataset_total_n_batches*batch_size]
+  labels = mnist.train.labels[0:dataset_total_n_batches*batch_size]
 
   def get_next_batch_fn():
     idx_cycle = itertools.cycle(range(len(images)))
@@ -41,9 +39,13 @@ def test_two_class_mnist():
 
   # Test it on small attacks
   model_fn = mnist_utils.np_two_class_mnist_model(model_dir)
+  num_datapoints = batch_size * test_batches
 
+  two_class_iter = mnist_utils.two_class_iter(
+    mnist.train.images, mnist_utils.one_hot_to_labels(mnist.train.labels),
+    num_datapoints=num_datapoints, batch_size=batch_size)
 
   attack = attacks.NullAttack()
   _, _, correct, _ = eval_kit.run_attack(
     model_fn, two_class_iter, attack)
-  assert(np.sum(correct) > (num_test_points * 0.5))
+  assert(np.sum(correct) > (num_datapoints * 0.5))
