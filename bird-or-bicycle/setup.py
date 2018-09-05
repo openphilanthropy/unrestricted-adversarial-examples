@@ -15,7 +15,7 @@ from setuptools import setup
 
 setup(
   name='bird-or-bicycle',
-  version='0.0.2',
+  version='0.0.3',
   description='Two-class unambiguous images. Follow the same dimensionality as ILSVRC 2012',
   author='Tom Brown',
   author_email='tombrown@google.com',

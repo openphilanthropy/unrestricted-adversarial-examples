@@ -24,7 +24,7 @@ from PIL import Image
 from bird_or_bicyle import metadata
 from tqdm import tqdm
 
-VERSION = '0.0.2'
+VERSION = '0.0.3'
 METADATA_ROOT = os.path.dirname(metadata.__file__)
 
 # https://stackoverflow.com/questions/20886565/using-multiprocessing-process-with-a-maximum-number-of-simultaneous-processes
@@ -137,9 +137,12 @@ def _map_with_tqdm(fn, iterable, n_workers=N_WORKERS, total=None):
 
 
 def _download_to_dir(image_ids, dest_dir, split):
-  print("Saving {n_images} images to {dest_dir} \
+  print("Version: {VERSION}. Saving {n_images} images to {dest_dir} \
     (using {N_WORKERS} parallel processes)".format(
-    n_images=len(image_ids), dest_dir=dest_dir, N_WORKERS=N_WORKERS))
+    VERSION=VERSION,
+    n_images=len(image_ids),
+    dest_dir=dest_dir,
+    N_WORKERS=N_WORKERS))
   os.makedirs(dest_dir, exist_ok=True)
 
   srcs = ["s3://open-images-dataset/train/%s.jpg" % (image_id)
@@ -193,7 +196,7 @@ def _get_bird_and_bicycle_image_ids(split):
 
 
 def default_data_root():
-  return os.path.expanduser('~/datasets/bird_or_bicyle')
+  return os.path.join(os.path.expanduser('~/datasets/bird_or_bicyle'), VERSION)
 
 
 def verify_dataset_integrity(split, data_root=None):
@@ -219,7 +222,7 @@ def verify_dataset_integrity(split, data_root=None):
       Please remove the corrupt dataset and try again" % (
         class_dir, expected_images, len(images_in_class))
 
-  if False: # Disable checksum for now
+  if False:  # Disable checksum for now
     shasum = _compute_sha1sum_of_directory(split_root)
     assert shasum == metadata.SHASUMS[
       VERSION][split], "sha1sum mismatch (got: %s). Please remove the files in %s" % (
