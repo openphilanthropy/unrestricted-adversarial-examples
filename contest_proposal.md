@@ -1,8 +1,12 @@
 # Unrestricted Adversarial Examples Contest Proposal
 
-[TODO: copy content from paper into this section after publication]
+(TODO: copy content from paper into this section immediately before publication)
 
-# Contest mechanics FAQ
+# Contest Prize Distribution Scheme
+(TODO: copy content from paper into this section immediately before publication)
+
+# Contest Mechanics FAQ
+(TODO: copy content from paper into this section immediately before publication)
 
 #### Why run an ongoing contest?
 
