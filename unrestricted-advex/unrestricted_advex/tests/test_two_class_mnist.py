@@ -13,33 +13,9 @@ def test_two_class_mnist():
   model_dir = '/tmp/two-class-mnist/test'
   batch_size = 128
   dataset_total_n_batches = 1  # use a subset of the data
-  train_batches = 200
-  test_batches = 1
+  train_batches = 20
 
   # Train a little MNIST classifier from scratch
-
-  '''
-  mnist = mnist_utils.mnist_dataset(one_hot=True)
-  images = mnist.train.images[0:dataset_total_n_batches*batch_size]
-  labels = mnist.train.labels[0:dataset_total_n_batches*batch_size]
-
-  def get_next_batch_fn():
-    idx_cycle = itertools.cycle(range(len(images)))
-    def next_batch_fn(batch_size):
-      images_batch = np.ndarray((0, 28*28))
-      labels_batch = np.ndarray((0, 10))
-      for _ in range(batch_size):
-        idx = next(idx_cycle)
-        images_batch = np.append(images_batch, images[idx,None], axis=0)
-        labels_batch = np.append(labels_batch, labels[idx,None], axis=0)
-      return (images_batch, labels_batch)
-    return next_batch_fn
-  next_batch_fn = get_next_batch_fn()
-  '''
-
-  # What do I need?
-  # A replacement next_batch_fn which produces only two classes
-
   mnist = mnist_utils.mnist_dataset(one_hot=False)
   num_datapoints = batch_size * dataset_total_n_batches
   next_batch_iter = mnist_utils.two_class_iter(
@@ -48,9 +24,10 @@ def test_two_class_mnist():
     label_scheme='one_hot', cycle=True)
 
   mnist_utils.train_mnist(model_dir, lambda: next(next_batch_iter),
-                          train_batches, "vanilla")
+                          train_batches, "vanilla", save_every=(train_batches-1),
+                          print_every=10)
 
-  # Test it on small attacks
+  # Test it on small attacks *on the training set*
   model_fn = mnist_utils.np_two_class_mnist_model(model_dir)
 
   two_class_iter = mnist_utils.two_class_iter(
@@ -60,4 +37,6 @@ def test_two_class_mnist():
   attack = attacks.NullAttack()
   _, _, correct, _ = eval_kit.run_attack(
     model_fn, two_class_iter, attack)
-  assert(np.sum(correct) > (num_datapoints * 0.5))
+
+  # not sure exactly how much fudge factor is needed
+  assert np.sum(correct) >= (num_datapoints - 1)

@@ -5,7 +5,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 from unrestricted_advex.mnist_baselines import mnist_convnet
-from tensorflow.examples.tutorials.mnist import input_data
 from cleverhans.attacks import MadryEtAl
 
 
@@ -34,7 +33,8 @@ class TwoClassWrapper(object):
 
   def __call__(self, xs):
     logits = self.mnist_model(xs)
-    return tf.stack([logits[:, self.classes[0]], logits[:, self.classes[1]]], axis=1)
+    return tf.stack([logits[:, self.classes[0]],
+                     logits[:, self.classes[1]]], axis=1)
 
 
 def two_class_iter(images, labels, num_datapoints, batch_size,
@@ -85,7 +85,8 @@ def np_two_class_mnist_model(model_dir):
     return np_model
 
 
-def train_mnist(model_dir, next_batch_fn, total_batches, train_mode):
+def train_mnist(model_dir, next_batch_fn, total_batches, train_mode,
+                save_every=1000, print_every=100):
   x_input = tf.placeholder(tf.float32, (None, 28, 28, 1))
   y_input = tf.placeholder(tf.float32, [None, 10])
 
@@ -139,7 +140,7 @@ def train_mnist(model_dir, next_batch_fn, total_batches, train_mode):
       adv_dict = {x_input: x_batch_adv,
                   y_input: y_batch}
 
-      if batch_num % 100 == 0:
+      if batch_num % print_every == 0:
         a, l, s = sess.run((accuracy, loss, nat_summaries), nat_dict)
         summary_writer.add_summary(s, sess.run(global_step))
         print(batch_num, "Clean accuracy", a, "loss", l)
@@ -148,7 +149,7 @@ def train_mnist(model_dir, next_batch_fn, total_batches, train_mode):
           summary_writer.add_summary(s, sess.run(global_step))
           print(batch_num, "Adv accuracy", a, "loss", l)
 
-      if batch_num % 1000 == 0:
+      if batch_num % save_every == 0:
         saver.save(sess, os.path.join(model_dir, "checkpoint"),
                    global_step=global_step)
 
