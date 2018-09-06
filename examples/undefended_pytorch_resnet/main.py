@@ -1,5 +1,11 @@
 """
-python main.py
+To train the model:
+
+  python main.py
+
+To evaluate the model (on GPU0) by loading a saved checkpoint:
+
+  CUDA_VISIBLE_DEVICES=0 python main.py --evaluate --resume=checkpoint.pth.tar
 
 train resnet50 (weight decay 5e-4) on extras + train, eval on test:
 Prec@1 95.500
@@ -68,6 +74,10 @@ best_prec1 = 0
 def main():
   global args, best_prec1
   args = parser.parse_args()
+
+  if args.smoke_test:
+    args.batch_size = 4
+    print('Smoke testing, setting batch size to {}'.format(args.batch_size))
 
   args.lr = 0.1 * (args.batch_size / 256)
   args.workers = int(4 * (args.batch_size / 256))
