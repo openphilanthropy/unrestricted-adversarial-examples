@@ -1,5 +1,6 @@
 import csv
 import json
+from collections import defaultdict
 
 MIN_BBOX_AREA = (0.5 * 299) ** 2
 
@@ -38,36 +39,15 @@ class TaskerResponse:
     return float(self.bounding_box['width']) * \
            float(self.bounding_box['height'])
 
-  def _is_valid(self):
-    if self._object_area() < MIN_BBOX_AREA:
-      print("INVALID, object was too small: %s" % self.url)
-      return False
-      pass
-
-    if self.is_depiction:
-      print("INVALID, object was a depiction : %s" % self.url)
-      return False
-
-    if not ALLOW_OCCLUDED:
-      if self.is_occluded:
-        print("INVALID, object was occluded : %s" % self.url)
-        return False
-
-    if not ALLOW_TRUNCATED:
-      if self.is_truncated:
-        print("INVALID, object was truncated : %s" % self.url)
-        return False
-
-    return True
+  def has_large_object(self):
+    return self._object_area() > MIN_BBOX_AREA
 
   def is_unambiguous_bird(self):
-    return self._is_valid() and \
-           self.bird_label == 'definitely_yes' and \
+    return self.bird_label == 'definitely_yes' and \
            self.bicycle_label == 'definitely_no'
 
   def is_unambiguous_bicycle(self):
-    return self._is_valid() and \
-           self.bird_label == 'definitely_no' and \
+    return self.bird_label == 'definitely_no' and \
            self.bicycle_label == 'definitely_yes'
 
 
@@ -89,6 +69,8 @@ if __name__ == '__main__':
   unambiguous_bicycle_ids = []
   unambiguous_bicycle_urls = []
 
+  rejection_reason_to_urls = defaultdict(list)
+
   filename = '/tmp/bird-or-bicycle-tasker-data.csv'
   with open(filename, 'r') as f:
     reader = csv.reader(f)
@@ -104,22 +86,38 @@ if __name__ == '__main__':
       tasker_2_data = row[9:16]
       tasker_3_data = row[16:23]
 
-      tasker_responses = [
+      responses = [
         TaskerResponse(tasker_1_data, url=url),
         TaskerResponse(tasker_2_data, url=url),
         TaskerResponse(tasker_3_data, url=url),
       ]
+      if not all([resp.has_large_object() for resp in responses]):
+        rejection_reason_to_urls['too_small'].append(url)
+        continue
 
-      if all([resp.is_unambiguous_bird() for resp in tasker_responses]):
+      if not all([not resp.is_depiction for resp in responses]):
+        rejection_reason_to_urls['is_depiction'].append(url)
+        continue
+
+      if not ALLOW_OCCLUDED:
+        if not all([not resp.is_occluded for resp in responses]):
+          rejection_reason_to_urls['is_occluded'].append(url)
+        continue
+
+      if not ALLOW_TRUNCATED:
+        if not all([not resp.is_truncated for resp in responses]):
+          rejection_reason_to_urls['is_truncated'].append(url)
+        continue
+
+      if all([resp.is_unambiguous_bird() for resp in responses]):
         unambiguous_bird_ids.append(image_id)
         unambiguous_bird_urls.append(url)
-
-      elif all([resp.is_unambiguous_bicycle() for resp in tasker_responses]):
+      elif all([resp.is_unambiguous_bicycle() for resp in responses]):
         unambiguous_bicycle_ids.append(image_id)
         unambiguous_bicycle_urls.append(url)
-
       else:
-        print("Ambiguous image: %s" % url)
+        rejection_reason_to_urls['ambiguous'].append(url)
+        # print("Ambiguous image: %s" % url)
 
   print('unambiguous_bicycle_ids: ', len(unambiguous_bicycle_ids))
   print('unambiguous_bird_ids: ', len(unambiguous_bird_ids))
