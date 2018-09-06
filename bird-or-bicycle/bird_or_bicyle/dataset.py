@@ -77,7 +77,7 @@ def _get_extras_image_ids():
     print(cmd)
     check_output(cmd, shell=True)
 
-  print("Finding all birds and bicycles within OpenImages dataset...")
+  print("Finding all birds and bicycles within OpenImages training dataset...")
   label_to_extras = {
     'bird': set(),
     'bicycle': set(),
@@ -109,9 +109,11 @@ def _get_extras_image_ids():
     for label_name in ['bird', 'bicycle']:
       label_to_extras[label_name] -= label_to_used_images[label_name]
 
-      # Truncate to the first 13000 images
-      num_extras = metadata.NUM_IMAGES_PER_CLASS[VERSION]['extras']
-      label_to_extras[label_name] = set(sorted(label_to_extras[label_name])[:num_extras])
+  # Truncate to the first 13000 images
+  num_extras = metadata.NUM_IMAGES_PER_CLASS[VERSION]['extras']
+  for label_name in ['bird', 'bicycle']:
+    print(len(label_to_extras[label_name]))
+    label_to_extras[label_name] = set(sorted(label_to_extras[label_name])[:num_extras])
 
   return label_to_extras
 
