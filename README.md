@@ -109,7 +109,7 @@ We encourage defense creators to not design defenses that are intentionally unin
  
 ### Warm-up FAQ
 
-We have a [growing collection of frequently asked questions about the warm-up phase](warmup_faq.md). If you have additional questions, feel free to [submit a new GitHub issue with the "question" tag](https://github.com/google/unrestricted-adversarial-examples/issues/new) and we will respond shortly.
+We have a growing [FAQ for the warm-up phase](warmup_faq.md). If you have additional questions, feel free to [submit a new GitHub issue](https://github.com/google/unrestricted-adversarial-examples/issues/new) with the "question" tag and we will respond shortly.
 
 ## Contest phase
 
