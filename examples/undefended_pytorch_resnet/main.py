@@ -2,7 +2,7 @@
 python main.py
 
 train resnet50 (weight decay 5e-4) on extras + train, eval on test:
-Prec@1 95.200
+Prec@1 95.500
 """
 import argparse
 import os
@@ -59,6 +59,8 @@ parser.add_argument('--evaluate', dest='evaluate', action='store_true',
                     help='Evaluate the model.')
 parser.add_argument('--gpu', default=None, type=int,
                     help='GPU id to use.')
+parser.add_argument('--smoke-test', dest='smoke_test', action='store_true',
+                    help='Test running only with 1 train/eval batch.')
 
 best_prec1 = 0
 
@@ -179,6 +181,9 @@ def main():
     # evaluate on validation set
     prec1 = validate_epoch(val_loader, model, criterion)
 
+    if args.smoke_test:
+      break  # smoke test train with only 1 epoch
+
     # remember best prec@1 and save checkpoint
     is_best = prec1 > best_prec1
     best_prec1 = max(prec1, best_prec1)
@@ -228,7 +233,7 @@ def train_epoch(train_loader, model, criterion, optimizer, epoch):
     batch_time.update(time.time() - end)
     end = time.time()
 
-    if i % args.print_freq == 0:
+    if i % args.print_freq == 0 or args.smoke_test:
       print('Epoch: [{0}][{1}/{2}]\t'
             'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
             'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
@@ -236,6 +241,9 @@ def train_epoch(train_loader, model, criterion, optimizer, epoch):
             'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t)'.format(
                 epoch, i, len(train_loader), batch_time=batch_time,
                 data_time=data_time, loss=losses, top1=top1))
+
+    if args.smoke_test:
+      break  # smoke test train with only 1 batch
 
 
 def validate_epoch(val_loader, model, criterion):
@@ -266,13 +274,16 @@ def validate_epoch(val_loader, model, criterion):
       batch_time.update(time.time() - end)
       end = time.time()
 
-      if i % args.print_freq == 0:
+      if i % args.print_freq == 0 or args.smoke_test:
         print('Test: [{0}/{1}]\t'
               'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
               'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
               'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'.format(
                   i, len(val_loader), batch_time=batch_time, loss=losses,
                   top1=top1))
+
+      if args.smoke_test:
+        break  # smoke test runs with only 1 epoch
 
     print(' * Prec@1 {top1.avg:.3f}'.format(top1=top1))
 
@@ -296,7 +307,12 @@ def evaluate(val_loader, model):
   tf.Session.__init__ = myinit
   # ----------------------------------------
 
-  def dataiter_wrapper(pytorch_loader, max_num_batches=-1):
+  if args.smoke_test:
+    max_num_batches = 1
+  else:
+    max_num_batches = -1  # unlimited
+
+  def dataiter_wrapper(pytorch_loader):
     for i, (x_t, y_t) in enumerate(pytorch_loader):
       # transpose from NCHW to NHWC format
       x_np = x_t.cpu().numpy().transpose((0, 2, 3, 1))
