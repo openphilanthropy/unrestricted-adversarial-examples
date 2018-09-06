@@ -17,7 +17,9 @@ def test_two_class_mnist():
   test_batches = 10
 
   # Train a little MNIST classifier from scratch
-  mnist = mnist_utils.mnist_dataset()
+
+  '''
+  mnist = mnist_utils.mnist_dataset(one_hot=True)
   images = mnist.train.images[0:dataset_total_n_batches*batch_size]
   labels = mnist.train.labels[0:dataset_total_n_batches*batch_size]
 
@@ -32,17 +34,27 @@ def test_two_class_mnist():
         labels_batch = np.append(labels_batch, labels[idx,None], axis=0)
       return (images_batch, labels_batch)
     return next_batch_fn
-
   next_batch_fn = get_next_batch_fn()
-  mnist_utils.train_mnist(model_dir, next_batch_fn, batch_size, train_batches,
-                         "vanilla")
+  '''
+
+  # What do I need?
+  # A replacement next_batch_fn which produces only two classes
+
+  mnist = mnist_utils.mnist_dataset(one_hot=False)
+  next_batch_iter = mnist_utils.two_class_iter(
+    mnist.train.images, mnist.train.labels,
+    num_datapoints=(batch_size * dataset_total_n_batches),
+    batch_size=batch_size, label_scheme='one_hot', cycle=True)
+
+  mnist_utils.train_mnist(model_dir, lambda: next(next_batch_iter),
+                          train_batches, "vanilla")
 
   # Test it on small attacks
   model_fn = mnist_utils.np_two_class_mnist_model(model_dir)
   num_datapoints = batch_size * test_batches
 
   two_class_iter = mnist_utils.two_class_iter(
-    mnist.train.images, mnist_utils.one_hot_to_labels(mnist.train.labels),
+    mnist.train.images, mnist.train.labels,
     num_datapoints=num_datapoints, batch_size=batch_size)
 
   attack = attacks.NullAttack()

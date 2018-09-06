@@ -1,3 +1,4 @@
+import itertools
 import math
 import os
 import numpy as np
@@ -11,7 +12,7 @@ from cleverhans.attacks import MadryEtAl
 NUM_CLASSES = 10
 
 
-def mnist_dataset(one_hot=True):
+def mnist_dataset(one_hot):
   return input_data.read_data_sets('MNIST_data', one_hot=one_hot)
 
 
@@ -37,15 +38,28 @@ class TwoClassWrapper(object):
 
 
 def two_class_iter(images, labels, num_datapoints, batch_size,
-                   class1=7, class2=6):
+                   class1=7, class2=6, label_scheme='boolean',
+                   cycle=False):
   """Filter MNIST to only two classes (e.g. sixes and sevens)"""
   which = (labels == class1) | (labels == class2)
   images_2class = images[which].astype(np.float32)
   labels_2class = labels[which]
   num_batches = math.ceil(num_datapoints / batch_size)
-  for i in range(int(num_batches)):
+
+  idxs = range(int(num_batches))
+  if cycle:
+    idxs = itertools.cycle(idxs)
+  for i in idxs:
     images = images_2class[i:i + batch_size].reshape((batch_size, 28, 28, 1))
-    labels = labels_2class[i:i + batch_size] == class1
+    if label_scheme == 'boolean':
+      labels = labels_2class[i:i + batch_size] == class1
+    elif label_scheme == 'one_hot':
+      labels = labels_to_one_hot(labels_2class[i:i + batch_size])
+    elif label_scheme == 'labels':
+      labels = labels_2class[i:i + batch_size]
+    else:
+      raise NotImplementedError(
+        'Unrecognized label scheme {}'.format(label_scheme))
     yield images, labels
 
 
@@ -71,8 +85,7 @@ def np_two_class_mnist_model(model_dir):
     return np_model
 
 
-def train_mnist(model_dir, next_batch_fn, batch_size, total_batches,
-                train_mode):
+def train_mnist(model_dir, next_batch_fn, total_batches, train_mode):
   x_input = tf.placeholder(tf.float32, (None, 28, 28, 1))
   y_input = tf.placeholder(tf.float32, [None, 10])
 
@@ -108,7 +121,7 @@ def train_mnist(model_dir, next_batch_fn, batch_size, total_batches,
     sess.run(tf.global_variables_initializer())
 
     for batch_num in range(total_batches):
-      x_batch, y_batch = next_batch_fn(batch_size)
+      x_batch, y_batch = next_batch_fn()
       x_batch = np.reshape(x_batch, (-1, 28, 28, 1))
 
       if train_mode == "adversarial" and batch_num > 1000:
