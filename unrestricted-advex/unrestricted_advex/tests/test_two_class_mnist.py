@@ -30,13 +30,25 @@ def test_two_class_mnist():
   # Test it on small attacks *on the training set*
   model_fn = mnist_utils.np_two_class_mnist_model(model_dir)
 
-  two_class_iter = mnist_utils.two_class_iter(
-    mnist.train.images, mnist.train.labels,
-    num_datapoints=num_datapoints, batch_size=batch_size)
+  attack_list = {
+    'null_attack': attacks.NullAttack(),
+    'spatial_grid_attack': attacks.SpatialGridAttack(
+      image_shape_hwc=(28, 28, 1),
+      spatial_limits=[5, 5, 5],
+      grid_granularity=[4, 4, 4],
+      black_border_size=4,
+      valid_check=mnist_utils.mnist_valid_check),
+    }
 
-  attack = attacks.NullAttack()
-  _, _, correct, _ = eval_kit.run_attack(
-    model_fn, two_class_iter, attack)
+  results = {}
+  for (name, attack) in attack_list.items():
+    print(name)
+    two_class_iter = mnist_utils.two_class_iter(
+      mnist.train.images, mnist.train.labels,
+      num_datapoints=num_datapoints, batch_size=batch_size)
+    _, _, correct, _ = eval_kit.run_attack(
+      model_fn, two_class_iter, attack)
+    results[name] = np.sum(correct)
 
-  # not sure exactly how much fudge factor is needed
-  assert np.sum(correct) >= (num_datapoints - 1)
+  assert results['null_attack'] >= (num_datapoints - 1)
+  assert results['spatial_grid_attack'] <= num_datapoints * 0.7

@@ -9,6 +9,7 @@ import bird_or_bicyle
 import numpy as np
 from tqdm import tqdm
 from unrestricted_advex import attacks, plotting
+from unrestricted_advex.mnist_baselines import mnist_utils
 
 EVAL_WITH_ATTACKS_DIR = '/tmp/eval_with_attacks'
 
@@ -124,12 +125,6 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
   :param dataset_iter: An iterable that returns (batched_images, batched_labels)
   :param model_name: An optional model_fn name
   """
-
-  def _mnist_valid_check(before, after):
-    weight_before = np.sum(np.abs(before), axis=(1, 2, 3))
-    weight_after = np.sum(np.abs(after), axis=(1, 2, 3))
-    return np.abs(weight_after - weight_before) < weight_before * .1
-
   attack_list = [
     attacks.NullAttack(),
     attacks.SpsaAttack(
@@ -141,7 +136,7 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
       spatial_limits=[10, 10, 10],
       grid_granularity=[10, 10, 10],
       black_border_size=4,
-      valid_check=_mnist_valid_check),
+      valid_check=mnist_utils.mnist_valid_check),
     attacks.BoundaryAttack(
       model_fn,
       max_l2_distortion=4),

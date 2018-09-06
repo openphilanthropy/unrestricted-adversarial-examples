@@ -26,6 +26,12 @@ def one_hot_to_labels(one_hot):
   return labels
 
 
+def mnist_valid_check(before, after):
+  weight_before = np.sum(np.abs(before), axis=(1, 2, 3))
+  weight_after = np.sum(np.abs(after), axis=(1, 2, 3))
+  return np.abs(weight_after - weight_before) < weight_before * .1
+
+
 class TwoClassWrapper(object):
   def __init__(self, mnist_model, classes=(6, 7)):
     self.mnist_model = mnist_model
