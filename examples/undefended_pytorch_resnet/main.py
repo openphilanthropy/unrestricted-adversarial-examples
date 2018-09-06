@@ -75,6 +75,10 @@ def main():
   global args, best_prec1
   args = parser.parse_args()
 
+  if args.smoke_test:
+    args.batch_size = 4
+    print('Smoke testing, setting batch size to {}'.format(args.batch_size))
+
   args.lr = 0.1 * (args.batch_size / 256)
   args.workers = int(4 * (args.batch_size / 256))
 
