@@ -14,7 +14,7 @@ def test_two_class_mnist():
   batch_size = 128
   dataset_total_n_batches = 1  # use a subset of the data
   train_batches = 200
-  test_batches = 10
+  test_batches = 1
 
   # Train a little MNIST classifier from scratch
 
@@ -41,17 +41,17 @@ def test_two_class_mnist():
   # A replacement next_batch_fn which produces only two classes
 
   mnist = mnist_utils.mnist_dataset(one_hot=False)
+  num_datapoints = batch_size * dataset_total_n_batches
   next_batch_iter = mnist_utils.two_class_iter(
     mnist.train.images, mnist.train.labels,
-    num_datapoints=(batch_size * dataset_total_n_batches),
-    batch_size=batch_size, label_scheme='one_hot', cycle=True)
+    num_datapoints=num_datapoints, batch_size=batch_size,
+    label_scheme='one_hot', cycle=True)
 
   mnist_utils.train_mnist(model_dir, lambda: next(next_batch_iter),
                           train_batches, "vanilla")
 
   # Test it on small attacks
   model_fn = mnist_utils.np_two_class_mnist_model(model_dir)
-  num_datapoints = batch_size * test_batches
 
   two_class_iter = mnist_utils.two_class_iter(
     mnist.train.images, mnist.train.labels,
