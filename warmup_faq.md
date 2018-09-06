@@ -1,6 +1,6 @@
 # Unrestricted Adversarial Examples Warm-up FAQ
 
-#### How did you decide which attacks to use for the warm-up?
+### How did you decide which attacks to use for the warm-up?
 
 We wanted to choose attacks with the following properties:
 
@@ -10,7 +10,7 @@ We wanted to choose attacks with the following properties:
 
 Beyond that, we focused on attacks that cover a variety of neighborhoods beyond the typical L_infinity ball 
 
-#### How did you decide what hyperparameters to use for the attacks?
+### How did you decide what hyperparameters to use for the attacks?
 
 We want our `eval_kit` to complete within 24 hours on a single P100 GPU. This allows a typical university laboratory to run many evaluations before publishing their results.
 
