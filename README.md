@@ -36,8 +36,6 @@ The top five distinct models for each dataset are shown below. You can see all s
 | [Undefended ResNet Baseline](unrestricted_advex/pytorch_resnet_baseline)   |  Google Brain   |    0.0%    |     0.0%    |     0.0%     |  Aug 27th, 2018 |
 
 
-
-
 ### Implementing a defense
 
 First install the requirements (assuming you already have working installation
@@ -110,7 +108,9 @@ For example, it would be possible to break the confidence-based SPSA attack thro
 
 We encourage defense creators to not design defenses that are intentionally uninteresting.
  
+### Warm-up FAQ
 
+We have a [growing collection of frequently asked questions about the warm-up phase](warmup_faq.md). If you have additional questions, feel free to [submit a new GitHub issue with the "question" tag](https://github.com/google/unrestricted-adversarial-examples/issues/new) and we will respond shortly.
 
 ## Contest phase
 
