@@ -1,5 +1,11 @@
 """
-python main.py
+To train the model:
+
+  python main.py
+
+To evaluate the model (on GPU0) by loading a saved checkpoint:
+
+  CUDA_VISIBLE_DEVICES=0 python main.py --evaluate --resume=checkpoint.pth.tar
 
 train resnet50 (weight decay 5e-4) on extras + train, eval on test:
 Prec@1 95.500
