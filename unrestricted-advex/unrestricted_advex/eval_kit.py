@@ -11,6 +11,7 @@ from tqdm import tqdm
 from unrestricted_advex import attacks, plotting
 from unrestricted_advex.mnist_baselines import mnist_utils
 
+
 EVAL_WITH_ATTACKS_DIR = '/tmp/eval_with_attacks'
 
 
@@ -117,7 +118,6 @@ def _get_coverage_to_confident_error_idxs(coverages, preds, confidences, y_true)
 
   return cov_to_confident_error_idxs
 
-
 def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None):
   """
   Evaluates a two-class MNIST model_fn on a default set of attacks and creates plots
@@ -125,6 +125,13 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
   :param dataset_iter: An iterable that returns (batched_images, batched_labels)
   :param model_name: An optional model_fn name
   """
+
+  images_2class, labels_2class = mnist_utils.two_class_mnist_dataset()
+
+  mnist_label_to_examples = {0: images_2class[0==labels_2class],
+                             1: images_2class[1==labels_2class]}
+
+>>>>>>> origin/master
   attack_list = [
     attacks.NullAttack(),
     attacks.SpsaAttack(
@@ -139,7 +146,8 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
       valid_check=mnist_utils.mnist_valid_check),
     attacks.BoundaryAttack(
       model_fn,
-      max_l2_distortion=4),
+      max_l2_distortion=4,
+      label_to_examples=mnist_label_to_examples),
   ]
 
   return _evaluate_two_class_unambiguous_model(
@@ -169,9 +177,11 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       spatial_limits=[18, 18, 30],
       grid_granularity=[5, 5, 31],
       black_border_size=0),
-    attacks.BoundaryAttack(
-      model_fn,
-      max_l2_distortion=4),
+    # comment for now, bird_or_bicycle_label_to_example not defined
+    # attacks.BoundaryAttack(
+    #   model_fn,
+    #   max_l2_distortion=4,
+    #   label_to_example=bird_or_bicycle_label_to_examples),
   ]
   return _evaluate_two_class_unambiguous_model(model_fn, dataset_iter,
                                                model_name=model_name,

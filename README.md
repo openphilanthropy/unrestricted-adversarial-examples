@@ -36,8 +36,6 @@ The top five distinct models for each dataset are shown below. You can see all s
 | [Undefended ResNet Baseline](unrestricted_advex/pytorch_resnet_baseline)   |  Google Brain   |    0.0%    |     0.0%    |     0.0%     |  Aug 27th, 2018 |
 
 
-
-
 ### Implementing a defense
 
 First install the requirements (assuming you already have working installation
@@ -74,15 +72,14 @@ CUDA_VISIBLE_DEVICES=0 python evaluate_two_class_mnist.py
 
 #### To be evaluated against our fixed warm-up attacks, your defense must implement the following API
 
-It must be a function that takes in batched images (as a numpy array), and returns two scalar (e.g. logits) between `(-inf, inf)`. These correspond to the likelihood the image corresponds to each of the two classes (e.g. the bicycle and bird class)
+It must be a function that takes in batched images (as a numpy array), and returns two scalar (e.g. logits) between `(-inf, inf)`. These correspond to the likelihood the image corresponds to each of the two classes (e.g. the bird and bicycle class)
 
 ```python
 import numpy as np
 
-def my_very_robust_model(images_batch_nchw):
-  """ This function implements a valid unrestricted advex defense that always returns higher
-  logits for the second class """
-  batch_size = len(images_batch_nchw)
+def my_very_robust_model(images_batch_nhwc):
+  """ This fn is a valid defense that always predicts the second class """
+  batch_size = len(images_batch_nhwc)
   logits_np = np.array([[-5.0, 5.0]] * batch_size)
   return logits_np.astype(np.float32)
 
@@ -95,7 +92,7 @@ For ease of evaluation, your model must also maintain a throughput of at least *
 ##### Your defense will be evaluated with the following mechanism
 
 - The test dataset is passed through the model and converted to logits.
-- `confidence` is defined as `max(bicycle_logit, bird_logit)` for each image.
+- `confidence` is defined as `max(bird_logit, bicycle_logit)` for each image.
 - The 20% of images that resulted in logits with the lowest `confidence` are abstained on by the model and are discarded.
 - The model’s score is the **accuracy on points that were not abstained on**.
 
@@ -110,7 +107,9 @@ For example, it would be possible to break the confidence-based SPSA attack thro
 
 We encourage defense creators to not design defenses that are intentionally uninteresting.
  
+### Warm-up FAQ
 
+We have a growing [FAQ for the warm-up phase](warmup_faq.md). If you have additional questions, feel free to [submit a new GitHub issue](https://github.com/google/unrestricted-adversarial-examples/issues/new) with the "question" tag and we will respond shortly.
 
 ## Contest phase
 
