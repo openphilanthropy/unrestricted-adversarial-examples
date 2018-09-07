@@ -43,6 +43,18 @@ class TwoClassWrapper(object):
                      logits[:, self.classes[1]]], axis=1)
 
 
+CLASS1 = 6
+CLASS2 = 7
+
+
+def two_class_mnist_dataset(one_hot=False):
+  mnist = mnist_dataset(one_hot=one_hot)
+  which = (mnist.test.labels == CLASS1) | (mnist.test.labels == CLASS2)
+  images_2class = mnist.test.images[which].astype(np.float32)
+  labels_2class = mnist.test.labels[which]
+  return images_2class.reshape((-1, 28, 28, 1)), labels_2class == CLASS2
+
+
 def two_class_iter(images, labels, num_datapoints, batch_size,
                    class1=7, class2=6, label_scheme='boolean',
                    cycle=False):

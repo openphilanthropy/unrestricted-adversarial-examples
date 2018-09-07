@@ -131,7 +131,6 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
   mnist_label_to_examples = {0: images_2class[0==labels_2class],
                              1: images_2class[1==labels_2class]}
 
->>>>>>> origin/master
   attack_list = [
     attacks.NullAttack(),
     attacks.SpsaAttack(
