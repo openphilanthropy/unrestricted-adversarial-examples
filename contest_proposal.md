@@ -2,7 +2,8 @@
 
 (TODO: copy content from paper into this section immediately before publication)
 
-# Contest Prize Distribution Scheme
+# <a name="prizes"></a>Contest Prize Distribution Scheme
+
 (TODO: copy content from paper into this section immediately before publication)
 
 # Contest Mechanics FAQ
