@@ -42,7 +42,9 @@ def run_attack(model, data_iter, attack_fn, max_num_batches=1, save_image_dir=No
 
 def save_image_to_png(image_np, filename):
   from PIL import Image
-  os.makedirs(os.path.dirname(filename), exist_ok=True)
+  dirname = os.path.dirname(filename)
+  if not os.path.exists(dirname):
+    os.makedirs(dirname)
   img = Image.fromarray(np.uint8(image_np * 255.), 'RGB')
   img.save(filename)
 

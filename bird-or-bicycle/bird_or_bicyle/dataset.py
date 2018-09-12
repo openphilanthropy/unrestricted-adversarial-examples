@@ -145,7 +145,9 @@ def _download_to_dir(image_ids, dest_dir, split):
     n_images=len(image_ids),
     dest_dir=dest_dir,
     N_WORKERS=N_WORKERS))
-  os.makedirs(dest_dir, exist_ok=True)
+
+  if not os.path.exists(dest_dir):
+    os.makedirs(dest_dir)
 
   srcs = ["s3://open-images-dataset/train/%s.jpg" % (image_id)
           for image_id in image_ids]
