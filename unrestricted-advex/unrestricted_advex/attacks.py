@@ -21,7 +21,7 @@ class Attack(object):
 
 
 class NullAttack(Attack):
-  name = 'null_attack'
+  name = 'null'
 
   def __call__(self, model_fn, images_batch_nhwc, y_np):
     del y_np, model_fn  # unused
@@ -29,7 +29,7 @@ class NullAttack(Attack):
 
 
 class SpsaAttack(Attack):
-  name = 'spsa_attack'
+  name = 'spsa'
 
   def __init__(self, model, image_shape_hwc, epsilon=(16. / 255), is_debug=False):
     self.graph = tf.Graph()
@@ -112,7 +112,7 @@ class SpatialGridAttack(Attack):
 
   https://arxiv.org/pdf/1712.02779.pdf
   """
-  name = 'spatial'
+  name = 'spatial_grid'
 
   def __init__(self, image_shape_hwc,
                spatial_limits,
