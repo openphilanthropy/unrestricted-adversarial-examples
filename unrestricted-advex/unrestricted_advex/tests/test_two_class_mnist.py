@@ -40,8 +40,8 @@ def test_two_class_mnist_accuracy():
   """ Train an mnist model on a subset of mnist and then evaluate it
   on small attacks *on the training set*.
   """
-  model_fn = train_overfit_classifier(num_batches=20, batch_size=32)
-  dataset_iter = get_two_class_iter(num_batches=1, batch_size=32)
+  model_fn = train_overfit_classifier(num_batches=32, batch_size=1)
+  dataset_iter = get_two_class_iter(num_batches=32, batch_size=1)
 
   mnist_spatial_limits = [10, 10, 10]
   mnist_shape = (28, 28, 1)
@@ -71,9 +71,20 @@ def test_two_class_mnist_accuracy():
       black_border_size=mnist_black_border_size,
       image_shape_hwc=mnist_shape,
     ),
-
-    # Skip boundary attack in this test because it is too slow
   ]
+
+  boundary_attack = attacks.BoundaryWithRandomSpatialAttack(
+    model_fn,
+    max_l2_distortion=4,
+    label_to_examples=eval_kit._get_mnist_labels_to_examples(),
+    spatial_limits=mnist_spatial_limits,
+    black_border_size=mnist_black_border_size,
+    image_shape_hwc=mnist_shape,
+  )
+
+  # We limit the boundary attack to the first datapoint to speed up eval
+  boundary_attack.stop_after_n_datapoints = 1
+  attack_list.append(boundary_attack)
 
   results = eval_kit.evaluate_two_class_unambiguous_model(
     model_fn,
