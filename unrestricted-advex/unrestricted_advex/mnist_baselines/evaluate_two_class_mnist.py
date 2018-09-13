@@ -8,6 +8,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string("model_dir", "/tmp/two-class-mnist/vanilla",
                     "Where to put the trained model checkpoint")
 
+
 def main(_):
   mnist = mnist_utils.mnist_dataset(one_hot=False)
   eval_kit.evaluate_two_class_mnist_model(

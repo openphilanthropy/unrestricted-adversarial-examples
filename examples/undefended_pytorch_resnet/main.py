@@ -16,8 +16,6 @@ import shutil
 import time
 import warnings
 
-import matplotlib
-import numpy as np
 import bird_or_bicyle
 import torch
 import torch.backends.cudnn as cudnn
@@ -29,9 +27,7 @@ import torch.utils.data.distributed
 import torchvision.datasets as datasets
 import torchvision.models as models
 import torchvision.transforms as transforms
-
 from unrestricted_advex import eval_kit
-
 
 model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__") and
@@ -113,7 +109,7 @@ def main():
                               momentum=args.momentum,
                               weight_decay=args.weight_decay)
   lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-      optimizer, milestones=[30, 60, 80], gamma=0.2)
+    optimizer, milestones=[30, 60, 80], gamma=0.2)
 
   # optionally resume from a checkpoint
   if args.resume:
@@ -144,14 +140,14 @@ def main():
                                    std=[0.229, 0.224, 0.225])
 
   train_dataset = [datasets.ImageFolder(
-      traindir,
-      transforms.Compose([
-          transforms.RandomResizedCrop(224),
-          transforms.RandomHorizontalFlip(),
-          transforms.ToTensor(),
-          # normalize,
-      ]))
-      for traindir in traindirs]
+    traindir,
+    transforms.Compose([
+      transforms.RandomResizedCrop(224),
+      transforms.RandomHorizontalFlip(),
+      transforms.ToTensor(),
+      # normalize,
+    ]))
+    for traindir in traindirs]
   if len(train_dataset) == 1:
     train_dataset = train_dataset[0]
   else:
@@ -161,18 +157,18 @@ def main():
   # train_dataset.samples = train_dataset.samples * 100
 
   train_loader = torch.utils.data.DataLoader(
-      train_dataset, batch_size=args.batch_size, shuffle=True,
-      num_workers=args.workers, pin_memory=True)
+    train_dataset, batch_size=args.batch_size, shuffle=True,
+    num_workers=args.workers, pin_memory=True)
 
   val_loader = torch.utils.data.DataLoader(
-      datasets.ImageFolder(valdir, transforms.Compose([
-          transforms.Resize(256),
-          transforms.CenterCrop(224),
-          transforms.ToTensor(),
-          # normalize,
-      ])),
-      batch_size=args.batch_size, shuffle=False,
-      num_workers=args.workers, pin_memory=True)
+    datasets.ImageFolder(valdir, transforms.Compose([
+      transforms.Resize(256),
+      transforms.CenterCrop(224),
+      transforms.ToTensor(),
+      # normalize,
+    ])),
+    batch_size=args.batch_size, shuffle=False,
+    num_workers=args.workers, pin_memory=True)
 
   if args.evaluate:
     if not args.resume:
@@ -198,11 +194,11 @@ def main():
     is_best = prec1 > best_prec1
     best_prec1 = max(prec1, best_prec1)
     save_checkpoint({
-        'epoch': epoch + 1,
-        'arch': args.arch,
-        'state_dict': model.state_dict(),
-        'best_prec1': best_prec1,
-        'optimizer': optimizer.state_dict(),
+      'epoch': epoch + 1,
+      'arch': args.arch,
+      'state_dict': model.state_dict(),
+      'best_prec1': best_prec1,
+      'optimizer': optimizer.state_dict(),
     }, is_best)
 
 
@@ -249,8 +245,8 @@ def train_epoch(train_loader, model, criterion, optimizer, epoch):
             'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
             'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
             'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t)'.format(
-                epoch, i, len(train_loader), batch_time=batch_time,
-                data_time=data_time, loss=losses, top1=top1))
+        epoch, i, len(train_loader), batch_time=batch_time,
+        data_time=data_time, loss=losses, top1=top1))
 
     if args.smoke_test:
       break  # smoke test train with only 1 batch
@@ -289,8 +285,8 @@ def validate_epoch(val_loader, model, criterion):
               'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
               'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
               'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'.format(
-                  i, len(val_loader), batch_time=batch_time, loss=losses,
-                  top1=top1))
+          i, len(val_loader), batch_time=batch_time, loss=losses,
+          top1=top1))
 
       if args.smoke_test:
         break  # smoke test runs with only 1 epoch
@@ -314,6 +310,7 @@ def evaluate(val_loader, model):
       config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     oldinit(session_object, target, graph, config)
+
   tf.Session.__init__ = myinit
   # ----------------------------------------
 
@@ -340,7 +337,7 @@ def evaluate(val_loader, model):
       return model(x_t).cpu().numpy()
 
   eval_kit.evaluate_bird_or_bicycle_model(
-      wrapped_model, dataset_iter=dataiter_wrapper(val_loader))
+    wrapped_model, dataset_iter=dataiter_wrapper(val_loader))
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):

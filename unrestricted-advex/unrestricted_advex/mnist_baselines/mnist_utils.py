@@ -1,12 +1,12 @@
 import itertools
 import math
 import os
+
 import numpy as np
 import tensorflow as tf
+from cleverhans.attacks import MadryEtAl
 from tensorflow.examples.tutorials.mnist import input_data
 from unrestricted_advex.mnist_baselines import mnist_convnet
-from cleverhans.attacks import MadryEtAl
-
 
 NUM_CLASSES = 10
 

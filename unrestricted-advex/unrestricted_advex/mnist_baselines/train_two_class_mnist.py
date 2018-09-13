@@ -18,7 +18,5 @@ def main(_):
                           FLAGS.total_batches, FLAGS.train_mode)
 
 
-
-
 if __name__ == "__main__":
   tf.app.run()
