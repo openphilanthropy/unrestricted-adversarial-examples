@@ -226,24 +226,24 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   if dataset_iter is None:
     dataset_iter = bird_or_bicyle.get_iterator('test')
 
-  bob_spatial_limits = [18, 18, 30]
-  bob_shape = (224, 224, 3)
-  bob_black_border_size = 20  # TODO: What should the border size be here?
+  bird_or_bicycle_shape = (224, 224, 3)
+  bird_or_bicycle_spatial_limits = [18, 18, 30]
+  bird_or_bicycle_black_border_size = 20  # TODO: What should the border size be here?
 
   attack_list = [
     attacks.CleanData(),
 
     attacks.SpatialGridAttack(
-      image_shape_hwc=bob_shape,
-      spatial_limits=bob_spatial_limits,
+      image_shape_hwc=bird_or_bicycle_shape,
+      spatial_limits=bird_or_bicycle_spatial_limits,
       grid_granularity=[5, 5, 31],
-      black_border_size=bob_black_border_size,
+      black_border_size=bird_or_bicycle_black_border_size,
     ),
 
     attacks.SpsaWithRandomSpatialAttack(
       model_fn,
-      image_shape_hwc=bob_shape,
-      spatial_limits=bob_spatial_limits,
+      image_shape_hwc=bird_or_bicycle_shape,
+      spatial_limits=bird_or_bicycle_spatial_limits,
       black_border_size=0,
       epsilon=(16. / 255),
     ),
@@ -252,9 +252,9 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       model_fn,
       max_l2_distortion=4,
       label_to_examples=_get_bird_or_bicycle_label_to_examples(),
-      spatial_limits=bob_spatial_limits,
-      black_border_size=bob_black_border_size,
-      image_shape_hwc=bob_shape,
+      spatial_limits=bird_or_bicycle_spatial_limits,
+      black_border_size=bird_or_bicycle_black_border_size,
+      image_shape_hwc=bird_or_bicycle_shape,
     )
     # attacks.BoundaryAttack(
     #   model_fn,
