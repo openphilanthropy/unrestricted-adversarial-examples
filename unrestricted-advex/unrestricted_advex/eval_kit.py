@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import math
 import os
 
 import bird_or_bicyle
@@ -93,7 +94,15 @@ def evaluate_two_class_unambiguous_model(
   for attack in attack_list:
     print("Executing attack: %s" % attack.name)
 
-    logits, labels, correct, x_adv = run_attack(model_fn, data_iter, attack)
+    if attack.stop_after_n_datapoints is not None:
+      batch_size = len(data_iter[0][0])
+      n_batches = math.ceil(float(attack.stop_after_n_datapoints) / batch_size)
+      attack_data_iter = data_iter[:n_batches]
+    else:
+      attack_data_iter = data_iter
+
+    logits, labels, correct, x_adv = run_attack(model_fn, attack_data_iter, attack)
+
     results_dir = os.path.join(adversarial_images_dir, attack.name)
     plotting.save_correct_and_incorrect_adv_images(x_adv, correct, results_dir)
 
@@ -158,11 +167,6 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
   :param dataset_iter: An iterable that returns (batched_images, batched_labels)
   :param model_name: An optional model_fn name
   """
-
-  images_2class, labels_2class = mnist_utils.two_class_mnist_dataset()
-  mnist_label_to_examples = {0: images_2class[0 == labels_2class],
-                             1: images_2class[1 == labels_2class]}
-
   mnist_spatial_limits = [10, 10, 10]
   mnist_shape = (28, 28, 1)
   mnist_black_border_size = 4
@@ -192,8 +196,8 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
     attacks.BoundaryWithRandomSpatialAttack(
       model_fn,
       max_l2_distortion=4,
-      label_to_examples=mnist_label_to_examples,
       valid_check=mnist_utils.mnist_valid_check,
+      label_to_examples=_get_mnist_labels_to_examples(),
       spatial_limits=mnist_spatial_limits,
       black_border_size=mnist_black_border_size,
       image_shape_hwc=mnist_shape,
@@ -204,6 +208,12 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
     model_fn, dataset_iter,
     model_name=model_name,
     attack_list=attack_list)
+
+
+def _get_mnist_labels_to_examples():
+  images_2class, labels_2class = mnist_utils.two_class_mnist_dataset()
+  return {0: images_2class[0 == labels_2class],
+          1: images_2class[1 == labels_2class]}
 
 
 def _get_bird_or_bicycle_label_to_examples():
@@ -250,17 +260,21 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       num_steps=200,
       batch_size=32
     ),
-
-    attacks.BoundaryWithRandomSpatialAttack(
-      model_fn,
-      max_l2_distortion=10,
-      label_to_examples=_get_bird_or_bicycle_label_to_examples(),
-      spatial_limits=bird_or_bicycle_spatial_limits,
-      black_border_size=bird_or_bicycle_black_border_size,
-      image_shape_hwc=bird_or_bicycle_shape,
-    )
-
   ]
+
+  boundary_attack = attacks.BoundaryWithRandomSpatialAttack(
+    model_fn,
+    max_l2_distortion=10,
+    label_to_examples=_get_bird_or_bicycle_label_to_examples(),
+    spatial_limits=bird_or_bicycle_spatial_limits,
+    black_border_size=bird_or_bicycle_black_border_size,
+    image_shape_hwc=bird_or_bicycle_shape,
+  )
+
+  # We limit the boundary attack to the first 100 datapoints to speed up eval
+  boundary_attack.stop_after_n_datapoints = 100
+  attack_list.append(boundary_attack)
+
   return evaluate_two_class_unambiguous_model(
     model_fn, dataset_iter,
     model_name=model_name,
