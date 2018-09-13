@@ -7,6 +7,7 @@ model_dir = '/tmp/two-class-mnist/test'
 
 def get_two_class_iter(num_batches, batch_size):
   mnist = mnist_utils.mnist_dataset(one_hot=False)
+
   two_class_iter = mnist_utils.two_class_iter(
     mnist.train.images, mnist.train.labels,
     num_datapoints=num_batches * batch_size,
@@ -39,7 +40,7 @@ def test_two_class_mnist_accuracy():
   """ Train an mnist model on a subset of mnist and then evaluate it
   on small attacks *on the training set*.
   """
-  model_fn = train_overfit_classifier(num_batches=5, batch_size=32)
+  model_fn = train_overfit_classifier(num_batches=20, batch_size=32)
   dataset_iter = get_two_class_iter(num_batches=5, batch_size=32)
 
   mnist_spatial_limits = [10, 10, 10]
