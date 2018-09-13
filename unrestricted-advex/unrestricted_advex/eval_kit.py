@@ -170,17 +170,17 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
   attack_list = [
     attacks.CleanData(),
 
-    attacks.SpsaWithRandomSpatialAttack(
-      model_fn,
-      epsilon=0.3,
+    attacks.SpatialGridAttack(
+      grid_granularity=[5, 5, 11],
+      valid_check=mnist_utils.mnist_valid_check,
       spatial_limits=mnist_spatial_limits,
       black_border_size=mnist_black_border_size,
       image_shape_hwc=mnist_shape,
     ),
 
-    attacks.SpatialGridAttack(
-      grid_granularity=[5, 5, 11],
-      valid_check=mnist_utils.mnist_valid_check,
+    attacks.SpsaWithRandomSpatialAttack(
+      model_fn,
+      epsilon=0.3,
       spatial_limits=mnist_spatial_limits,
       black_border_size=mnist_black_border_size,
       image_shape_hwc=mnist_shape,
@@ -218,6 +218,13 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   attack_list = [
     attacks.CleanData(),
 
+    attacks.SpatialGridAttack(
+      image_shape_hwc=imagenet_shape,
+      spatial_limits=imagenet_spatial_limits,
+      grid_granularity=[5, 5, 31],
+      black_border_size=0
+    ),
+
     attacks.SpsaWithRandomSpatialAttack(
       model_fn,
       image_shape_hwc=imagenet_shape,
@@ -226,12 +233,6 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       epsilon=(16. / 255),
     ),
 
-    attacks.SpatialGridAttack(
-      image_shape_hwc=imagenet_shape,
-      spatial_limits=imagenet_spatial_limits,
-      grid_granularity=[5, 5, 31],
-      black_border_size=0
-    ),
     # comment for now, bird_or_bicycle_label_to_example not defined
     # attacks.BoundaryAttack(
     #   model_fn,
