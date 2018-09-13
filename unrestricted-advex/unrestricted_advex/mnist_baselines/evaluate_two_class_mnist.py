@@ -7,6 +7,11 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string("model_dir", "/tmp/two-class-mnist/vanilla",
                     "Where to load the model to attack from")
+flags.DEFINE_integer("num_datapoints", 128,
+                    "How many datapoints to evaluate on")
+flags.DEFINE_integer("batch_size", 128,
+                    "Batch size to use during evaluation")
+
 
 
 def main(_):
@@ -15,7 +20,8 @@ def main(_):
     mnist_utils.np_two_class_mnist_model(FLAGS.model_dir),
     mnist_utils.two_class_iter(
       images=mnist.test.images, labels=mnist.test.labels,
-      num_datapoints=128, batch_size=128))
+      num_datapoints=FLAGS.num_datapoints, batch_size=FLAGS.batch_size),
+    model_name='datapoints_'+str(FLAGS.num_datapoints))
 
 
 if __name__ == "__main__":
