@@ -1,74 +1,84 @@
-from unrestricted_advex import attacks, eval_kit
+from unrestricted_advex import eval_kit, attacks
 
 from unrestricted_advex.mnist_baselines import mnist_utils
 
+model_dir = '/tmp/two-class-mnist/test'
 
-def test_two_class_mnist():
-  """ Train an mnist model on a subset of mnist and then evaluate it
-  on small attacks *on the training set*.
-  """
-  model_dir = '/tmp/two-class-mnist/test'
-  batch_size = 32
-  dataset_total_n_batches = 1  # use a subset of the data
-  train_batches = 20
 
-  # Train a little MNIST classifier from scratch
-  print("Training mnist classifier...")
+def get_two_class_iter(num_batches, batch_size):
   mnist = mnist_utils.mnist_dataset(one_hot=False)
-  num_datapoints = batch_size * dataset_total_n_batches
+  two_class_iter = mnist_utils.two_class_iter(
+    mnist.train.images, mnist.train.labels,
+    num_datapoints=num_batches * batch_size,
+    batch_size=batch_size)
+  return two_class_iter
+
+
+def train_overfit_classifier(num_batches, batch_size):
+  mnist = mnist_utils.mnist_dataset(one_hot=False)
+  print("Training mnist classifier...")
 
   next_batch_iter = mnist_utils.two_class_iter(
     mnist.train.images, mnist.train.labels,
-    num_datapoints=num_datapoints, batch_size=batch_size,
-    label_scheme='one_hot', cycle=True)
+    num_datapoints=num_batches * batch_size,
+    batch_size=batch_size,
+    label_scheme='one_hot',
+    cycle=True)
 
   mnist_utils.train_mnist(
     model_dir,
     lambda: next(next_batch_iter),
-    train_batches, "vanilla",
-    save_every=(train_batches - 1),
+    num_batches, "vanilla",
+    save_every=(num_batches - 1),
     print_every=10)
 
-  model_fn = mnist_utils.np_two_class_mnist_model(model_dir)
+  return mnist_utils.np_two_class_mnist_model(model_dir)
+
+
+def test_two_class_mnist_accuracy():
+  """ Train an mnist model on a subset of mnist and then evaluate it
+  on small attacks *on the training set*.
+  """
+  model_fn = train_overfit_classifier(num_batches=5, batch_size=32)
+  dataset_iter = get_two_class_iter(num_batches=5, batch_size=32)
+
+  mnist_spatial_limits = [10, 10, 10]
+  mnist_shape = (28, 28, 1)
+  mnist_black_border_size = 4
+
   attack_list = [
     attacks.CleanData(),
 
-    attacks.RandomSpatialAttack(
-      image_shape_hwc=(28, 28, 1),
-      spatial_limits=[5, 5, 5],
-      black_border_size=4,
-    ),
-
-    attacks.SpatialGridAttack(
-      image_shape_hwc=(28, 28, 1),
-      spatial_limits=[5, 5, 5],
-      grid_granularity=[4, 4, 4],
-      black_border_size=4,
-      valid_check=mnist_utils.mnist_valid_check
-    ),
-
     attacks.SpsaAttack(
-      model=model_fn,
-      image_shape_hwc=(28, 28, 1),
+      model_fn,
       epsilon=0.3,
+      image_shape_hwc=mnist_shape,
     ),
 
     attacks.SpsaWithRandomSpatialAttack(
-      model=model_fn,
-      image_shape_hwc=(28, 28, 1),
+      model_fn,
       epsilon=0.3,
-      spatial_limits=[5, 5, 5],
-      black_border_size=4),
-  ]
+      spatial_limits=mnist_spatial_limits,
+      black_border_size=mnist_black_border_size,
+      image_shape_hwc=mnist_shape,
+    ),
 
-  two_class_iter = mnist_utils.two_class_iter(
-    mnist.train.images, mnist.train.labels,
-    num_datapoints=num_datapoints, batch_size=batch_size)
+    attacks.SpatialGridAttack(
+      grid_granularity=[5, 5, 11],
+      valid_check=mnist_utils.mnist_valid_check,
+      spatial_limits=mnist_spatial_limits,
+      black_border_size=mnist_black_border_size,
+      image_shape_hwc=mnist_shape,
+    ),
+
+    # Skip boundary because it is too slow
+  ]
 
   results = eval_kit.evaluate_two_class_unambiguous_model(
     model_fn,
-    two_class_iter,
-    attack_list)
+    data_iter=dataset_iter,
+    model_name="overfit_mnist",
+    attack_list=attack_list)
 
   # Make sure that clean data has high accuracy
   assert results['clean']['accuracy@100'] >= 0.9
@@ -79,5 +89,18 @@ def test_two_class_mnist():
   assert results['spsa_with_random_spatial']['accuracy@100'] <= 0.5
 
 
+def test_evaluate_two_class_mnist_model_for_smoke():
+  """ Train an mnist model on a subset of mnist and then evaluate it
+  on small attacks *on the training set*.
+  """
+  model_fn = train_overfit_classifier(num_batches=20, batch_size=1)
+  dataset_iter = get_two_class_iter(num_batches=1, batch_size=1)
+  eval_kit.evaluate_two_class_mnist_model(
+    model_fn,
+    dataset_iter=dataset_iter,
+    model_name="overfit_mnist")
+
+
 if __name__ == '__main__':
-  test_two_class_mnist()
+  test_two_class_mnist_accuracy()
+  test_evaluate_two_class_mnist_model_for_smoke()

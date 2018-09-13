@@ -64,8 +64,8 @@ CUDA_VISIBLE_DEVICES=0 python evaluate_two_class_mnist.py
 # Outputs look like (specific numbers may vary)
 # Executing attack: null_attack
 # Fraction correct under null_attack: 1.000
-# Executing attack: spsa_attack
-# Fraction correct under spsa_attack: 0.016
+boundary_attack
+boundary_attack
 # Executing attack: spatial
 # Fraction correct under spatial: 0.117
 ```

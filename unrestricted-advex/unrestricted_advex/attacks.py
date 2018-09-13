@@ -338,3 +338,27 @@ class SpsaWithRandomSpatialAttack(Attack):
     x_after_spatial_np = self.random_spatial_attack(model, x_np, y_np)
     x_adv = self.spsa_attack(model, x_after_spatial_np, y_np)
     return x_adv
+
+
+class BoundaryWithRandomSpatialAttack(Attack):
+  """Apply a single random rotation and translation and then apply SPSA
+  to the resulting image
+  """
+  name = "boundary_with_random_spatial"
+
+  def __init__(self, model, image_shape_hwc, spatial_limits, black_border_size,
+               max_l2_distortion=4, label_to_examples={}):
+    self.random_spatial_attack = RandomSpatialAttack(
+      image_shape_hwc,
+      spatial_limits=spatial_limits,
+      black_border_size=black_border_size)
+
+    self.boundary_attack = BoundaryAttack(
+      model,
+      max_l2_distortion=max_l2_distortion,
+      label_to_examples=label_to_examples)
+
+  def __call__(self, model, x_np, y_np):
+    x_after_spatial_np = self.random_spatial_attack(model, x_np, y_np)
+    x_adv = self.boundary_attack(model, x_after_spatial_np, y_np)
+    return x_adv

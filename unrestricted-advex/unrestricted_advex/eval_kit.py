@@ -160,35 +160,40 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
   """
 
   images_2class, labels_2class = mnist_utils.two_class_mnist_dataset()
-
   mnist_label_to_examples = {0: images_2class[0 == labels_2class],
                              1: images_2class[1 == labels_2class]}
 
   mnist_spatial_limits = [10, 10, 10]
   mnist_shape = (28, 28, 1)
+  mnist_black_border_size = 4
 
   attack_list = [
     attacks.CleanData(),
 
     attacks.SpsaWithRandomSpatialAttack(
       model_fn,
-      spatial_limits=mnist_spatial_limits,
-      black_border_size=4,
-      image_shape_hwc=mnist_shape,
       epsilon=0.3,
+      spatial_limits=mnist_spatial_limits,
+      black_border_size=mnist_black_border_size,
+      image_shape_hwc=mnist_shape,
     ),
 
     attacks.SpatialGridAttack(
-      image_shape_hwc=mnist_shape,
-      spatial_limits=mnist_spatial_limits,
       grid_granularity=[5, 5, 11],
-      black_border_size=4,
-      valid_check=mnist_utils.mnist_valid_check),
+      valid_check=mnist_utils.mnist_valid_check,
+      spatial_limits=mnist_spatial_limits,
+      black_border_size=mnist_black_border_size,
+      image_shape_hwc=mnist_shape,
+    ),
 
-    attacks.BoundaryAttack(
+    attacks.BoundaryWithRandomSpatialAttack(
       model_fn,
       max_l2_distortion=4,
-      label_to_examples=mnist_label_to_examples),
+      label_to_examples=mnist_label_to_examples,
+      spatial_limits=mnist_spatial_limits,
+      black_border_size=mnist_black_border_size,
+      image_shape_hwc=mnist_shape,
+    )
   ]
 
   return evaluate_two_class_unambiguous_model(
@@ -220,6 +225,7 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       black_border_size=0,
       epsilon=(16. / 255),
     ),
+
     attacks.SpatialGridAttack(
       image_shape_hwc=imagenet_shape,
       spatial_limits=imagenet_spatial_limits,

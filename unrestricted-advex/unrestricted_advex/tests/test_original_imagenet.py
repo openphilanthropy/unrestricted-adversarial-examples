@@ -117,7 +117,7 @@ def evaluate_imagenet_model(model_fn, dataset_iter):
   for (attack_fn, attack_name) in [
     (attacks.null_attack, 'null_attack'),
     (spatial_replicate_paper, 'spatial_replicate_paper'),
-    # (attacks.spsa_attack, 'spsa_attack'),
+    # (attacks.boundary_attack, 'boundary_attack'),
   ]:
     print("Executing attack: %s" % attack_name)
     logits, labels = run_attack(
