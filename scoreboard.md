@@ -1,16 +1,5 @@
 # Full Scoreboard
 
-##### Two-Class MNIST
-| Defense               | Submitted by  | Spatial acc.<br>at 80% cov. | SPSA acc.<br>at 80% cov. | L2-ball acc.<br>at 80% cov. |  Submission Date |
-| --------------------- | ------------- | ------------ |--------------- |--------------- | --------------- |
-| [MadryPGD LeNet Baseline](#)  |  ?? |    **??**    |     **??**   |     **??**     |  Aug 28th, 2018 |
-| [Undefended LeNet Baseline](#)   |  Google Brain   |    0.0%    |     0.0%    |     0.0%     |  Aug 27th, 2018 |
-
-##### Bird or Bicycle
-| Defense               | Submitted by  | Spatial acc.<br>at 80% cov. | SPSA acc.<br>at 80% cov. | L2-ball acc.<br>at 80% cov. |  Submission Date |
-| --------------------- | ------------- | ------------ |--------------- |--------------- | --------------- |
-| [Worst-of-10-Spatial Baseline](#)  |  ?? |    **??**    |     **??**   |     **??**     |  Aug 28th, 2018 |
-| [Undefended ResNet Baseline](unrestricted_advex/pytorch_resnet_baseline)   |  Google Brain   |    0.0%    |     0.0%    |     0.0%     |  Aug 27th, 2018 |
-
-
-
+Currently all scores are kept in the 
+[main README.md document](https://github.com/google/unrestricted-adversarial-examples/blob/master/README.md). 
+When that list becomes too long, we will put scores here.
