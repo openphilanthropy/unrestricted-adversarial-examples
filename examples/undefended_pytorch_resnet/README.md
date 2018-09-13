@@ -13,5 +13,5 @@ To run prediction and make coverage-error plot:
 
 ```
 gsutil cp gs://unrestricted-advex/example_defenses/undefended_pytorch_resnet.pth.tar /tmp/undefended_pytorch_resnet.pth.tar
-CUDA_VISIBLE_DEVICES=1 python main.py --resume=/tmp/undefended_pytorch_resnet.pth.tar --evaluate
+CUDA_VISIBLE_DEVICES=0 python main.py --resume=/tmp/undefended_pytorch_resnet.pth.tar --evaluate
 ```

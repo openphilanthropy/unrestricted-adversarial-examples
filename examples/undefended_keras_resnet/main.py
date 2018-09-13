@@ -41,4 +41,4 @@ if __name__ == '__main__':
     return two_class_logits
 
 
-  eval_kit.evaluate_bird_or_bicycle_model(model_fn)
+  eval_kit.evaluate_bird_or_bicycle_model(model_fn, model_name='undefended_keras_resnet')
