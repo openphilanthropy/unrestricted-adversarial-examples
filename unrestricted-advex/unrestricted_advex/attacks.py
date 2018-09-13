@@ -334,7 +334,7 @@ class SpsaWithRandomSpatialAttack(Attack):
       image_shape_hwc,
       epsilon=epsilon,
       num_steps=num_steps,
-      batch_size=batch_size
+      batch_size=batch_size,
       is_debug=is_debug)
 
   def __call__(self, model, x_np, y_np):

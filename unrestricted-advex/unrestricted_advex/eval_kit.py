@@ -254,7 +254,7 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
 
     attacks.BoundaryWithRandomSpatialAttack(
       model_fn,
-      max_l2_distortion=4,
+      max_l2_distortion=10,
       label_to_examples=_get_bird_or_bicycle_label_to_examples(),
       spatial_limits=bob_spatial_limits,
       black_border_size=bob_black_border_size,
