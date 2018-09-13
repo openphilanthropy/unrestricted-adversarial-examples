@@ -128,7 +128,7 @@ def evaluate_two_class_unambiguous_model(
 
   # Print results
   print(AsciiTable(table_data).table)
-  print("To inspect the adversarial images "
+  print("To visually inspect the adversarial examples "
         "that your model correctly and incorrectly classified, "
         "view them in: %s " % adversarial_images_dir)
   return results
