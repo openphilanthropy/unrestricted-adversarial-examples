@@ -337,7 +337,10 @@ def evaluate(val_loader, model):
       return model(x_t).cpu().numpy()
 
   eval_kit.evaluate_bird_or_bicycle_model(
-    wrapped_model, dataset_iter=dataiter_wrapper(val_loader))
+    wrapped_model,
+    dataset_iter=dataiter_wrapper(val_loader),
+    model_name='undefended_pytorch_resnet'
+  )
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):

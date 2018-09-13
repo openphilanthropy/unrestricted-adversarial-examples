@@ -16,7 +16,8 @@ from six.moves import xrange
 class Attack(object):
   name = None
 
-  stop_after_n_datapoints = None  # An attack can optionally run on only a subset of the dataset
+  # TODO: Refactor this out of this object
+  _stop_after_n_datapoints = None  # An attack can optionally run on only a subset of the dataset
 
   def __call__(self, *args, **kwargs):
     raise NotImplementedError()

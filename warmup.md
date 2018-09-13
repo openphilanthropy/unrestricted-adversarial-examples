@@ -1,0 +1,93 @@
+# Warm-up to the Unrestricted Advex Contest
+
+
+### Implementing a defense
+
+First install the requirements (assuming you already have working installation
+of Tensorflow or pytorch)
+```bash
+git clone git@github.com:google/unrestricted-adversarial-examples.git
+cd unrestricted-adversarial-examples
+
+pip install -e bird-or-bicycle
+pip install -e unrestricted-advex
+```
+
+Confirm that your setup runs correctly by training and evaluating an MNIST model.
+```bash
+cd unrestricted-advex/unrestricted_advex/mnist_baselines
+CUDA_VISIBLE_DEVICES=0 python train_two_class_mnist.py --total_batches 10000
+# Outputs look like (specific numbers may vary)
+# 0 Clean accuracy 0.046875 loss 2.3123064
+# 100 Clean accuracy 0.9140625 loss 0.24851117
+# 200 Clean accuracy 0.953125 loss 0.1622512
+# ...
+# 9800 Clean accuracy 1.0 loss 0.004472881
+# 9900 Clean accuracy 1.0 loss 0.00033166306
+
+CUDA_VISIBLE_DEVICES=0 python evaluate_two_class_mnist.py
+# Outputs look like (specific numbers may vary)
+# Executing attack: null_attack
+# Fraction correct under null_attack: 1.000
+boundary_attack
+boundary_attack
+# Executing attack: spatial
+# Fraction correct under spatial: 0.117
+```
+
+#### To be evaluated against our fixed warm-up attacks, your defense must implement the following API
+
+It must be a function that takes in batched images (as a numpy array), and returns two scalar (e.g. logits) between `(-inf, inf)`. These correspond to the likelihood the image corresponds to each of the two classes (e.g. the bird and bicycle class)
+
+```python
+import numpy as np
+
+def my_very_robust_model(images_batch_nhwc):
+  """ This fn is a valid defense that always predicts the second class """
+  batch_size = len(images_batch_nhwc)
+  logits_np = np.array([[-5.0, 5.0]] * batch_size)
+  return logits_np.astype(np.float32)
+
+from unrestricted_advex import eval_kit
+eval_kit.evaluate_bird_or_bicycle_model(my_very_robust_model)
+```
+
+For ease of evaluation, your model must also maintain a throughput of at least **100 images per second** when evaluated on a P100 GPU on the `bird-or-bicyle` dataset
+
+##### Your defense will be evaluated with the following mechanism
+
+- The test dataset is passed through the model and converted to logits.
+- `confidence` is defined as `max(bird_logit, bicycle_logit)` for each image.
+- The 20% of images that resulted in logits with the lowest `confidence` are abstained on by the model and are discarded.
+- The model’s score is the **accuracy on points that were not abstained on**.
+
+##### Submitting your defense to the leaderboard
+
+After evaluating your defense you can submit it to [the leaderboard](#user-content-leaderboard) by [editing the table](https://github.com/google/unrestricted-adversarial-examples/edit/master/README.md) and creating a pull request that links to your defense. The challenge organizers will respond to the pull request within five business days.
+
+##### A note on uninteresting defenses that break the default attacks
+We expect there to be several uninteresting defenses that are “robust” against the fixed set of attacks we have developed. By “uninteresting” we mean defenses that were designed explicitly to stop the attacks we have developed, but not necessarily other attacks. 
+
+For example, it would be possible to break the confidence-based SPSA attack through gradient masking and not returning the true models’ confidence, but either 100% confidence or 0% for each input.
+
+We encourage defense creators to not design defenses that are intentionally uninteresting.
+ 
+
+# Warm-up FAQ
+
+### How did you decide which attacks to use for the warm-up?
+
+We wanted to choose attacks with the following properties:
+
+- A well-tested canonical implementation is available
+- Gradient-free, to avoid the problem of obfuscated gradients
+- Fairly computationally efficient  
+
+Beyond that, we focused on attacks that cover a variety of neighborhoods beyond the typical L_infinity ball 
+
+### How did you decide what hyperparameters to use for the attacks?
+
+We want our `eval_kit` to complete within 24 hours on a single P100 GPU. This allows a typical university laboratory to run many evaluations before publishing their results.
+
+Given that constraint on total compute, we want attacks to be as strong as possible. The compute allocation of the current `eval_kit` is something like 45% SPSA, 45% Boundary, 10% spatial. 
+
