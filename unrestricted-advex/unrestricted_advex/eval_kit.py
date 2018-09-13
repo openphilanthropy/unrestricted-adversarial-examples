@@ -110,29 +110,35 @@ def evaluate_two_class_unambiguous_model(
     confidences = np.max(logits, axis=1)
 
     # We will plot accuracy at various coverages
-    coverages = np.linspace(0.01, 1.00, 100)
+    desired_coverages = np.linspace(0.01, 1.00, 100)
 
     preds = logits_to_preds(logits)
-    cov_to_confident_error_idxs = _get_coverage_to_confident_error_idxs(
-      coverages, preds, confidences, labels, )
+    num_covered, confident_error_idxs = _get_num_covered_and_confident_error_idxs(
+      desired_coverages, preds, confidences, labels)
 
     plotting.plot_confident_error_rate(
-      coverages, cov_to_confident_error_idxs, len(labels), attack.name, results_dir,
+      desired_coverages, confident_error_idxs, len(labels), attack.name, results_dir,
       legend=model_name)
 
     # Add accuracy at 80% and 100% to table and results
-    num_errors_at_80 = len(cov_to_confident_error_idxs[80 - 1])
-    num_errors_at_100 = len(cov_to_confident_error_idxs[-1])
+    num_errors_at_80 = len(confident_error_idxs[80 - 1])
+    num_covered_at_80 = num_covered[80 - 1]
+
+    num_errors_at_100 = len(confident_error_idxs[-1])
+    num_covered_at_100 = num_covered[-1]
+
+    assert len(logits) == num_covered_at_100
     assert len(logits) == (np.sum(correct, axis=0) + num_errors_at_100)
 
-    acc_at_80 = 1.0 - (float(num_errors_at_80) / len(labels))
-    acc_at_100 = 1.0 - (float(num_errors_at_100) / len(labels))
+    acc_at_80 = 1.0 - (float(num_errors_at_80) / num_covered_at_80)
+    acc_at_100 = 1.0 - (float(num_errors_at_100) / num_covered_at_100)
 
     table_data.append([attack.name, acc_at_80, acc_at_100])
     results[attack.name] = {
       'accuracy@80': acc_at_80,
       'accuracy@100': acc_at_100,
-      'cov_to_confident_error_idxs': cov_to_confident_error_idxs
+      'confident_error_idxs@80': confident_error_idxs[80 - 1],
+      'confident_error_idxs@100': confident_error_idxs[-1],
     }
     print("[%s] acc@80%% = %.3f" % (attack.name, acc_at_80))
 
@@ -144,20 +150,22 @@ def evaluate_two_class_unambiguous_model(
   return results
 
 
-def _get_coverage_to_confident_error_idxs(coverages, preds, confidences, y_true):
-  """Returns a list of confident error indices for each coverage"""
+def _get_num_covered_and_confident_error_idxs(desired_coverages, preds, confidences, y_true):
+  """Returns the number of covered samples and a list of confident error indices for each coverage"""
   sorted_confidences = list(sorted(confidences, reverse=True))
 
-  cov_to_confident_error_idxs = []
-  for coverage in coverages:
+  confident_error_idxs = []
+  num_covered = []
+  for coverage in desired_coverages:
     threshold = sorted_confidences[int(coverage * len(preds)) - 1]
     confident_mask = confidences >= threshold
     confident_error_mask = (y_true != preds) * confident_mask
     confident_error_idx = confident_error_mask.nonzero()[0]
 
-    cov_to_confident_error_idxs.append(confident_error_idx)
+    confident_error_idxs.append(confident_error_idx)
+    num_covered.append(np.sum(confident_mask))
 
-  return cov_to_confident_error_idxs
+  return num_covered, confident_error_idxs
 
 
 def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None):
