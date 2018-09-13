@@ -17,8 +17,6 @@ We include three attacks in [the warm-up to the contest](warmup.md):
 The top few distinct models for each dataset are shown below.  You can see all submissions in [the full scoreboard](scoreboard.md). 
 
 #### Two-Class MNIST dataset
-![tcu_mnist_example 2x](https://user-images.githubusercontent.com/306655/45503359-7e04d700-b73b-11e8-87c1-9aa4167e7291.png)
-
 | Defense               | Submitted by  | Clean data | Spatial grid attack | SPSA attack | L2-ball attack |  Submission Date |
 | --------------------- | ------------- | ------------ |------------ |--------------- |--------------- | --------------- |
 | [MadryPGD LeNet Baseline](#)  |  Google Brain |    100.0%    |      ??    |     ??   |     ??     |  Aug 28th, 2018 |
@@ -26,8 +24,6 @@ The top few distinct models for each dataset are shown below.  You can see all s
 All percentages above correspond to the model's accuracy at 80% coverage.
 
 #### Bird or Bicycle dataset
-![bob_example 2x](https://user-images.githubusercontent.com/306655/45503358-7e04d700-b73b-11e8-895e-dec5bd2d7394.png)
-
 | Defense               | Submitted by  | Clean data | Spatial grid attack | SPSA attack | L2-ball attack |  Submission Date |
 | --------------------- | ------------- | ------------| ------------ |--------------- |--------------- | --------------- |
 | [Pytorch ResNet <br>(via bird-or-bicycle extras)](unrestricted_advex/undefended_pytorch_resnet)  |  Google Brain |    99.0%    |     45.2%   | 12.8%   |     ??     |  Sept 13th, 2018 |
