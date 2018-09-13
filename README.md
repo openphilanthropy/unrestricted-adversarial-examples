@@ -17,7 +17,7 @@ We include three attacks in [the warm-up to the contest](warmup.md):
 The top few distinct models for each dataset are shown below.  You can see all submissions in [the full scoreboard](scoreboard.md). 
 
 #### Two-Class MNIST dataset
-![tcu_mnist_example](https://user-images.githubusercontent.com/306655/45502804-cc18db00-b739-11e8-9609-9c00ff7857f7.png)
+![tcu_mnist_example 2x](https://user-images.githubusercontent.com/306655/45503196-f6b76380-b73a-11e8-8f9f-81213bfe41db.png)
 
 | Defense               | Submitted by  | Clean data | Spatial grid attack | SPSA attack | L2-ball attack |  Submission Date |
 | --------------------- | ------------- | ------------ |------------ |--------------- |--------------- | --------------- |
@@ -26,7 +26,7 @@ The top few distinct models for each dataset are shown below.  You can see all s
 All percentages above correspond to the model's accuracy at 80% coverage.
 
 #### Bird or Bicycle dataset
-![bob_example](https://user-images.githubusercontent.com/306655/45502776-b73c4780-b739-11e8-80b6-927ffceeb8bd.png)
+![bob_example 2x](https://user-images.githubusercontent.com/306655/45503195-f6b76380-b73a-11e8-986d-12310d2fb6f6.png)
 
 | Defense               | Submitted by  | Clean data | Spatial grid attack | SPSA attack | L2-ball attack |  Submission Date |
 | --------------------- | ------------- | ------------| ------------ |--------------- |--------------- | --------------- |
