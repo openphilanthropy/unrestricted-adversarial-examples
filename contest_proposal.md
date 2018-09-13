@@ -7,7 +7,7 @@ We are especially interested in any corner-cases that might allow
 for attackers or defenders to “cheat” and win prizes without actually 
 following the spirit of the contest outlined previously.
 
-## Motivation
+### Motivation
 
 All known machine learning systems make confident and blatant errors when 
 in the presence of an adversary.
@@ -23,7 +23,7 @@ We see four main advantages that this contest provides:
 
 
 
-## Unambiguous two-class bird-or-bicycle dataset
+### Unambiguous two-class bird-or-bicycle dataset
 This contest introduces a new image dataset. 
 We ask models to answer the question
 "Is this an unambiguous picture of a bird, a bicycle,
@@ -43,7 +43,7 @@ image included in the dataset.
 (See the [tasker instructions section](#user-content-tasker-instructions) for more details)
 
 
-## Defenders
+### Defenders
 Defenders build models that output one of three labels: (a) bird, (b) bicycle, and (c) abstain.
 Note that in the contest, researchers can choose to design any mechanism for abstaining
 that they desire (unlike in the warm-up where we require that the defending model returns
@@ -61,7 +61,7 @@ Defenders should upload clear training code, inference code, and the trained
 model to the contest organizers by following instructions developed by the community.
 
 
-## Attackers
+### Attackers
 Attackers are given complete access to defenses (including the inference source code, 
 training source code, and the pre-trained models).
 Given this access, attackers attempt to construct 
@@ -86,7 +86,7 @@ service run by the organizers.
 To incentivize actors to participate in this contest as both attackers and
 defenders, we will provide a prize pool.
 
-## Defender prize
+### Defender prize
 Half of the prize pool will be allocated for defenders.
 
 The first defense that goes unbroken after
@@ -99,7 +99,7 @@ defenses that remain unbroken for smaller numbers of days.
 Any researchers associated with the contest can submit defenses
 but are ineligible for prizes.
 
-## Attacker prizes
+### Attacker prizes
 
 We will allocate the other half of the attack prize for the attackers.
 
@@ -124,7 +124,7 @@ paper previously can email the review board.
 Any researchers associated with the contest can
 submit attacks but are ineligible for prizes.
 
-## Eligible defenses
+### Eligible defenses
 We want to avoid having people submitting defenses that are not novel
 or real contenders to win the contest.
 
@@ -143,7 +143,7 @@ Anyone can submit a defense at any time, and if it is eligible, we
 will publish it by the end of the following week. Newly published defenses will initially
 be unstaked, with no prize (other than honor) for breaking them.
 
-## Staking an eligible defense
+### Staking an eligible defense
 A *staked defense* has a small prize for attackers associated with it, and is also 
 eligible to win the large defender prize if it remains unbroken for 90 days.
 
@@ -181,7 +181,7 @@ that will be awarded to the attacker who breaks the defense.
 If a team pays to have their defense staked, and the defense is never broken, they
 will receive their initial payment back along with their portion of the defender prize.
 
-## Review Board
+### Review Board
 
 We will form a *review board* of researchers who helped organize the contest.
 In exceptional circumstances, the review board has the power to withhold prizes (e.g.,
@@ -191,7 +191,7 @@ Members of the review board will recuse themselves when discussing submissions f
 researchers they conflict with (e.g., co-authored a recent paper, conflicted
 institutionally, advisor/advisee, etc).
 
-## Appeals
+### Appeals
 Defenders who find images ambiguous that are labeled by taskers as unambiguously one class
 can be appealed to the review board.
 The review board will either have additional taskers label the image, or make an executive
