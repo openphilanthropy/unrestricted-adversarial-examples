@@ -7,6 +7,7 @@ import os
 
 import bird_or_bicyle
 import numpy as np
+from terminaltables import AsciiTable
 from tqdm import tqdm
 from unrestricted_advex import attacks, plotting
 from unrestricted_advex.mnist_baselines import mnist_utils
@@ -79,8 +80,10 @@ def evaluate_two_class_unambiguous_model(model_fn, data_iter, attack_list, model
   # Load the whole data_iter into memory because we will iterate through the iterator multiple times
   data_iter = list(data_iter)
 
+  table_data = [
+    ['Attack name', 'Acc @ 80% cov', 'Acc @ 100% cov']
+  ]
   results = {}
-
   for attack in attack_list:
     print("Executing attack: %s" % attack.name)
 
@@ -105,14 +108,22 @@ def evaluate_two_class_unambiguous_model(model_fn, data_iter, attack_list, model
       coverages, cov_to_confident_error_idxs, len(labels), attack.name, results_dir,
       legend=model_name)
 
-    # Add accuracy at 80% and 100% to results
+    # Add accuracy at 80% and 100% to table and results
     num_errors_at_80 = len(cov_to_confident_error_idxs[80 - 1])
     num_errors_at_100 = len(cov_to_confident_error_idxs[-1])
+
+    acc_at_80 = 1.0 - (float(num_errors_at_80) / len(labels))
+    acc_at_100 = 1.0 - (float(num_errors_at_100) / len(labels))
+
+    table_data.append([attack.name, acc_at_80, acc_at_100])
     results[attack.name] = {
-      'accuracy@80': 1.0 - (float(num_errors_at_80) / len(labels)),
-      'accuracy@100': 1.0 - (float(num_errors_at_100) / len(labels)),
+      'accuracy@80': acc_at_80,
+      'accuracy@100': acc_at_100,
+      'cov_to_confident_error_idxs': cov_to_confident_error_idxs
     }
 
+  # Print results
+  print(AsciiTable(table_data).table)
   return results
 
 

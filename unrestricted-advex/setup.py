@@ -14,6 +14,7 @@ setup(
     'tqdm ~= 4.0',
     'cleverhans ~= 2.1',
     'foolbox ~= 1.3',
-    'randomgen'
+    'randomgen',
+    'terminaltables ~= 3.1',
   ],
 )
