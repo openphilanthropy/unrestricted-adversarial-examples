@@ -89,12 +89,8 @@ def test_two_class_mnist_accuracy():
   assert results['spsa']['accuracy@100'] <= 0.6
   assert results['spsa_with_random_spatial']['accuracy@100'] <= 0.5
 
-
-def test_evaluate_two_class_mnist_model_for_smoke():
-  """ Train an mnist model on a subset of mnist and then evaluate it
-  on small attacks *on the training set*.
-  """
-  model_fn = train_overfit_classifier(num_batches=20, batch_size=1)
+  # Run a smoke test on the full dataset
+  # TODO: Split this into a separate test
   dataset_iter = get_two_class_iter(num_batches=1, batch_size=1)
   eval_kit.evaluate_two_class_mnist_model(
     model_fn,
@@ -104,4 +100,3 @@ def test_evaluate_two_class_mnist_model_for_smoke():
 
 if __name__ == '__main__':
   test_two_class_mnist_accuracy()
-  test_evaluate_two_class_mnist_model_for_smoke()

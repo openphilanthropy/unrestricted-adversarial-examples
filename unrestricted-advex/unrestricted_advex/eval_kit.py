@@ -204,10 +204,7 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
 
 def _get_bird_or_bicycle_label_to_examples():
   dataset_iter = bird_or_bicyle.get_iterator('test')
-  label_to_examples = {
-    0: [],
-    1: [],
-  }
+  label_to_examples = {0: [], 1: []}
 
   for x_np, y_np in dataset_iter:
     for x, label in zip(x_np, y_np):
@@ -256,11 +253,9 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       black_border_size=bob_black_border_size,
       image_shape_hwc=bob_shape,
     )
-    # attacks.BoundaryAttack(
-    #   model_fn,
-    #   max_l2_distortion=4,
-    #   label_to_example=bird_or_bicycle_label_to_examples),
+
   ]
-  return evaluate_two_class_unambiguous_model(model_fn, dataset_iter,
-                                              model_name=model_name,
-                                              attack_list=attack_list)
+  return evaluate_two_class_unambiguous_model(
+    model_fn, dataset_iter,
+    model_name=model_name,
+    attack_list=attack_list)
