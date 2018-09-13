@@ -1,8 +1,8 @@
 # Unrestricted Adversarial Examples Challenge
 
-In the Unrestricted Adversarial Examples Challenge, attackers submit arbitrary adversarial inputs, and defenders are expected to assign low confidence to difficult inputs while retaining high confidence and accuracy on a clean, unambiguous test set.
+In the Unrestricted Adversarial Examples Challenge, attackers submit arbitrary adversarial inputs, and defenders are expected to assign low confidence to difficult inputs while retaining high confidence and accuracy on a clean, unambiguous test set. You can learn more about the motivation and structure of the contest in [our recent paper](https://drive.google.com/open?id=1T0yiu9LPv_Qh-qYhYFLj9dxjnkca8fkG)
 
-This repository contains code for [the warm-up to the challenge](warmup.md), as well as [the public proposal for the contest](contest_proposal.md).
+This repository contains code for [the warm-up to the challenge](warmup.md), as well as [the public proposal for the contest](contest_proposal.md). We are currently accepting defenses for the warm-up. 
 
 ![image](https://user-images.githubusercontent.com/306655/44686400-f0b74800-aa02-11e8-8967-fa354244813f.png)
 
@@ -45,4 +45,4 @@ You can learn more about the motivation and structure of the contest in our rece
 
 **Unrestricted Adversarial Examples**<br>
 *Tom B. Brown, Nicholas Carlini, Chiyuan Zhang, Catherine Olsson, Paul Christiano and Ian Goodfellow*<br>
-[Arxiv paper preprint](https://drive.google.com/open?id=1T0yiu9LPv_Qh-qYhYFLj9dxjnkca8fkG)
+[Arxiv paper preprint]
