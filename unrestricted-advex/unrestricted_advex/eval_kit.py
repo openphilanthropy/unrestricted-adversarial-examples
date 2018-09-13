@@ -184,6 +184,8 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
       spatial_limits=mnist_spatial_limits,
       black_border_size=mnist_black_border_size,
       image_shape_hwc=mnist_shape,
+      num_steps=2000,
+      batch_size=512,
     ),
 
     attacks.BoundaryWithRandomSpatialAttack(
@@ -231,6 +233,8 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       spatial_limits=imagenet_spatial_limits,
       black_border_size=0,
       epsilon=(16. / 255),
+      num_steps=200,
+      batch_size=32
     ),
 
     # comment for now, bird_or_bicycle_label_to_example not defined
