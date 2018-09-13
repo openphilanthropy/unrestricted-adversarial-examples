@@ -280,8 +280,9 @@ class RandomSpatialAttack(Attack):
   """
   name = 'random_spatial'
 
-  def __init__(self, image_shape_hwc, spatial_limits, black_border_size):
+  def __init__(self, image_shape_hwc, spatial_limits, black_border_size, valid_check=None):
     self.limits = spatial_limits
+    self.valid_check = valid_check
 
     # Construct graph for spatial attack
     self.graph = tf.Graph()
@@ -306,14 +307,34 @@ class RandomSpatialAttack(Attack):
 
   def __call__(self, model_fn, x_np, y_np):
     # randomize each example separately
-    random_transforms = (np.random.uniform(-lim, lim, len(x_np)) for lim in self.limits)
-    trans_np = np.stack(random_transforms, axis=1)
 
     with self.graph.as_default():
-      return self.session.run(self._tranformed_x_op, feed_dict={
+      result = np.zeros(x_np.shape, dtype=x_np.dtype)
+      did = np.zeros(x_np.shape[0], dtype=np.bool)
+
+      trans_np = np.stack(
+        repeat([0, 0, 0], x_np.shape[0]))
+      x_downsize_np = self.session.run(self._tranformed_x_op, feed_dict={
         self._x_for_trans: x_np,
         self._t_for_trans: trans_np,
       })
+      
+      while True:
+        random_transforms = (np.random.uniform(-lim, lim, len(x_np)) for lim in self.limits)
+        trans_np = np.stack(random_transforms, axis=1)
+        out = self.session.run(self._tranformed_x_op, feed_dict={
+          self._x_for_trans: x_np,
+          self._t_for_trans: trans_np,
+        })
+        
+        if self.valid_check is None:
+          return out
+        else:
+          ok = self.valid_check(x_downsize_np, out)
+          result[ok] = out[ok]
+          did[ok] = True
+          if np.all(did):
+            return result
 
 
 class SpsaWithRandomSpatialAttack(Attack):
@@ -323,9 +344,11 @@ class SpsaWithRandomSpatialAttack(Attack):
   name = "spsa_with_random_spatial"
 
   def __init__(self, model, image_shape_hwc, spatial_limits, black_border_size,
-               epsilon=(16. / 255), num_steps=32, batch_size=512, is_debug=False):
+               epsilon=(16. / 255), num_steps=32, batch_size=512, is_debug=False,
+               valid_check=None):
     self.random_spatial_attack = RandomSpatialAttack(
       image_shape_hwc,
+      valid_check=valid_check,
       spatial_limits=spatial_limits,
       black_border_size=black_border_size)
 
@@ -350,9 +373,10 @@ class BoundaryWithRandomSpatialAttack(Attack):
   name = "boundary_with_random_spatial"
 
   def __init__(self, model, image_shape_hwc, spatial_limits, black_border_size,
-               max_l2_distortion=4, label_to_examples={}):
+               max_l2_distortion=4, label_to_examples={}, valid_check=None):
     self.random_spatial_attack = RandomSpatialAttack(
       image_shape_hwc,
+      valid_check=valid_check,
       spatial_limits=spatial_limits,
       black_border_size=black_border_size)
 
