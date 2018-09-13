@@ -4,6 +4,9 @@ from unrestricted_advex.mnist_baselines import mnist_utils
 
 
 def test_two_class_mnist():
+  """ Train an mnist model on a subset of mnist and then evaluate it
+  on small attacks *on the training set*.
+  """
   model_dir = '/tmp/two-class-mnist/test'
   batch_size = 32
   dataset_total_n_batches = 1  # use a subset of the data
@@ -26,10 +29,7 @@ def test_two_class_mnist():
     save_every=(train_batches - 1),
     print_every=10)
 
-  # Test it on small attacks *on the training set*
   model_fn = mnist_utils.np_two_class_mnist_model(model_dir)
-
-  # TODO: Refactor to use attack names
   attack_list = [
     attacks.NullAttack(),
 
