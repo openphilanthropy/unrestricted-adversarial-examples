@@ -25,8 +25,8 @@ The top few distinct models for each dataset are shown below. You can see all su
 #### Bird or Bicycle
 | Defense               | Submitted by  | Clean acc.<br>at 80% cov. | Spatial grid acc.<br>at 80% cov. | SPSA L-infty acc.<br>at 80% cov. | L2-ball acc.<br>at 80% cov. |  Submission Date |
 | --------------------- | ------------- | ------------| ------------ |--------------- |--------------- | --------------- |
-| [Pytorch ResNet trained on bird-or-bicycle extras dataset](unrestricted_advex/undefended_pytorch_resnet)  |  Google Brain |    **99.5%**    |     **??**   | **??**   |     **??**     |  Aug 28th, 2018 |
-| [Keras ResNet trained on ImageNet](unrestricted_advex/undefended_keras_resnet)   |  Google Brain   |    99.0%    |     ??    |     ??    |     ??     |  Aug 27th, 2018 |
+| [Keras ResNet <br>(via ImageNet)](unrestricted_advex/undefended_keras_resnet)   |  Google Brain   |    99.5%    |     ??    |     ??    |     ??     |  Aug 27th, 2018 |
+| [Pytorch ResNet <br>(via bird-or-bicycle extras)](unrestricted_advex/undefended_pytorch_resnet)  |  Google Brain |    99.0%    |     45.2%   | 12.8%   |     ??     |  Aug 28th, 2018 |
 
 
 ### Submitting a defense for the warm-up
