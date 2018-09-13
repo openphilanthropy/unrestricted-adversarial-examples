@@ -81,14 +81,6 @@ def two_class_iter(images, labels, num_datapoints, batch_size,
     yield images, labels
 
 
-def show(img):
-  remap = " .*#" + "#" * 100
-  img = (img.flatten()) * 3
-  print("START")
-  for i in range(28):
-    print("".join([remap[int(round(x))] for x in img[i * 28:i * 28 + 28]]))
-
-
 def np_two_class_mnist_model(model_dir):
   with tf.Graph().as_default():
     x_input = tf.placeholder(tf.float32, (None, 28, 28, 1))
