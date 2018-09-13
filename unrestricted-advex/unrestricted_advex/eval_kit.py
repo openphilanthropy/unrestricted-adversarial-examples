@@ -181,6 +181,7 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
     attacks.SpsaWithRandomSpatialAttack(
       model_fn,
       epsilon=0.3,
+      valid_check=mnist_utils.mnist_valid_check,
       spatial_limits=mnist_spatial_limits,
       black_border_size=mnist_black_border_size,
       image_shape_hwc=mnist_shape,
@@ -192,6 +193,7 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
       model_fn,
       max_l2_distortion=4,
       label_to_examples=mnist_label_to_examples,
+      valid_check=mnist_utils.mnist_valid_check,
       spatial_limits=mnist_spatial_limits,
       black_border_size=mnist_black_border_size,
       image_shape_hwc=mnist_shape,

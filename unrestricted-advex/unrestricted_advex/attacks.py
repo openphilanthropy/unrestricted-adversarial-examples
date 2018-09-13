@@ -178,12 +178,12 @@ class SpatialGridAttack(Attack):
 
       # Apply the spatial attack
       with self.graph.as_default():
-        x_np = self.session.run(self._tranformed_x_op, feed_dict={
+        x_np_trans = self.session.run(self._tranformed_x_op, feed_dict={
           self._x_for_trans: x_np,
           self._t_for_trans: trans_np,
         })
       # See how the model_fn performs on the perturbed input
-      logits = model_fn(x_np)
+      logits = model_fn(x_np_trans)
       preds = np.argmax(logits, axis=1)
 
       cur_xent = _sparse_softmax_cross_entropy_with_logits_from_numpy(
@@ -193,7 +193,7 @@ class SpatialGridAttack(Attack):
       cur_correct = np.equal(y_np, preds)
 
       if self.valid_check:
-        is_valid = self.valid_check(x_downsize_np, x_np)
+        is_valid = self.valid_check(x_downsize_np, x_np_trans)
         cur_correct |= ~is_valid
         cur_xent -= is_valid * 1e9
 
@@ -208,7 +208,7 @@ class SpatialGridAttack(Attack):
 
       idx = np.expand_dims(idx, axis=-1)
       idx = np.expand_dims(idx, axis=-1)  # shape (bsize, 1, 1, 1)
-      worst_x = np.where(idx, x_np, worst_x, )  # shape (bsize, 32, 32, 3)
+      worst_x = np.where(idx, x_np_trans, worst_x, )  # shape (bsize, 32, 32, 3)
 
     return worst_x
 
