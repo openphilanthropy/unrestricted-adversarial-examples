@@ -272,7 +272,7 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   )
 
   # We limit the boundary attack to the first 100 datapoints to speed up eval
-  boundary_attack.stop_after_n_datapoints = 100
+  boundary_attack._stop_after_n_datapoints = 100
   attack_list.append(boundary_attack)
 
   return evaluate_two_class_unambiguous_model(

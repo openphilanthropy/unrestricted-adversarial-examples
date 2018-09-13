@@ -83,7 +83,7 @@ def test_two_class_mnist_accuracy():
   )
 
   # We limit the boundary attack to the first datapoint to speed up eval
-  boundary_attack.stop_after_n_datapoints = 1
+  boundary_attack._stop_after_n_datapoints = 1
   attack_list.append(boundary_attack)
 
   results = eval_kit.evaluate_two_class_unambiguous_model(
