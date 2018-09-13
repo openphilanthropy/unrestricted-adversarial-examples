@@ -202,6 +202,20 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
     attack_list=attack_list)
 
 
+def _get_bird_or_bicycle_label_to_examples():
+  dataset_iter = bird_or_bicyle.get_iterator('test')
+  label_to_examples = {
+    0: [],
+    1: [],
+  }
+
+  for x_np, y_np in dataset_iter:
+    for x, label in zip(x_np, y_np):
+      label_to_examples[label].append(x)
+
+  return label_to_examples
+
+
 def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None):
   """
   Evaluates a bird_or_bicycle classifier on a default set of attacks and creates plots
@@ -212,28 +226,36 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   if dataset_iter is None:
     dataset_iter = bird_or_bicyle.get_iterator('test')
 
-  imagenet_spatial_limits = [18, 18, 30]
-  imagenet_shape = (224, 224, 3)
+  bob_spatial_limits = [18, 18, 30]
+  bob_shape = (224, 224, 3)
+  bob_black_border_size = 20  # TODO: What should the border size be here?
 
   attack_list = [
     attacks.CleanData(),
 
     attacks.SpatialGridAttack(
-      image_shape_hwc=imagenet_shape,
-      spatial_limits=imagenet_spatial_limits,
+      image_shape_hwc=bob_shape,
+      spatial_limits=bob_spatial_limits,
       grid_granularity=[5, 5, 31],
-      black_border_size=0
+      black_border_size=bob_black_border_size,
     ),
 
     attacks.SpsaWithRandomSpatialAttack(
       model_fn,
-      image_shape_hwc=imagenet_shape,
-      spatial_limits=imagenet_spatial_limits,
+      image_shape_hwc=bob_shape,
+      spatial_limits=bob_spatial_limits,
       black_border_size=0,
       epsilon=(16. / 255),
     ),
 
-    # comment for now, bird_or_bicycle_label_to_example not defined
+    attacks.BoundaryWithRandomSpatialAttack(
+      model_fn,
+      max_l2_distortion=4,
+      label_to_examples=_get_bird_or_bicycle_label_to_examples(),
+      spatial_limits=bob_spatial_limits,
+      black_border_size=bob_black_border_size,
+      image_shape_hwc=bob_shape,
+    )
     # attacks.BoundaryAttack(
     #   model_fn,
     #   max_l2_distortion=4,
