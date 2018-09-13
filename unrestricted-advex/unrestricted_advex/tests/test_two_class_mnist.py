@@ -70,11 +70,10 @@ def test_two_class_mnist():
     two_class_iter,
     attack_list)
 
-  # Make sure that the null attack results in high accuracy
+  # Make sure that clean data has high accuracy
   assert results['clean']['accuracy@100'] >= 0.9
 
-  # Make sure that clean is high accuracy
-  assert results['random_spatial']['accuracy@100'] <= 0.9
+  # Make sure that attacks reduce accuracy
   assert results['spatial_grid']['accuracy@100'] <= 0.7
   assert results['spsa']['accuracy@100'] <= 0.6
   assert results['spsa_with_random_spatial']['accuracy@100'] <= 0.5

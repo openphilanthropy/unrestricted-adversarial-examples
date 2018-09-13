@@ -67,7 +67,7 @@ def run_attack(model, data_iter, attack_fn):
 
 def evaluate_two_class_unambiguous_model(
     model_fn, data_iter, attack_list,
-    model_name='unnamed_defense',
+    model_name=None,
     eval_results_dir='/tmp/unrestricted_advex_evals',
 ):
   """
@@ -79,6 +79,8 @@ def evaluate_two_class_unambiguous_model(
 
   :return a map from attack_name to accuracy at 80% and 100%
   """
+  if model_name is None:
+    model_name = 'unnamed_defense'
   adversarial_images_dir = os.path.join(eval_results_dir, model_name)
 
   # Load the whole data_iter into memory because we will iterate through the iterator multiple times
@@ -92,9 +94,6 @@ def evaluate_two_class_unambiguous_model(
     print("Executing attack: %s" % attack.name)
 
     logits, labels, correct, x_adv = run_attack(model_fn, data_iter, attack)
-    correct_fracs = np.sum(correct, axis=0) / len(labels)
-    print("Fraction correct under %s: %.3f" % (attack.name, correct_fracs))
-
     results_dir = os.path.join(adversarial_images_dir, attack.name)
     plotting.save_correct_and_incorrect_adv_images(x_adv, correct, results_dir)
 
@@ -115,6 +114,7 @@ def evaluate_two_class_unambiguous_model(
     # Add accuracy at 80% and 100% to table and results
     num_errors_at_80 = len(cov_to_confident_error_idxs[80 - 1])
     num_errors_at_100 = len(cov_to_confident_error_idxs[-1])
+    assert len(logits) == (np.sum(correct, axis=0) + num_errors_at_100)
 
     acc_at_80 = 1.0 - (float(num_errors_at_80) / len(labels))
     acc_at_100 = 1.0 - (float(num_errors_at_100) / len(labels))
@@ -125,6 +125,7 @@ def evaluate_two_class_unambiguous_model(
       'accuracy@100': acc_at_100,
       'cov_to_confident_error_idxs': cov_to_confident_error_idxs
     }
+    print("[%s] acc@80%% = %.3f" % (attack.name, acc_at_80))
 
   # Print results
   print(AsciiTable(table_data).table)
@@ -163,21 +164,24 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
   mnist_label_to_examples = {0: images_2class[0 == labels_2class],
                              1: images_2class[1 == labels_2class]}
 
-  spatial_limits = [10, 10, 10]
+  mnist_spatial_limits = [10, 10, 10]
+  mnist_shape = (28, 28, 1)
 
   attack_list = [
     attacks.CleanData(),
 
-    attacks.SpsaAttack(
+    attacks.SpsaWithRandomSpatialAttack(
       model_fn,
-      image_shape_hwc=(28, 28, 1),
+      spatial_limits=mnist_spatial_limits,
+      black_border_size=4,
+      image_shape_hwc=mnist_shape,
       epsilon=0.3,
     ),
 
     attacks.SpatialGridAttack(
-      image_shape_hwc=(28, 28, 1),
-      spatial_limits=spatial_limits,
-      grid_granularity=[10, 10, 10],
+      image_shape_hwc=mnist_shape,
+      spatial_limits=mnist_spatial_limits,
+      grid_granularity=[5, 5, 11],
       black_border_size=4,
       valid_check=mnist_utils.mnist_valid_check),
 
@@ -203,17 +207,25 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   if dataset_iter is None:
     dataset_iter = bird_or_bicyle.get_iterator('test')
 
+  imagenet_spatial_limits = [18, 18, 30]
+  imagenet_shape = (224, 224, 3)
+
   attack_list = [
     attacks.CleanData(),
-    attacks.SpsaAttack(
+
+    attacks.SpsaWithRandomSpatialAttack(
       model_fn,
-      image_shape_hwc=(224, 224, 3),
-      epsilon=(16. / 255)),
+      image_shape_hwc=imagenet_shape,
+      spatial_limits=imagenet_spatial_limits,
+      black_border_size=0,
+      epsilon=(16. / 255),
+    ),
     attacks.SpatialGridAttack(
-      image_shape_hwc=(224, 224, 3),
-      spatial_limits=[18, 18, 30],
+      image_shape_hwc=imagenet_shape,
+      spatial_limits=imagenet_spatial_limits,
       grid_granularity=[5, 5, 31],
-      black_border_size=0),
+      black_border_size=0
+    ),
     # comment for now, bird_or_bicycle_label_to_example not defined
     # attacks.BoundaryAttack(
     #   model_fn,

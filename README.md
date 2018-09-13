@@ -24,16 +24,16 @@ We include three attacks in the warm-up phase of the challenge:
 The top five distinct models for each dataset are shown below. You can see all submissions in [the full scoreboard](scoreboard.md). 
 
 ##### Two-Class MNIST
-| Defense               | Submitted by  | Spatial acc.<br>at 80% cov. | SPSA acc.<br>at 80% cov. | L2-ball acc.<br>at 80% cov. |  Submission Date |
+| Defense               | Submitted by  | Spatial grid acc.<br>at 80% cov. | SPSA L-infty acc.<br>at 80% cov. | L2-ball acc.<br>at 80% cov. |  Submission Date |
 | --------------------- | ------------- | ------------ |--------------- |--------------- | --------------- |
 | [MadryPGD LeNet Baseline](#)  |  ?? |    **??**    |     **??**   |     **??**     |  Aug 28th, 2018 |
 | [Undefended LeNet Baseline](#)   |  Google Brain   |    0.0%    |     0.0%    |     0.0%     |  Aug 27th, 2018 |
 
 ##### Bird or Bicycle
-| Defense               | Submitted by  | Spatial acc.<br>at 80% cov. | SPSA acc.<br>at 80% cov. | L2-ball acc.<br>at 80% cov. |  Submission Date |
+| Defense               | Submitted by  | Spatial grid acc.<br>at 80% cov. | SPSA L-infty acc.<br>at 80% cov. | L2-ball acc.<br>at 80% cov. |  Submission Date |
 | --------------------- | ------------- | ------------ |--------------- |--------------- | --------------- |
-| [Worst-of-10-Spatial Baseline](#)  |  ?? |    **??**    |     **??**   |     **??**     |  Aug 28th, 2018 |
-| [Undefended ResNet Baseline](unrestricted_advex/pytorch_resnet_baseline)   |  Google Brain   |    0.0%    |     0.0%    |     0.0%     |  Aug 27th, 2018 |
+| [Pytorch ResNet trained on bird-or-bicycle extras](unrestricted_advex/undefended_pytorch_resnet)  |  ?? |    **??**    |     **??**   |     **??**     |  Aug 28th, 2018 |
+| [Keras ResNet trained on ImageNet](unrestricted_advex/undefended_keras_resnet)   |  Google Brain   |    0.0%    |     0.0%    |     0.0%     |  Aug 27th, 2018 |
 
 
 ### Implementing a defense
