@@ -34,7 +34,8 @@ class CleanData(Attack):
 class SpsaAttack(Attack):
   name = 'spsa'
 
-  def __init__(self, model, image_shape_hwc, epsilon=(16. / 255), is_debug=False):
+  def __init__(self, model, image_shape_hwc, epsilon=(16. / 255),
+               num_steps=200, batch_size=32, is_debug=False):
     self.graph = tf.Graph()
 
     with self.graph.as_default():
@@ -49,9 +50,9 @@ class SpsaAttack(Attack):
         self.x_input,
         y=self.y_label,
         epsilon=epsilon,
-        num_steps=200,
+        num_steps=num_steps,
         early_stop_loss_threshold=-1.,
-        batch_size=32,
+        batch_size=batch_size,
         is_debug=is_debug)
 
     self.graph.finalize()
@@ -324,7 +325,7 @@ class SpsaWithRandomSpatialAttack(Attack):
   name = "spsa_with_random_spatial"
 
   def __init__(self, model, image_shape_hwc, spatial_limits, black_border_size,
-               epsilon=(16. / 255), is_debug=False):
+               epsilon=(16. / 255), num_steps=32, batch_size=512, is_debug=False):
     self.random_spatial_attack = RandomSpatialAttack(
       image_shape_hwc,
       spatial_limits=spatial_limits,
@@ -334,6 +335,8 @@ class SpsaWithRandomSpatialAttack(Attack):
       model,
       image_shape_hwc,
       epsilon=epsilon,
+      num_steps=num_steps,
+      batch_size=batch_size,
       is_debug=is_debug)
 
   def __call__(self, model, x_np, y_np):

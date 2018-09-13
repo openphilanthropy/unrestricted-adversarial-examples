@@ -6,7 +6,7 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string("model_dir", "/tmp/two-class-mnist/vanilla",
-                    "Where to put the trained model checkpoint")
+                    "Where to load the model to attack from")
 
 
 def main(_):

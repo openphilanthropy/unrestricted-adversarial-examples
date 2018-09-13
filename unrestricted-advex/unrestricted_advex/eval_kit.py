@@ -188,6 +188,8 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
       spatial_limits=mnist_spatial_limits,
       black_border_size=mnist_black_border_size,
       image_shape_hwc=mnist_shape,
+      num_steps=2000,
+      batch_size=512,
     ),
 
     attacks.BoundaryWithRandomSpatialAttack(
@@ -253,12 +255,14 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       spatial_limits=bird_or_bicycle_spatial_limits,
       black_border_size=0,
       epsilon=(16. / 255),
-    )
+      num_steps=200,
+      batch_size=32
+    ),
   ]
 
   boundary_attack = attacks.BoundaryWithRandomSpatialAttack(
     model_fn,
-    max_l2_distortion=4,
+    max_l2_distortion=10,
     label_to_examples=_get_bird_or_bicycle_label_to_examples(),
     spatial_limits=bird_or_bicycle_spatial_limits,
     black_border_size=bird_or_bicycle_black_border_size,
