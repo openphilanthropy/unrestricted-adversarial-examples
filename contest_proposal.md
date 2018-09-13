@@ -1,5 +1,14 @@
 # Unrestricted Adversarial Examples Contest Proposal
 
+This is a **living contest proposal** for the unrestricted advex contest.
+We expect some specifics below to change as we refine the exact mechanics of the contest, 
+and we are actively seeking feedback on all details. 
+We are especially interested in any corner-cases that might allow 
+for attackers or defenders to “cheat” and win prizes without actually 
+following the spirit of the contest outlined previously.
+
+## Motivation
+
 All known machine learning systems make confident and blatant errors when 
 in the presence of an adversary.
 We propose an ongoing, two-player contest for evaluating the safety and robustness
