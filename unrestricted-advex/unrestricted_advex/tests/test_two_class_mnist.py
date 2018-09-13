@@ -71,7 +71,7 @@ def test_two_class_mnist_accuracy():
       image_shape_hwc=mnist_shape,
     ),
 
-    # Skip boundary because it is too slow
+    # Skip boundary attack in this test because it is too slow
   ]
 
   results = eval_kit.evaluate_two_class_unambiguous_model(
