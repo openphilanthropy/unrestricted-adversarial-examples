@@ -18,13 +18,13 @@ inputs where the model assigns an incorrect label with high confidence.
 ##Unambiguous two-class bird-or-bicycle dataset
 This contest introduces a new image dataset. 
 We ask models to answer the question
- ``Is this an unambiguous picture of a bird, a bicycle,
-or is it (ambiguous / not obvious)?''.
+"Is this an unambiguous picture of a bird, a bicycle,
+or is it (ambiguous / not obvious)?".
 We call this the
 "bird-or-bicycle" task.
 
-We collect our images from the OpenImages
-\citep{openimages2017} dataset.
+We collect our images from the [OpenImages](https://storage.googleapis.com/openimages/web/index.html)
+dataset.
 To obtain the ground truth label
 for an image, we ask multiple human taskers to label the
 image as either a **bird**, a **bicycle**, or as being
@@ -32,7 +32,7 @@ image as either a **bird**, a **bicycle**, or as being
 Only when all taskers unanimously agree the image is obviously either a bird or
 bicycle is the
 image included in the dataset.
-(See the [tasker instructions section](#) for more details)
+(See the [tasker instructions section](#user-content-tasker-instructions) for more details)
 
 
 ##Defenders
@@ -47,10 +47,10 @@ By this, we mean that given any arbitrary input
 that is unambiguous either a bird or a bicycle, the model must either
 classify it correctly, or must choose to abstain.
 To prevent models from vacuously abstaining on every input, the model may only abstain
-on $20\%$ of an eligibility set (described below), but may abstain on any other input. 
+on 20% of an eligibility set (described below), but may abstain on any other input. 
 
-%Defenders should upload clear training code, inference code, and the trained
-%model to the contest organizers by following instructions developed by the community.
+Defenders should upload clear training code, inference code, and the trained
+model to the contest organizers by following instructions developed by the community.
 
 
 ##Attackers
@@ -62,7 +62,7 @@ defense to make a *confident mistake*.
 There are two requirements here: 
 
   1. the input must be unambiguously either a
-  bird or a bicycle, as decided by an ensemble of taskers (see Appendix~\ref{appendix-tasker-instructions}), and
+  bird or a bicycle, [as decided by an ensemble of taskers](#user-content-tasker-instructions), and
   2. the model must assign the incorrect label (and not choose to abstain).
 
 If both (a) all the human taskers agree the image is either an unambiguously
@@ -122,7 +122,7 @@ or real contenders to win the contest.
 
 New defense submissions must do the following in order to be eligible:
 
-  1. Obtain perfect accuracy on $80\%$ of the eligibility dataset;
+  1. Obtain perfect accuracy on 80% of the eligibility dataset;
   2 Successfully defend against all previously-submitted adversarial examples;
   3. Run in a docker container and conform to the API maintaining a throughput
     of at least 1 image per minute per P100 GPU;
@@ -193,9 +193,120 @@ we expect it will be easier in most cases to re-upload a similar adversarial ima
 re-processed by taskers.
 
 
+# Uninteresting defenses that solve the warm-up
+Because the warm-up consists only of fixed attacks, we expect there will
+be a wide range of defenses that easily defeat the specific fixed attacks
+we selected, but don't actually solve the problem of adversarial examples
+under the restircted perturbation budgets.
+The motivates *why} we the full challenge is a two-player situation.
 
 
-(TODO: copy content from paper into this section immediately before publication)
+In order to demonstrate that simple uninteresting defenses exist, we have
+constructed one defense that completely stops both of the supplied epsilon-ball
+attacks.
+(Observe that it is not possible to cheat on the rotations and translations adversarial
+attack because we generate examples through brute force.)
+
+Our "defense" is as follows:
+
+    def np_model(x):
+      x = x + np.random.normal(0, .05, size=x.shape)
+      logits = sess.run(logits, {x_input: x})
+      return np.array(logits == np.max(logits, axis=1), dtype=np.float32)
+
+
+This defense has two pieces: (1) randomness, which breaks the decision-only
+attack, and (2) gradient masking, which breaks SPSA.
+Both of these facts are well-known failure modes for these types of attacks,
+we describe why each is "effective" below.
+
+Randomness prevents the decision-only attack from working because it
+constantly shifts the location of the decision boundary very slightly.
+For an attack that works by walking along the decision boundary,
+if we move where exactly the boundary is from one run to the next, we
+won't be able to move along it.
+
+SPSA works by numerically estimating the gradient of the input image
+with respect to the probabilities.
+By clipping the values to be identically either `1` or `0`, we prevent
+any possible gradient signal from being revealed.
+
+
+#Reviewing inputs with taskers
+To review inputs and classify them as either a bird, a bicycle, or
+ambiguous, we utilize an ensemble of several *taskers*: humans
+that we have selected to review inputs manually.
+We will ask them to confirm that a given image definitely contains one
+class, definitely does not contain the other, the object is not
+truncated or occluded, and is a real object and not a painting, sculpture,
+or other depiction of the object.
+
+We will ask at least three taskers for each submitted image.
+If any tasker is not certain, the image is rejected.
+We will provide the taskers with multiple examples and continuously
+monitor their responses.
+
+Taskers will given unique IDs and all images will be released along with
+all tasker's ID and response.
+
+The review board reserves the right to over-rule the taskers, but expects
+to do so only in exceptional circumstances.
+If this is done, the review board will publicly explain why the result
+was over-ruled.
+
+Before a defense can win the defense prize, the review board will examine
+every submitted adversarial example and confirm that all images rejected 
+by taskers are in fact invalid.
+
+
+
+#<a name="tasker-instructions"></a>Instructions given to taskers
+### We provide the following instructions to taskers.
+
+Answer the following questions:
+
+**1. Does this photo contain a bird, or a depiction of a bird (e.g., a
+toy bird, a painting of a bird, a stuffed animal bird, a cartoon bird) anywhere
+in the image?**
+
+  1. Definitely yes (and I am confident that no other tasker will guess "no")
+  2. I'm not sure, but my best guess is yes
+  3. I'm not sure, but my best guess is no
+  4. Definitely no (and I am confident that no other tasker will guess "yes")
+
+
+**2. Does this photo contain a bicycle, or a depiction of a bicycle (e.g.,
+a drawing of a bicycle, a model bicycle, a toy bicycle)
+anywhere in the image?**
+
+  1. Definitely yes (and I am confident that no other tasker will guess "no")
+  2. I'm not sure, but my best guess is yes
+  3. I'm not sure, but my best guess is no
+  4. Definitely no (and I am confident that no other tasker will guess "yes")
+
+*If the tasker said that there definitely IS NOT one class, and
+  there MAYBE IS the other class, then move on to the following
+  additional questions.*
+
+**3. For the largest single bird/bicycle in the image, 
+label the pixels of the bird/bicycle. 
+(If there are multiple that are the same size, then choose one at random)**
+
+**4. Please answer the following True/False statements about the labeled bird/bicycle**
+
+  1. This bird/bicycle is complete and not truncated. It does not go
+  outside of the image at all
+  2. This bird/bicycle is not occluded by anything else. I can see all of the bird/bicycle
+  3. This is a picture of a **[real, live bird]** / **[real bicycle]**. It is not a painting, drawing,
+  sculpture, toy, stuffed animal, or any other sort of depiction.
+(It is okay if the object is a photorealistic rendering of a bird/bicycle.)
+
+
+*The image is determined to be unambiguous ONLY IF all taskers answered
+  "Definitely yes" to one class, "Definitely no" to the other class, the
+  largest object is at least half of the image, is not truncated, is not occluded,
+  and is not a depiction of any sort.*
+
 
 # Additional Contest Mechanics FAQ
 (TODO: copy content from paper into this section immediately before publication)
