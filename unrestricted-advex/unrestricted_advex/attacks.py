@@ -2,10 +2,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import random
 from itertools import product, repeat
 
 import numpy as np
-import random
 import tensorflow as tf
 from cleverhans.attacks import SPSA
 from cleverhans.model import Model
@@ -68,6 +68,7 @@ class SpsaAttack(Attack):
         all_x_adv_np.append(x_adv_np)
       return np.concatenate(all_x_adv_np)
 
+
 class BoundaryAttack(object):
   name = "boundary"
 
@@ -90,7 +91,7 @@ class BoundaryAttack(object):
   def __call__(self, model, x_np, y_np):
     r = []
     for i in range(len(x_np)):
-      other = 1-y_np[i]
+      other = 1 - y_np[i]
       initial_adv = random.choice(self.label_to_examples[other])
       adv = self.attack(x_np[i], y_np[i],
                         log_every_n_steps=100,  # Reduce verbosity of the attack
@@ -178,7 +179,6 @@ class SpatialGridAttack(Attack):
         x_np = self.session.run(self._tranformed_x_op, feed_dict={
           self._x_for_trans: x_np,
           self._t_for_trans: trans_np,
-
         })
       # See how the model_fn performs on the perturbed input
       logits = model_fn(x_np)
@@ -267,3 +267,73 @@ class CleverhansPyfuncModelWrapper(Model):
   def fprop(self, x, **kwargs):
     logits_op = tf.py_func(self.model_fn, [x], tf.float32)
     return {'logits': logits_op}
+
+
+class RandomSpatialAttack(Attack):
+  """Apply a single random rotation and translation
+  as in "A Rotation and a Translation Suffice: Fooling CNNs with
+  Simple Transformations", Engstrom et al. 2018
+
+  https://arxiv.org/pdf/1712.02779.pdf
+  """
+  name = 'random_spatial'
+
+  def __init__(self, image_shape_hwc, spatial_limits, black_border_size):
+    self.limits = spatial_limits
+
+    # Construct graph for spatial attack
+    self.graph = tf.Graph()
+    with self.graph.as_default():
+      self._x_for_trans = tf.placeholder(tf.float32, shape=[None] + list(image_shape_hwc))
+      self._t_for_trans = tf.placeholder(tf.float32, shape=[None, 3])
+
+      x = apply_black_border(
+        self._x_for_trans,
+        image_height=image_shape_hwc[0],
+        image_width=image_shape_hwc[1],
+        border_size=black_border_size
+      )
+
+      self._tranformed_x_op = apply_transformation(
+        x,
+        transform=self._t_for_trans,
+        image_height=image_shape_hwc[0],
+        image_width=image_shape_hwc[1],
+      )
+      self.session = tf.Session()
+
+  def __call__(self, model_fn, x_np, y_np):
+    # randomize each example separately
+    random_transforms = (np.random.uniform(-lim, lim, len(x_np)) for lim in self.limits)
+    trans_np = np.stack(random_transforms, axis=1)
+
+    with self.graph.as_default():
+      return self.session.run(self._tranformed_x_op, feed_dict={
+        self._x_for_trans: x_np,
+        self._t_for_trans: trans_np,
+      })
+
+
+class SpsaWithRandomSpatialAttack(Attack):
+  """Apply a single random rotation and translation and then apply SPSA
+  to the resulting image
+  """
+  name = "spsa_with_random_spatial"
+
+  def __init__(self, model, image_shape_hwc, spatial_limits, black_border_size,
+               epsilon=(16. / 255), is_debug=False):
+    self.random_spatial_attack = RandomSpatialAttack(
+      image_shape_hwc,
+      spatial_limits=spatial_limits,
+      black_border_size=black_border_size)
+
+    self.spsa_attack = SpsaAttack(
+      model,
+      image_shape_hwc,
+      epsilon=epsilon,
+      is_debug=is_debug)
+
+  def __call__(self, model, x_np, y_np):
+    x_after_spatial_np = self.random_spatial_attack(model, x_np, y_np)
+    x_adv = self.spsa_attack(model, x_after_spatial_np, y_np)
+    return x_adv
