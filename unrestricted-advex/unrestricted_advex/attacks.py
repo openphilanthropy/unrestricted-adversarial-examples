@@ -14,14 +14,15 @@ from six.moves import xrange
 
 
 class Attack(object):
-  name = 'unnamed_attack'
+  name = None
 
   def __call__(self, *args, **kwargs):
     raise NotImplementedError()
 
 
-class NullAttack(Attack):
-  name = 'null'
+class CleanData(Attack):
+  """Also known as the "null attack". Just returns the unaltered clean image"""
+  name = 'clean'
 
   def __call__(self, model_fn, images_batch_nhwc, y_np):
     del y_np, model_fn  # unused

@@ -31,7 +31,7 @@ def test_two_class_mnist():
 
   model_fn = mnist_utils.np_two_class_mnist_model(model_dir)
   attack_list = [
-    attacks.NullAttack(),
+    attacks.CleanData(),
 
     attacks.RandomSpatialAttack(
       image_shape_hwc=(28, 28, 1),
@@ -71,7 +71,7 @@ def test_two_class_mnist():
     attack_list)
 
   # Make sure that the null attack results in high accuracy
-  assert results['null']['accuracy@100'] >= 0.9
+  assert results['clean']['accuracy@100'] >= 0.9
 
   # Make sure that clean is high accuracy
   assert results['random_spatial']['accuracy@100'] <= 0.9

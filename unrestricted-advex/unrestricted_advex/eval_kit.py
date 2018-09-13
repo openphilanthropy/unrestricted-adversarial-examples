@@ -12,8 +12,6 @@ from tqdm import tqdm
 from unrestricted_advex import attacks, plotting
 from unrestricted_advex.mnist_baselines import mnist_utils
 
-EVAL_WITH_ATTACKS_DIR = '/tmp/eval_with_attacks'
-
 
 def _validate_logits(logits, batch_size):
   """Validate the model_fn to help the researcher with debugging"""
@@ -67,7 +65,11 @@ def run_attack(model, data_iter, attack_fn):
           np.concatenate(all_xadv))
 
 
-def evaluate_two_class_unambiguous_model(model_fn, data_iter, attack_list, model_name=None):
+def evaluate_two_class_unambiguous_model(
+    model_fn, data_iter, attack_list,
+    model_name='unnamed_defense',
+    eval_results_dir='/tmp/unrestricted_advex_evals',
+):
   """
   Evaluates a model_fn on a set of attacks and creates plots
   :param model_fn: A function mapping images to logits
@@ -77,6 +79,8 @@ def evaluate_two_class_unambiguous_model(model_fn, data_iter, attack_list, model
 
   :return a map from attack_name to accuracy at 80% and 100%
   """
+  adversarial_images_dir = os.path.join(eval_results_dir, model_name)
+
   # Load the whole data_iter into memory because we will iterate through the iterator multiple times
   data_iter = list(data_iter)
 
@@ -91,7 +95,7 @@ def evaluate_two_class_unambiguous_model(model_fn, data_iter, attack_list, model
     correct_fracs = np.sum(correct, axis=0) / len(labels)
     print("Fraction correct under %s: %.3f" % (attack.name, correct_fracs))
 
-    results_dir = os.path.join(EVAL_WITH_ATTACKS_DIR, attack.name)
+    results_dir = os.path.join(adversarial_images_dir, attack.name)
     plotting.save_correct_and_incorrect_adv_images(x_adv, correct, results_dir)
 
     # Confidence is the value of the larger of the two logits
@@ -124,6 +128,9 @@ def evaluate_two_class_unambiguous_model(model_fn, data_iter, attack_list, model
 
   # Print results
   print(AsciiTable(table_data).table)
+  print("To inspect the adversarial images "
+        "that your model correctly and incorrectly classified, "
+        "view them in: %s " % adversarial_images_dir)
   return results
 
 
@@ -159,7 +166,7 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
   spatial_limits = [10, 10, 10]
 
   attack_list = [
-    attacks.NullAttack(),
+    attacks.CleanData(),
 
     attacks.SpsaAttack(
       model_fn,
@@ -197,7 +204,7 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
     dataset_iter = bird_or_bicyle.get_iterator('test')
 
   attack_list = [
-    attacks.NullAttack(),
+    attacks.CleanData(),
     attacks.SpsaAttack(
       model_fn,
       image_shape_hwc=(224, 224, 3),
