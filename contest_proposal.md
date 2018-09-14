@@ -310,10 +310,12 @@ label the pixels of the bird/bicycle.
 (It is okay if the object is a photorealistic rendering of a bird/bicycle.)
 
 
-*The image is determined to be unambiguous ONLY IF all taskers answered
-  "Definitely yes" to one class, "Definitely no" to the other class, the
-  largest object is at least half of the image, is not truncated, is not occluded,
-  and is not a depiction of any sort.*
+### Criteria for a valid unambiguous bird-or-bicycle image
+The image is determined to be valid only if all of the following hold true:
+
+1. all taskers answered "Definitely yes" to one class, "Definitely no" to the other class
+2. the largest object is at least 25% of the image (as per a bounding box)
+3. the image is not truncated, is not occluded, and is not a depiction of any sort.
 
 
 # Additional Contest Mechanics FAQ
