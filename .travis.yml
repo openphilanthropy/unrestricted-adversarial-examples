@@ -7,8 +7,8 @@ python:
   - 3.5
 
 env:
-  - KERAS_BACKEND=tensorflow TENSORFLOW_V=1.8.0 PYTORCH=True
-  # - KERAS_BACKEND=tensorflow TENSORFLOW_V=1.8.0 PYTORCH=True
+  - KERAS_BACKEND=tensorflow TENSORFLOW_V=1.8.0
+  # - KERAS_BACKEND=tensorflow TENSORFLOW_V=1.8.0
 
 install:
   # code below is taken from http://conda.pydata.org/docs/travis.html
@@ -41,10 +41,7 @@ install:
 
   - time pip install -q -e "bird-or-bicycle"
   - time pip install -q -e "unrestricted-advex[test]"
-  - >
-   if [[ "$PYTORCH" == True ]]; then
-      pip install torch==0.4.0 torchvision==0.2.1 -q;
-   fi
+
   # workaround for version incompatibility between the scipy version in conda
   # and the system-provided /usr/lib/x86_64-linux-gnu/libstdc++.so.6
   # by installing a conda-provided libgcc and adding it to the load path
