@@ -12,7 +12,7 @@ flags.DEFINE_integer("total_batches", 1000000, "Total number of batches to train
 
 
 def main(_):
-  assert train_mode in ['vanilla', 'adversarial']
+  assert FLAGS.train_mode in ['vanilla', 'adversarial']
   mnist = mnist_utils.mnist_dataset(one_hot=True)
   next_batch_fn = lambda: mnist.train.next_batch(FLAGS.batch_size)
   mnist_utils.train_mnist(FLAGS.model_dir, next_batch_fn,
