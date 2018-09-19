@@ -62,5 +62,7 @@ script:
   # set up keras backend
   - sed -i -e 's/"backend":[[:space:]]*"[^"]*/"backend":\ "'$KERAS_BACKEND'/g' ~/.keras/keras.json;
   - echo -e "Running tests with the following config:\n$(cat ~/.keras/keras.json)"
-  # test for evaluation infrastructure are very fast, so running them first
-  - pytest -s
+
+  # Accuracy tests are slow so we run them after finishing all the other tests
+  - pytest -s -k "not two_class_mnist_accuracy"
+  - pytest -s -k "two_class_mnist_accuracy"

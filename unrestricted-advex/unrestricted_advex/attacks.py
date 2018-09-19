@@ -77,7 +77,10 @@ class SpsaAttack(Attack):
 class BoundaryAttack(object):
   name = "boundary"
 
-  def __init__(self, model, max_l2_distortion=4, label_to_examples={}):
+  def __init__(self, model, max_l2_distortion=4, label_to_examples=None):
+    if label_to_examples is None:
+      label_to_examples = {}
+
     self.max_l2_distortion = max_l2_distortion
 
     class Model:
@@ -376,7 +379,7 @@ class BoundaryWithRandomSpatialAttack(Attack):
   name = "boundary_with_random_spatial"
 
   def __init__(self, model, image_shape_hwc, spatial_limits, black_border_size,
-               max_l2_distortion=4, label_to_examples={}, valid_check=None):
+               max_l2_distortion=4, label_to_examples=None, valid_check=None):
     self.random_spatial_attack = RandomSpatialAttack(
       image_shape_hwc,
       valid_check=valid_check,

@@ -8,6 +8,9 @@ the results are not checked in this auto-test.
 
 import os
 
+import pytest
+import torch
+
 
 def get_example_main_path():
   return os.path.abspath(
@@ -15,12 +18,14 @@ def get_example_main_path():
                  'examples', 'undefended_pytorch_resnet', 'main.py'))
 
 
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="Pytorch tests require CUDA")
 def test_training():
   main_py = get_example_main_path()
   assert os.system('python "{main_py}" --smoke-test'.format(
     main_py=main_py)) == 0
 
 
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="Pytorch tests require CUDA")
 def test_eval():
   main_py = get_example_main_path()
   env = 'CUDA_VISIBLE_DEVICES=0'
