@@ -1,4 +1,4 @@
-# Unrestricted Adversarial Examples Challenge
+# Unrestricted Adversarial Examples Challenge [![Build Status](https://travis-ci.org/google/unrestricted-adversarial-examples.svg?branch=master)](https://travis-ci.org/google/unrestricted-adversarial-examples)
 
 In the Unrestricted Adversarial Examples Challenge, attackers submit arbitrary adversarial inputs, and defenders are expected to assign low confidence to difficult inputs while retaining high confidence and accuracy on a clean, unambiguous test set. You can learn more about the motivation and structure of the contest in [our recent paper](https://drive.google.com/open?id=1T0yiu9LPv_Qh-qYhYFLj9dxjnkca8fkG)
 
