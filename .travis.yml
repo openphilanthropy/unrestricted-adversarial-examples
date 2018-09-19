@@ -7,8 +7,7 @@ python:
   - 3.5
 
 env:
-  - KERAS_BACKEND=tensorflow TENSORFLOW_V=1.8.0
-  # - KERAS_BACKEND=tensorflow TENSORFLOW_V=1.8.0
+  - TENSORFLOW_V=1.8.0
 
 install:
   # code below is taken from http://conda.pydata.org/docs/travis.html
@@ -52,13 +51,6 @@ install:
 script:
   # exit on first error
   - set -e
-  # run keras backend init to initialize backend config
-  - python -c "import keras.backend"
-  # create dataset directory to avoid concurrent directory creation at runtime
-  - mkdir ~/.keras/datasets
-  # set up keras backend
-  - sed -i -e 's/"backend":[[:space:]]*"[^"]*/"backend":\ "'$KERAS_BACKEND'/g' ~/.keras/keras.json;
-  - echo -e "Running tests with the following config:\n$(cat ~/.keras/keras.json)"
 
   # Accuracy tests are slow so we run them after finishing all the other tests
   - pytest -s -k "not two_class_mnist_accuracy"
