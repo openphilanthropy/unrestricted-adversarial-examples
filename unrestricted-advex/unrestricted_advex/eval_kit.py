@@ -96,7 +96,7 @@ def evaluate_two_class_unambiguous_model(
 
     if attack._stop_after_n_datapoints is not None:
       batch_size = len(data_iter[0][0])
-      n_batches = math.ceil(float(attack._stop_after_n_datapoints) / batch_size)
+      n_batches = int(math.ceil(float(attack._stop_after_n_datapoints) / batch_size))
       attack_data_iter = data_iter[:n_batches]
     else:
       attack_data_iter = data_iter
