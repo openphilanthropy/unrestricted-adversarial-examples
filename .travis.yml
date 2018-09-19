@@ -39,7 +39,8 @@ install:
       pip install https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.8.0-cp35-cp35m-linux_x86_64.whl;
     fi
 
-  - time pip install -q -e ".[test]"
+  - time pip install -e "bird-or-bicycle"
+  - time pip install -e "unrestricted-advex[test]"
   - >
    if [[ "$PYTORCH" == True ]]; then
       pip install torch==0.4.0 torchvision==0.2.1 -q;
