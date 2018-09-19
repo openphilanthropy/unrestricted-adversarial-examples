@@ -101,14 +101,24 @@ class BoundaryAttack(object):
     for i in range(len(x_np)):
       other = 1 - y_np[i]
       initial_adv = random.choice(self.label_to_examples[other])
-      adv = self.attack(x_np[i], y_np[i],
-                        log_every_n_steps=100,  # Reduce verbosity of the attack
-                        starting_point=initial_adv
-                        )
-      distortion = np.sum((x_np[i] - adv) ** 2) ** .5
-      if distortion > self.max_l2_distortion:
-        # project to the surface of the L2 ball
-        adv = x_np[i] + (adv - x_np[i]) / distortion * self.max_l2_distortion
+      try:
+        adv = self.attack(x_np[i], y_np[i],
+                          log_every_n_steps=100,  # Reduce verbosity of the attack
+                          starting_point=initial_adv
+                          )
+        distortion = np.sum((x_np[i] - adv) ** 2) ** .5
+        if distortion > self.max_l2_distortion:
+          # project to the surface of the L2 ball
+          adv = x_np[i] + (adv - x_np[i]) / distortion * self.max_l2_distortion
+
+      except AssertionError as error:
+        if str(error).startswith("Invalid starting point provided."):
+          print("WARNING: The model misclassified the starting point (the target) "
+                "from BoundaryAttack. This means that the attack will fail on this "
+                "specific point (but is likely to succeed on other points.")
+          adv = x_np[i] # Just return the non-adversarial point
+        else:
+          raise error
 
       r.append(adv)
     return np.array(r)
@@ -324,7 +334,7 @@ class RandomSpatialAttack(Attack):
         self._x_for_trans: x_np,
         self._t_for_trans: trans_np,
       })
-      
+
       while True:
         random_transforms = (np.random.uniform(-lim, lim, len(x_np)) for lim in self.limits)
         trans_np = np.stack(random_transforms, axis=1)
@@ -332,7 +342,7 @@ class RandomSpatialAttack(Attack):
           self._x_for_trans: x_np,
           self._t_for_trans: trans_np,
         })
-        
+
         if self.valid_check is None:
           return out
         else:
