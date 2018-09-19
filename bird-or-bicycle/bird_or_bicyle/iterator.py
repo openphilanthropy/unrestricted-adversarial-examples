@@ -2,6 +2,21 @@ import bird_or_bicyle
 import torch
 import torchvision
 from bird_or_bicyle import BICYCLE_IDX, BIRD_IDX
+import os.path
+
+class ImageFolderWithFilenames(torchvision.datasets.ImageFolder):
+  def __getitem__(self, index):
+    """
+    Args:
+        index (int): Index
+
+    Returns:
+        tuple: (sample, target, path) where target is class_index of the target class.
+    """
+    path, _ = self.samples[index]
+    sample, target = super(ImageFolderWithFilenames, self).__getitem__(index)
+    filename  = os.path.basename(path)
+    return sample, target, filename
 
 
 def get_iterator(split='train', batch_size=32, shuffle=True):
@@ -10,7 +25,7 @@ def get_iterator(split='train', batch_size=32, shuffle=True):
   :param split: One of ['train', 'test', 'extras']
   :param batch_size: The number of images and labels in each batch
   :param shuffle: Whether or not to shuffle
-  :return:  An iterable that returns (batched_images, batched_labels)
+  :return:  An iterable that returns (batched_images, batched_labels, list_of_paths)
   """
   data_dir = bird_or_bicyle.get_dataset(split)
 
@@ -20,7 +35,7 @@ def get_iterator(split='train', batch_size=32, shuffle=True):
     lambda x: torch.einsum('chw->hwc', [x]),
   ])
 
-  train_dataset = torchvision.datasets.ImageFolder(
+  train_dataset = ImageFolderWithFilenames(
     data_dir, transform=image_preprocessing
   )
 
@@ -32,5 +47,7 @@ def get_iterator(split='train', batch_size=32, shuffle=True):
   assert train_dataset.class_to_idx['bicycle'] == BICYCLE_IDX
   assert train_dataset.class_to_idx['bird'] == BIRD_IDX
 
-  dataset_iter = [(x.numpy(), y.numpy()) for (x, y) in iter(data_loader)]
+  dataset_iter = ((sample.numpy(), target.numpy(), paths)
+                  for (sample, target, paths) in iter(data_loader))
+
   return dataset_iter
