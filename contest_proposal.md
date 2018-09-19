@@ -359,3 +359,8 @@ We think that it’s possible that we can get away with just a few taskers doing
   4. Submitting a single image could in fact permanently break several models.
  
 All this considered, for a contest with N models, we could imagine having maybe ~10*N submitted images total. If we have a similar number of models as the 2017 NIPS advex competition, this would yield on the order of ~10K total images to be labeled by each of our ensemble of taskers.
+
+
+#### What are the eligibility rules for the contest? In particular, are family members or spouses of Google employees eligible?
+
+When we figure out any prizes for the full contest, the contest organizers definitely won't be eligible for prizes. We believe (but can't commit to saying) anyone else, including google employees, will be able to get prizes.
