@@ -62,7 +62,7 @@ def two_class_iter(images, labels, num_datapoints, batch_size,
   which = (labels == class1) | (labels == class2)
   images_2class = images[which].astype(np.float32)
   labels_2class = labels[which]
-  num_batches = math.ceil(num_datapoints / batch_size)
+  num_batches = int(math.ceil(num_datapoints / batch_size))
 
   idxs = range(int(num_batches))
   if cycle:

@@ -1,5 +1,6 @@
+import pytest
+import tensorflow as tf
 from unrestricted_advex import eval_kit, attacks
-
 from unrestricted_advex.mnist_baselines import mnist_utils
 
 model_dir = '/tmp/two-class-mnist/test'
@@ -36,6 +37,8 @@ def train_overfit_classifier(num_batches, batch_size):
   return mnist_utils.np_two_class_mnist_model(model_dir)
 
 
+@pytest.mark.skipif(not tf.test.is_gpu_available(),
+                    reason="Running attacks on MNIST currently requires a GPU :( ")
 def test_two_class_mnist_accuracy():
   """ Train an mnist model on a subset of mnist and then evaluate it
   on small attacks *on the training set*.
