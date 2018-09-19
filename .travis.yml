@@ -7,8 +7,8 @@ python:
   - 3.5
 
 env:
-  - KERAS_BACKEND=tensorflow TENSORFLOW_V=1.8.0 PYTORCH=False
-  - KERAS_BACKEND=tensorflow TENSORFLOW_V=1.4.1 PYTORCH=True
+  - KERAS_BACKEND=tensorflow TENSORFLOW_V=1.8.0 PYTORCH=True
+  # - KERAS_BACKEND=tensorflow TENSORFLOW_V=1.8.0 PYTORCH=True
 
 install:
   # code below is taken from http://conda.pydata.org/docs/travis.html
