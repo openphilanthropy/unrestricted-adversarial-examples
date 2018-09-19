@@ -5,6 +5,7 @@ language: python
 python:
   - 2.7
   - 3.5
+
 env:
   - KERAS_BACKEND=tensorflow TENSORFLOW_V=1.8.0 PYTORCH=False
   - KERAS_BACKEND=tensorflow TENSORFLOW_V=1.4.1 PYTORCH=True
