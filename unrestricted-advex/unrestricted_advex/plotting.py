@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def save_correct_and_incorrect_adv_images(x_adv, correct, filenames, labels, results_dir):
+def save_correct_and_incorrect_adv_images(x_adv, correct, image_ids, labels, results_dir):
   correct_dir = os.path.join(results_dir, 'correct_images')
   shutil.rmtree(correct_dir, ignore_errors=True)
 
@@ -26,7 +26,7 @@ def save_correct_and_incorrect_adv_images(x_adv, correct, filenames, labels, res
     else:
       save_dir = incorrect_dir
 
-    filename = "adv_%s_%s" % (labels[i], filenames[i])
+    filename = "adv_%s_%s.png" % (labels[i], image_ids[i])
     save_image_to_png(image_np, os.path.join(save_dir, filename))
 
 

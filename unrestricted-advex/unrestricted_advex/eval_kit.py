@@ -43,10 +43,10 @@ def run_attack(model, data_iter, attack_fn):
   all_logits = []
   all_correct = []
   all_xadv = []
-  all_filenames = []
+  all_image_ids = []
 
   # TODO: Add assertion about the model's throughput
-  for i_batch, (x_np, y_np, filenames) in enumerate(tqdm(data_iter)):
+  for i_batch, (x_np, y_np, image_ids) in enumerate(tqdm(data_iter)):
     assert x_np.shape[-1] == 3 or x_np.shape[-1] == 1, "Data was {}, should be NHWC".format(
       x_np.shape)
 
@@ -60,13 +60,13 @@ def run_attack(model, data_iter, attack_fn):
     all_logits.append(logits)
     all_correct.append(correct)
     all_xadv.append(x_adv)
-    all_filenames += filenames
+    all_image_ids += list(image_ids)
 
   return (np.concatenate(all_logits),
           np.concatenate(all_labels),
           np.concatenate(all_correct),
           np.concatenate(all_xadv),
-          all_filenames)
+          all_image_ids)
 
 
 def evaluate_two_class_unambiguous_model(
@@ -77,7 +77,7 @@ def evaluate_two_class_unambiguous_model(
   """
   Evaluates a model_fn on a set of attacks and creates plots
   :param model_fn: A function mapping images to logits
-  :param dataset_iter: An iterable that returns (batched_images, batched_labels)
+  :param dataset_iter: An iterable that returns (batched_images, batched_labels, image_ids)
   :param attack_list: A list of callable Attacks
   :param model_name: An optional model_fn name
 
@@ -104,14 +104,14 @@ def evaluate_two_class_unambiguous_model(
     else:
       attack_data_iter = data_iter
 
-    logits, labels, correct, x_adv, filenames = run_attack(model_fn, attack_data_iter, attack)
+    logits, labels, correct, x_adv, image_ids = run_attack(model_fn, attack_data_iter, attack)
 
     results_dir = os.path.join(adversarial_images_dir, attack.name)
     plotting.save_correct_and_incorrect_adv_images(
       x_adv=x_adv,
       correct=correct,
       labels=labels,
-      filenames=filenames,
+      image_ids=image_ids,
       results_dir=results_dir,
     )
 
@@ -228,7 +228,7 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
 
 
 def _get_mnist_labels_to_examples():
-  images_2class, labels_2class = mnist_utils.two_class_mnist_dataset()
+  images_2class, labels_2class = mnist_utils._two_class_mnist_dataset()
   return {0: images_2class[0 == labels_2class],
           1: images_2class[1 == labels_2class]}
 
@@ -248,7 +248,7 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   """
   Evaluates a bird_or_bicycle classifier on a default set of attacks and creates plots
   :param model_fn: A function mapping images to logits
-  :param dataset_iter: An iterable that returns (batched_images, batched_labels)
+  :param dataset_iter: An iterable that returns (batched_images, batched_labels, image_ids)
   :param model_name: An optional model_fn name
   """
   if dataset_iter is None:

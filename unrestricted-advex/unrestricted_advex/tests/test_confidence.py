@@ -21,7 +21,8 @@ def random_model_fn(x):
 def test_confidence_always_right():
   fake_data_iter = [[
     np.zeros([batch_size, 28, 28, 1]),
-    np.ones(batch_size)
+    np.ones(batch_size),
+    range(batch_size)
   ]]
 
   results = eval_kit.evaluate_two_class_unambiguous_model(
@@ -38,7 +39,8 @@ def test_confidence_always_right():
 def test_confidence_always_wrong():
   fake_data_iter = [[
     np.zeros([batch_size, 28, 28, 1]),
-    np.zeros(batch_size)
+    np.zeros(batch_size),
+    range(batch_size)
   ]]
 
   results = eval_kit.evaluate_two_class_unambiguous_model(
@@ -55,7 +57,8 @@ def test_confidence_always_wrong():
 def test_confidence_random():
   fake_data_iter = [[
     np.zeros([batch_size, 28, 28, 1]),
-    np.zeros(batch_size)
+    np.zeros(batch_size),
+    range(batch_size)
   ]]
 
   results = eval_kit.evaluate_two_class_unambiguous_model(
