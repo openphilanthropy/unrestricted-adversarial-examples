@@ -6,22 +6,11 @@ from unrestricted_advex.mnist_baselines import mnist_utils
 model_dir = '/tmp/two-class-mnist/test'
 
 
-def get_two_class_iter(num_batches, batch_size):
-  mnist = mnist_utils.mnist_dataset(one_hot=False)
-
-  two_class_iter = mnist_utils.two_class_iter(
-    mnist.train.images, mnist.train.labels,
-    num_datapoints=num_batches * batch_size,
-    batch_size=batch_size)
-  return two_class_iter
-
-
 def train_overfit_classifier(num_batches, batch_size):
-  mnist = mnist_utils.mnist_dataset(one_hot=False)
   print("Training mnist classifier...")
 
-  next_batch_iter = mnist_utils.two_class_iter(
-    mnist.train.images, mnist.train.labels,
+  next_batch_iter = mnist_utils.get_two_class_iterator(
+    'train',
     num_datapoints=num_batches * batch_size,
     batch_size=batch_size,
     label_scheme='one_hot',
@@ -44,7 +33,7 @@ def test_two_class_mnist_accuracy():
   on small attacks *on the training set*.
   """
   model_fn = train_overfit_classifier(num_batches=32, batch_size=1)
-  dataset_iter = get_two_class_iter(num_batches=32, batch_size=1)
+  dataset_iter = mnist_utils.get_two_class_iterator('train', num_datapoints=32, batch_size=1)
 
   mnist_spatial_limits = [10, 10, 10]
   mnist_shape = (28, 28, 1)
@@ -103,9 +92,9 @@ def test_two_class_mnist_accuracy():
   assert results['spsa']['accuracy@100'] <= 0.6
   assert results['spsa_with_random_spatial']['accuracy@100'] <= 0.5
 
-  # Run a smoke test on the full dataset with a batch size of one
+  # Run a smoke test on all attacks with a batch size of one
   # TODO: Split this into a separate test
-  dataset_iter = get_two_class_iter(num_batches=1, batch_size=1)
+  dataset_iter = mnist_utils.get_two_class_iterator('train', num_datapoints=1, batch_size=1)
   eval_kit.evaluate_two_class_mnist_model(
     model_fn,
     dataset_iter=dataset_iter,

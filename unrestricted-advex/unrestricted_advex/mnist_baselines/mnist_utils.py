@@ -57,10 +57,19 @@ def _two_class_mnist_dataset(one_hot=False):
   return images_2class, labels_2class
 
 
-def two_class_iter(images_10class, labels_10class, num_datapoints, batch_size,
-                   class1=7, class2=6, label_scheme='boolean',
-                   cycle=False):
+def get_two_class_iterator(split, num_datapoints, batch_size,
+                           class1=7, class2=6, label_scheme='boolean',
+                           cycle=False):
   """Filter MNIST to only two classes (e.g. sixes and sevens)"""
+  mnist_10class = mnist_dataset(one_hot=False)
+  if split == "train":
+    images_10class = mnist_10class.train.images
+    labels_10class = mnist_10class.train.labels
+  elif split == "test":
+    images_10class = mnist_10class.test.images
+    labels_10class = mnist_10class.test.labels
+  else:
+    raise ValueError("split must be one of {train, test}")
 
   # Use the idxs as our image_id so that we can track them down
   image_ids_2class, = np.where((labels_10class == class1) | (labels_10class == class2))
@@ -141,7 +150,7 @@ def train_mnist(model_dir, next_batch_fn, total_batches, train_mode,
     sess.run(tf.global_variables_initializer())
 
     for batch_num in range(total_batches):
-      x_batch, y_batch = next_batch_fn()
+      x_batch, y_batch = next_batch_fn()[:2] # Omit the image_ids part of the batch
       x_batch = np.reshape(x_batch, (-1, 28, 28, 1))
 
       if train_mode == "adversarial" and batch_num > 1000:
