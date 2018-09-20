@@ -1,13 +1,13 @@
 import itertools
 
-import bird_or_bicyle
+import bird_or_bicycle
 import numpy as np
 from unrestricted_advex import eval_kit
 
 
 def get_tiny_iterator():
   """An iterator with a single sample"""
-  dataset_iter = bird_or_bicyle.get_iterator('test', batch_size=1)
+  dataset_iter = bird_or_bicycle.get_iterator('test', batch_size=1)
   return itertools.islice(dataset_iter, 1)
 
 

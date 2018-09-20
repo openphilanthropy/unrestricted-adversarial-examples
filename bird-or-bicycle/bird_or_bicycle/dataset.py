@@ -21,7 +21,7 @@ from subprocess import check_output
 
 import torchvision
 from PIL import Image
-from bird_or_bicyle import metadata
+from bird_or_bicycle import metadata
 from tqdm import tqdm
 
 VERSION = '0.0.3'
@@ -200,7 +200,7 @@ def _get_bird_and_bicycle_image_ids(split):
 
 
 def default_data_root():
-  return os.path.join(os.path.expanduser('~/datasets/bird_or_bicyle'), VERSION)
+  return os.path.join(os.path.expanduser('~/datasets/bird_or_bicycle'), VERSION)
 
 
 def verify_dataset_integrity(split, data_root=None):

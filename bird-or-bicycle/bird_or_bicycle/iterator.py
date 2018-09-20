@@ -1,8 +1,10 @@
-import bird_or_bicyle
+import os.path
+
+import bird_or_bicycle
 import torch
 import torchvision
-from bird_or_bicyle import BICYCLE_IDX, BIRD_IDX
-import os.path
+from bird_or_bicycle import BICYCLE_IDX, BIRD_IDX
+
 
 class ImageFolderWithFilenames(torchvision.datasets.ImageFolder):
   def __getitem__(self, index):
@@ -15,7 +17,7 @@ class ImageFolderWithFilenames(torchvision.datasets.ImageFolder):
     """
     path, _ = self.samples[index]
     sample, target = super(ImageFolderWithFilenames, self).__getitem__(index)
-    image_id  = os.path.basename(path).rstrip('.jpg')
+    image_id = os.path.basename(path).rstrip('.jpg')
     return sample, target, image_id
 
 
@@ -27,7 +29,7 @@ def get_iterator(split='train', batch_size=32, shuffle=True):
   :param shuffle: Whether or not to shuffle
   :return:  An iterable that returns (batched_images, batched_labels, batched_image_ids)
   """
-  data_dir = bird_or_bicyle.get_dataset(split)
+  data_dir = bird_or_bicycle.get_dataset(split)
 
   image_preprocessing = torchvision.transforms.Compose([
     torchvision.transforms.Resize(224),

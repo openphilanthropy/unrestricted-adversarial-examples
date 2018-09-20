@@ -16,7 +16,7 @@ import shutil
 import time
 import warnings
 
-import bird_or_bicyle
+import bird_or_bicycle
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
@@ -79,7 +79,7 @@ def main():
   args.workers = int(4 * (args.batch_size / 256))
 
   if args.data == '':
-    args.data = bird_or_bicyle.dataset.default_data_root()
+    args.data = bird_or_bicycle.dataset.default_data_root()
 
   if args.gpu is not None:
     warnings.warn('You have chosen a specific GPU. This will completely '

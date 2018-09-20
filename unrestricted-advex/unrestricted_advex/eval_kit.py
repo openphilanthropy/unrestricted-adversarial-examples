@@ -6,7 +6,7 @@ from __future__ import print_function
 import math
 import os
 
-import bird_or_bicyle
+import bird_or_bicycle
 import numpy as np
 from terminaltables import AsciiTable
 from tqdm import tqdm
@@ -234,7 +234,7 @@ def _get_mnist_labels_to_examples():
 
 
 def _get_bird_or_bicycle_label_to_examples():
-  dataset_iter = bird_or_bicyle.get_iterator('test')
+  dataset_iter = bird_or_bicycle.get_iterator('test')
   label_to_examples = {0: [], 1: []}
 
   for x_np, y_np, _ in dataset_iter:
@@ -252,7 +252,7 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   :param model_name: An optional model_fn name
   """
   if dataset_iter is None:
-    dataset_iter = bird_or_bicyle.get_iterator('test')
+    dataset_iter = bird_or_bicycle.get_iterator('test')
 
   bird_or_bicycle_shape = (224, 224, 3)
   bird_or_bicycle_spatial_limits = [18, 18, 30]

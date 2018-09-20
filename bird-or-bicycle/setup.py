@@ -20,7 +20,7 @@ setup(
   author='Tom Brown',
   author_email='tombrown@google.com',
   url='https://github.com/google/unrestricted-adversarial-examples/bird-or-bicycle',
-  packages=['bird_or_bicyle'],
+  packages=['bird_or_bicycle'],
   install_requires=[
     # Use semantic versioning of dependencies
     # https://stackoverflow.com/questions/39590187/in-requirements-txt-what-does-tilde-equals-mean

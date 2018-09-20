@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import numpy as np
 import tensorflow as tf
-from bird_or_bicyle import CLASS_NAME_TO_IMAGENET_CLASS
+from bird_or_bicycle import CLASS_NAME_TO_IMAGENET_CLASS
 from tensorflow.keras.applications.resnet50 import preprocess_input
 from unrestricted_advex import eval_kit
 
