@@ -150,7 +150,7 @@ def train_mnist(model_dir, next_batch_fn, total_batches, train_mode,
     sess.run(tf.global_variables_initializer())
 
     for batch_num in range(total_batches):
-      x_batch, y_batch = next_batch_fn()
+      x_batch, y_batch = next_batch_fn()[:2] # Omit the image_ids part of the batch
       x_batch = np.reshape(x_batch, (-1, 28, 28, 1))
 
       if train_mode == "adversarial" and batch_num > 1000:
