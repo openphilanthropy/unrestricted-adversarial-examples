@@ -57,10 +57,19 @@ def _two_class_mnist_dataset(one_hot=False):
   return images_2class, labels_2class
 
 
-def two_class_iter(images_10class, labels_10class, num_datapoints, batch_size,
-                   class1=7, class2=6, label_scheme='boolean',
-                   cycle=False):
+def get_two_class_iterator(split, num_datapoints, batch_size,
+                           class1=7, class2=6, label_scheme='boolean',
+                           cycle=False):
   """Filter MNIST to only two classes (e.g. sixes and sevens)"""
+  mnist_10class = mnist_dataset(one_hot=False)
+  if split == "train":
+    images_10class = mnist_10class.train.images
+    labels_10class = mnist_10class.train.labels
+  elif split == "train":
+    images_10class = mnist_10class.test.images
+    labels_10class = mnist_10class.test.labels
+  else:
+    raise ValueError("split must be one of {train, test}")
 
   # Use the idxs as our image_id so that we can track them down
   image_ids_2class, = np.where((labels_10class == class1) | (labels_10class == class2))

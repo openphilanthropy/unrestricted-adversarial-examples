@@ -184,6 +184,10 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
   :param dataset_iter: An iterable that returns (batched_images, batched_labels)
   :param model_name: An optional model_fn name
   """
+
+  if dataset_iter is None:
+    dataset_iter = mnist_utils.get_two_class_iterator('test', num_datapoints=128, batch_size=128)
+
   mnist_spatial_limits = [10, 10, 10]
   mnist_shape = (28, 28, 1)
   mnist_black_border_size = 4
