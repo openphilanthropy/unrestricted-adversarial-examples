@@ -1,7 +1,7 @@
-import bird_or_bicyle
+import bird_or_bicycle
 import torch
 import torchvision
-from bird_or_bicyle import BICYCLE_IDX, BIRD_IDX
+from bird_or_bicycle import BICYCLE_IDX, BIRD_IDX
 
 
 def get_iterator(split='train', batch_size=32, shuffle=True):
@@ -12,7 +12,7 @@ def get_iterator(split='train', batch_size=32, shuffle=True):
   :param shuffle: Whether or not to shuffle
   :return:  An iterable that returns (batched_images, batched_labels)
   """
-  data_dir = bird_or_bicyle.get_dataset(split)
+  data_dir = bird_or_bicycle.get_dataset(split)
 
   image_preprocessing = torchvision.transforms.Compose([
     torchvision.transforms.Resize(224),

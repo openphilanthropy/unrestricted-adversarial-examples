@@ -65,7 +65,7 @@ from unrestricted_advex import eval_kit
 eval_kit.evaluate_bird_or_bicycle_model(my_very_robust_model)
 ```
 
-For ease of evaluation, your model must also maintain a throughput of at least **100 images per second** when evaluated on a P100 GPU on the `bird-or-bicyle` dataset
+For ease of evaluation, your model must also maintain a throughput of at least **100 images per second** when evaluated on a P100 GPU on the `bird-or-bicycle` dataset
 
 ##### Your defense will be evaluated with the following mechanism
 
