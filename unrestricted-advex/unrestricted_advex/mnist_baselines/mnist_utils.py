@@ -65,7 +65,7 @@ def get_two_class_iterator(split, num_datapoints, batch_size,
   if split == "train":
     images_10class = mnist_10class.train.images
     labels_10class = mnist_10class.train.labels
-  elif split == "train":
+  elif split == "test":
     images_10class = mnist_10class.test.images
     labels_10class = mnist_10class.test.labels
   else:
