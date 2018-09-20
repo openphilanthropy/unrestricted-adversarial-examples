@@ -61,6 +61,15 @@ def _strip_name(image_id):
   return image_id
 
 
+# Images that are known to be mislabeled by taskers
+KNOWN_BAD_IMAGES = {
+  'e9310a5dce5bbb0f',
+  '1422b0695f2d3d51',
+  '1988a12b8997bab2',
+  '3519bf7ab7d2f7b6',
+  '599a814b35fb994d',
+}
+
 if __name__ == '__main__':
 
   unambiguous_bird_ids = []
@@ -70,8 +79,7 @@ if __name__ == '__main__':
   unambiguous_bicycle_urls = []
 
   rejection_reason_to_urls = defaultdict(list)
-
-  filename = '/tmp/bird-or-bicycle-tasker-data.csv'
+  filename = '/Users/tomfeelslucky/Downloads/bird-or-bicycle-tasker-data - shuffled_urls_v0-0-1.csv'
   with open(filename, 'r') as f:
     reader = csv.reader(f)
     _ = next(reader)
@@ -80,7 +88,8 @@ if __name__ == '__main__':
       # print(i)
       # print(row)
 
-      url, image_id = row[:2]
+      url, long_image_id = row[:2]
+      image_id = _strip_name(long_image_id)
 
       tasker_1_data = row[2:9]
       tasker_2_data = row[9:16]
@@ -91,6 +100,11 @@ if __name__ == '__main__':
         TaskerResponse(tasker_2_data, url=url),
         TaskerResponse(tasker_3_data, url=url),
       ]
+
+      if image_id in KNOWN_BAD_IMAGES:
+        rejection_reason_to_urls['known_bad'].append(url)
+        continue
+
       if not all([resp.has_large_object() for resp in responses]):
         rejection_reason_to_urls['too_small'].append(url)
         continue
@@ -124,8 +138,8 @@ if __name__ == '__main__':
 
   with open('/tmp/bird_image_ids.csv', 'w') as f:
     for bird_id in unambiguous_bird_ids:
-      f.write(_strip_name(bird_id) + '\n')
+      f.write(bird_id + '\n')
 
   with open('/tmp/bicycle_image_ids.csv', 'w') as f:
     for bicycle_id in unambiguous_bicycle_ids:
-      f.write(_strip_name(bicycle_id) + '\n')
+      f.write(bicycle_id + '\n')

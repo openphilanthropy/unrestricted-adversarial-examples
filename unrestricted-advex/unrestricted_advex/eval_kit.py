@@ -43,9 +43,10 @@ def run_attack(model, data_iter, attack_fn):
   all_logits = []
   all_correct = []
   all_xadv = []
+  all_image_ids = []
 
   # TODO: Add assertion about the model's throughput
-  for i_batch, (x_np, y_np) in enumerate(tqdm(data_iter)):
+  for i_batch, (x_np, y_np, image_ids) in enumerate(tqdm(data_iter)):
     assert x_np.shape[-1] == 3 or x_np.shape[-1] == 1, "Data was {}, should be NHWC".format(
       x_np.shape)
 
@@ -59,11 +60,13 @@ def run_attack(model, data_iter, attack_fn):
     all_logits.append(logits)
     all_correct.append(correct)
     all_xadv.append(x_adv)
+    all_image_ids += list(image_ids)
 
   return (np.concatenate(all_logits),
           np.concatenate(all_labels),
           np.concatenate(all_correct),
-          np.concatenate(all_xadv))
+          np.concatenate(all_xadv),
+          all_image_ids)
 
 
 def evaluate_two_class_unambiguous_model(
@@ -74,7 +77,7 @@ def evaluate_two_class_unambiguous_model(
   """
   Evaluates a model_fn on a set of attacks and creates plots
   :param model_fn: A function mapping images to logits
-  :param dataset_iter: An iterable that returns (batched_images, batched_labels)
+  :param dataset_iter: An iterable that returns (batched_images, batched_labels, image_ids)
   :param attack_list: A list of callable Attacks
   :param model_name: An optional model_fn name
 
@@ -101,10 +104,16 @@ def evaluate_two_class_unambiguous_model(
     else:
       attack_data_iter = data_iter
 
-    logits, labels, correct, x_adv = run_attack(model_fn, attack_data_iter, attack)
+    logits, labels, correct, x_adv, image_ids = run_attack(model_fn, attack_data_iter, attack)
 
     results_dir = os.path.join(adversarial_images_dir, attack.name)
-    plotting.save_correct_and_incorrect_adv_images(x_adv, correct, results_dir)
+    plotting.save_correct_and_incorrect_adv_images(
+      x_adv=x_adv,
+      correct=correct,
+      labels=labels,
+      image_ids=image_ids,
+      results_dir=results_dir,
+    )
 
     # Confidence is the value of the larger of the two logits
     confidences = np.max(logits, axis=1)
@@ -219,7 +228,7 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
 
 
 def _get_mnist_labels_to_examples():
-  images_2class, labels_2class = mnist_utils.two_class_mnist_dataset()
+  images_2class, labels_2class = mnist_utils._two_class_mnist_dataset()
   return {0: images_2class[0 == labels_2class],
           1: images_2class[1 == labels_2class]}
 
@@ -228,7 +237,7 @@ def _get_bird_or_bicycle_label_to_examples():
   dataset_iter = bird_or_bicycle.get_iterator('test')
   label_to_examples = {0: [], 1: []}
 
-  for x_np, y_np in dataset_iter:
+  for x_np, y_np, _ in dataset_iter:
     for x, label in zip(x_np, y_np):
       label_to_examples[label].append(x)
 
@@ -239,7 +248,7 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   """
   Evaluates a bird_or_bicycle classifier on a default set of attacks and creates plots
   :param model_fn: A function mapping images to logits
-  :param dataset_iter: An iterable that returns (batched_images, batched_labels)
+  :param dataset_iter: An iterable that returns (batched_images, batched_labels, image_ids)
   :param model_name: An optional model_fn name
   """
   if dataset_iter is None:
@@ -282,6 +291,8 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   # We limit the boundary attack to the first 100 datapoints to speed up eval
   boundary_attack._stop_after_n_datapoints = 100
   attack_list.append(boundary_attack)
+
+  attack_list = [attacks.CleanData()]
 
   return evaluate_two_class_unambiguous_model(
     model_fn, dataset_iter,

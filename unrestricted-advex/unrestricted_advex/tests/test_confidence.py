@@ -1,8 +1,8 @@
 import numpy as np
-from numpy.testing import assert_approx_equal
+from numpy.testing import assert_almost_equal
 from unrestricted_advex import eval_kit, attacks
 
-batch_size = 10000
+batch_size = 1000
 attack_list = [
   attacks.CleanData(),
 ]
@@ -21,7 +21,8 @@ def random_model_fn(x):
 def test_confidence_always_right():
   fake_data_iter = [[
     np.zeros([batch_size, 28, 28, 1]),
-    np.ones(batch_size)
+    np.ones(batch_size),
+    range(batch_size)
   ]]
 
   results = eval_kit.evaluate_two_class_unambiguous_model(
@@ -38,7 +39,8 @@ def test_confidence_always_right():
 def test_confidence_always_wrong():
   fake_data_iter = [[
     np.zeros([batch_size, 28, 28, 1]),
-    np.zeros(batch_size)
+    np.zeros(batch_size),
+    range(batch_size)
   ]]
 
   results = eval_kit.evaluate_two_class_unambiguous_model(
@@ -55,7 +57,8 @@ def test_confidence_always_wrong():
 def test_confidence_random():
   fake_data_iter = [[
     np.zeros([batch_size, 28, 28, 1]),
-    np.zeros(batch_size)
+    np.zeros(batch_size),
+    range(batch_size)
   ]]
 
   results = eval_kit.evaluate_two_class_unambiguous_model(
@@ -64,10 +67,10 @@ def test_confidence_random():
     model_name='random_model',
     attack_list=attack_list
   )
-  assert_approx_equal(results['clean']['accuracy@100'], 0.5,
-                      significant=2)
-  assert_approx_equal(results['clean']['accuracy@80'], 0.5,
-                      significant=2)
+  assert_almost_equal(results['clean']['accuracy@100'], 0.5,
+                      decimal=1)
+  assert_almost_equal(results['clean']['accuracy@80'], 0.5,
+                      decimal=1)
 
 
 if __name__ == '__main__':

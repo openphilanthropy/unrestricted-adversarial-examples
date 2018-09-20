@@ -47,38 +47,48 @@ CLASS1 = 6
 CLASS2 = 7
 
 
-def two_class_mnist_dataset(one_hot=False):
+def _two_class_mnist_dataset(one_hot=False):
   mnist = mnist_dataset(one_hot=one_hot)
   which = (mnist.test.labels == CLASS1) | (mnist.test.labels == CLASS2)
   images_2class = mnist.test.images[which].astype(np.float32)
-  labels_2class = mnist.test.labels[which]
-  return images_2class.reshape((-1, 28, 28, 1)), labels_2class == CLASS2
+
+  labels_2class = mnist.test.labels[which] == CLASS2
+  images_2class = images_2class.reshape((-1, 28, 28, 1))
+  return images_2class, labels_2class
 
 
-def two_class_iter(images, labels, num_datapoints, batch_size,
+def two_class_iter(images_10class, labels_10class, num_datapoints, batch_size,
                    class1=7, class2=6, label_scheme='boolean',
                    cycle=False):
   """Filter MNIST to only two classes (e.g. sixes and sevens)"""
-  which = (labels == class1) | (labels == class2)
-  images_2class = images[which].astype(np.float32)
-  labels_2class = labels[which]
+
+  # Use the idxs as our image_id so that we can track them down
+  image_id_10class = [str(idx) for idx in range(len(labels_10class))]
+
+  # Filter to our desired classes
+  image_ids_2class, = np.where((labels_10class == class1) | (labels_10class == class2))
+  images_2class = images_10class[image_ids_2class].astype(np.float32)
+  labels_2class = labels_10class[image_ids_2class]
+
   num_batches = int(math.ceil(num_datapoints / batch_size))
 
-  idxs = range(int(num_batches))
+  batch_idxs = range(num_batches)
   if cycle:
-    idxs = itertools.cycle(idxs)
-  for i in idxs:
-    images = images_2class[i:i + batch_size].reshape((batch_size, 28, 28, 1))
+    batch_idxs = itertools.cycle(batch_idxs)
+  for i in batch_idxs:
+    image_batch = images_2class[i:i + batch_size].reshape((batch_size, 28, 28, 1))
+    image_ids_batch = image_ids_2class[i:i + batch_size]
     if label_scheme == 'boolean':
-      labels = labels_2class[i:i + batch_size] == class1
+      labels_batch = labels_2class[i:i + batch_size] == class1
     elif label_scheme == 'one_hot':
-      labels = labels_to_one_hot(labels_2class[i:i + batch_size])
+      labels_batch = labels_to_one_hot(labels_2class[i:i + batch_size])
     elif label_scheme == 'labels':
-      labels = labels_2class[i:i + batch_size]
+      labels_batch = labels_2class[i:i + batch_size]
     else:
       raise NotImplementedError(
         'Unrecognized label scheme {}'.format(label_scheme))
-    yield images, labels
+
+    yield image_batch, labels_batch, list(image_ids_batch)
 
 
 def np_two_class_mnist_model(model_dir):
@@ -132,7 +142,7 @@ def train_mnist(model_dir, next_batch_fn, total_batches, train_mode,
     sess.run(tf.global_variables_initializer())
 
     for batch_num in range(total_batches):
-      x_batch, y_batch = next_batch_fn()
+      x_batch, y_batch, _ = next_batch_fn()
       x_batch = np.reshape(x_batch, (-1, 28, 28, 1))
 
       if train_mode == "adversarial" and batch_num > 1000:
