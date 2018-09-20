@@ -63,10 +63,9 @@ def two_class_iter(images_10class, labels_10class, num_datapoints, batch_size,
   """Filter MNIST to only two classes (e.g. sixes and sevens)"""
 
   # Use the idxs as our image_id so that we can track them down
-  image_id_10class = [str(idx) for idx in range(len(labels_10class))]
+  image_ids_2class, = np.where((labels_10class == class1) | (labels_10class == class2))
 
   # Filter to our desired classes
-  image_ids_2class, = np.where((labels_10class == class1) | (labels_10class == class2))
   images_2class = images_10class[image_ids_2class].astype(np.float32)
   labels_2class = labels_10class[image_ids_2class]
 
@@ -142,7 +141,7 @@ def train_mnist(model_dir, next_batch_fn, total_batches, train_mode,
     sess.run(tf.global_variables_initializer())
 
     for batch_num in range(total_batches):
-      x_batch, y_batch, _ = next_batch_fn()
+      x_batch, y_batch = next_batch_fn()
       x_batch = np.reshape(x_batch, (-1, 28, 28, 1))
 
       if train_mode == "adversarial" and batch_num > 1000:
