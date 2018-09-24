@@ -296,8 +296,6 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   boundary_attack._stop_after_n_datapoints = 100
   attack_list.append(boundary_attack)
 
-  attack_list = [attacks.CleanData()]
-
   return evaluate_two_class_unambiguous_model(
     model_fn, dataset_iter,
     model_name=model_name,
