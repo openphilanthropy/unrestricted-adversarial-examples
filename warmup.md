@@ -15,6 +15,7 @@ We have leaderboards for two datasets. See some samples below:
 ![bob_example_wide 2x](https://user-images.githubusercontent.com/306655/45507995-726bdd00-b748-11e8-9074-d93e257ea1a0.png)
 
 ### Implementing a defense
+You can get started with a basic working defense in [this colab notebook](https://colab.research.google.com/drive/1ISHInSv7zV-r0-vR8JgBCWayuI3MtMQY). Additional instructions are below.
 
 First install the requirements (assuming you already have working installation
 of Tensorflow or pytorch)
