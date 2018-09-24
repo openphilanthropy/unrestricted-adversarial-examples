@@ -10,11 +10,11 @@ We have [leaderboards for two datasets](https://github.com/google/unrestricted-a
 
 #### Two-Class MNIST dataset
 ![tcu_mnist_example_wide 2x](https://user-images.githubusercontent.com/306655/45507996-726bdd00-b748-11e8-90ad-ea701e63f9a2.png)
-A dataset of MNIST sixes vs sevens.
+A dataset of MNIST sixes vs sevens. These two classes were chosen because they are we have found empirically that they are the easiest for a classifier to discriminate between in an adversarial setting.
 
 #### Bird or Bicycle dataset 
 ![bob_example_wide 2x](https://user-images.githubusercontent.com/306655/45507995-726bdd00-b748-11e8-9074-d93e257ea1a0.png)
-A dataset of unambiguous birds and bicycles that are all 299x299 pixels (like ImageNet)
+A dataset of unambiguous birds and bicycles that are all 299x299 pixels (like ImageNet). For an explanation of how we chose this task, see the [contest proposal document](https://github.com/google/unrestricted-adversarial-examples/blob/master/contest_proposal.md#unambiguous-two-class-bird-or-bicycle-dataset).
 
 ### Implementing a defense
 You can get started with a basic working defense in [this colab notebook](https://colab.research.google.com/drive/1ISHInSv7zV-r0-vR8JgBCWayuI3MtMQY). Additional instructions are below.
