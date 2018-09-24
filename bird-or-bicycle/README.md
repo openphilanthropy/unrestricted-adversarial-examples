@@ -14,7 +14,7 @@ bird-or-bicycle-download
 ### Usage
 ```python
 import bird_or_bicycle 
-train_dataset_folder = bird_or_bicycle.download_dataset('train')
+train_dataset_folder = bird_or_bicycle.get_dataset('train')
 
 # Use a pytorch directory-based dataset loader
 import torchvision.datasets
