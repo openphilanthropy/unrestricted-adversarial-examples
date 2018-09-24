@@ -79,6 +79,9 @@ def main():
   args.workers = int(4 * (args.batch_size / 256))
 
   if args.data == '':
+    bird_or_bicycle.get_dataset('train')
+    bird_or_bicycle.get_dataset('test')
+    bird_or_bicycle.get_dataset('extras')
     args.data = bird_or_bicycle.dataset.default_data_root()
 
   if args.gpu is not None:
