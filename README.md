@@ -44,8 +44,18 @@ The contest phase will begin after the warm-up attacks have been conclusively so
 
 
 ## Paper
-You can learn more about the motivation and structure of the contest in our recent paper:
+You can learn more about the motivation and structure of the contest in our [recent paper](https://arxiv.org/abs/1809.08352):
 
 **Unrestricted Adversarial Examples**<br>
 *Tom B. Brown, Nicholas Carlini, Chiyuan Zhang, Catherine Olsson, Paul Christiano and Ian Goodfellow*<br>
 [Arxiv preprint](https://arxiv.org/abs/1809.08352)
+
+```
+@article{unrestricted_advex_2018,
+  title = {Unrestricted Adversarial Examples},
+  author = {{Brown}, T.~B. and {Carlini}, N. and {Zhang}, C. and {Olsson}, C. and 
+	  {Christiano}, P. and {Goodfellow}, I.},
+  journal={arXiv preprint arXiv:1809.08352},
+  year={2018}
+}
+```
