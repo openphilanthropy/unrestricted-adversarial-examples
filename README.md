@@ -48,4 +48,4 @@ You can learn more about the motivation and structure of the contest in our rece
 
 **Unrestricted Adversarial Examples**<br>
 *Tom B. Brown, Nicholas Carlini, Chiyuan Zhang, Catherine Olsson, Paul Christiano and Ian Goodfellow*<br>
-[Arxiv paper preprint]
+[Arxiv preprint](https://arxiv.org/abs/1809.08352)
