@@ -79,6 +79,9 @@ def main():
   args.workers = int(4 * (args.batch_size / 256))
 
   if args.data == '':
+    bird_or_bicycle.get_dataset('train')
+    bird_or_bicycle.get_dataset('test')
+    bird_or_bicycle.get_dataset('extras')
     args.data = bird_or_bicycle.dataset.default_data_root()
 
   if args.gpu is not None:
@@ -129,15 +132,16 @@ def main():
 
   # Data loading code
   traindirs = [os.path.join(args.data, partition)
-               for partition in ['train', 'extras']]
-  valdir = os.path.join(args.data, 'test')
+               for partition in ['extras']]
+  # Use train as validation because it is IID with the test set
+  valdir = os.path.join(args.data, 'train')
 
   # this normalization is NOT used, as the attack API requires
   # the images to be in [0, 1] range. So we prepend a BatchNorm
   # layer to the model instead of normalizing the images in the
   # data iter.
-  normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                   std=[0.229, 0.224, 0.225])
+  _unused_normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                           std=[0.229, 0.224, 0.225])
 
   train_dataset = [datasets.ImageFolder(
     traindir,
@@ -145,16 +149,13 @@ def main():
       transforms.RandomResizedCrop(224),
       transforms.RandomHorizontalFlip(),
       transforms.ToTensor(),
-      # normalize,
+      # _unused_normalize,
     ]))
     for traindir in traindirs]
   if len(train_dataset) == 1:
     train_dataset = train_dataset[0]
   else:
     train_dataset = torch.utils.data.ConcatDataset(train_dataset)
-
-  # Duplicated the dataset to make it as
-  # train_dataset.samples = train_dataset.samples * 100
 
   train_loader = torch.utils.data.DataLoader(
     train_dataset, batch_size=args.batch_size, shuffle=True,
@@ -165,7 +166,7 @@ def main():
       transforms.Resize(256),
       transforms.CenterCrop(224),
       transforms.ToTensor(),
-      # normalize,
+      # _unused_normalize,
     ])),
     batch_size=args.batch_size, shuffle=False,
     num_workers=args.workers, pin_memory=True)
@@ -174,7 +175,7 @@ def main():
     if not args.resume:
       print('WARNING: evaluating without loading a checkpoint, use --resume '
             'to load a previously trained checkpoint if needed.')
-    evaluate(val_loader, model)
+    evaluate(model)
     return
 
   for epoch in range(args.start_epoch, args.epochs):
@@ -296,7 +297,7 @@ def validate_epoch(val_loader, model, criterion):
   return top1.avg
 
 
-def evaluate(val_loader, model):
+def evaluate(model):
   # ----------------------------------------
   # Workaround: tensorflow claims all the visible
   # GPU memory upon starting. We use hacky patch
@@ -312,22 +313,8 @@ def evaluate(val_loader, model):
     oldinit(session_object, target, graph, config)
 
   tf.Session.__init__ = myinit
+
   # ----------------------------------------
-
-  if args.smoke_test:
-    max_num_batches = 1
-  else:
-    max_num_batches = -1  # unlimited
-
-  def dataiter_wrapper(pytorch_loader):
-    for i, (x_t, y_t) in enumerate(pytorch_loader):
-      # transpose from NCHW to NHWC format
-      x_np = x_t.cpu().numpy().transpose((0, 2, 3, 1))
-      y_np = y_t.cpu().numpy()
-      yield x_np, y_np
-
-      if max_num_batches > 0 and i + 1 >= max_num_batches:
-        break
 
   def wrapped_model(x_np):
     x_np = x_np.transpose((0, 3, 1, 2))  # from NHWC to NCHW
@@ -338,7 +325,6 @@ def evaluate(val_loader, model):
 
   eval_kit.evaluate_bird_or_bicycle_model(
     wrapped_model,
-    dataset_iter=dataiter_wrapper(val_loader),
     model_name='undefended_pytorch_resnet'
   )
 

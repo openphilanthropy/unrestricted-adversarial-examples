@@ -1,5 +1,3 @@
-# Baseline codes
-
 ## Undefended pytorch model
 
 To train the network (and evaluate every epoch):
