@@ -1,5 +1,6 @@
 import csv
 import json
+import os.path
 from collections import defaultdict
 
 MIN_BBOX_AREA = (0.5 * 299) ** 2
@@ -51,14 +52,13 @@ class TaskerResponse:
            self.bicycle_label == 'definitely_yes'
 
 
-def _strip_name(image_id):
+def _long_id_to_label_and_image_id(image_id):
   if image_id.startswith('/bird/'):
-    image_id = image_id[len('/bird/'):-len('.jpg')]
+    return 'bird', image_id[len('/bird/'):-len('.jpg')]
   if image_id.startswith('/bicycle/'):
-    image_id = image_id[len('/bicycle/'):-len('.jpg')]
-
-  assert len(image_id) == len('86d47eaee77d6e33')
-  return image_id
+    return 'bicycle', image_id[len('/bicycle/'):-len('.jpg')]
+  else:
+    raise ValueError("Bad long_image_id: %s" % image_id)
 
 
 # Images that are known to be mislabeled by taskers
@@ -89,16 +89,17 @@ if __name__ == '__main__':
       # print(row)
 
       url, long_image_id = row[:2]
-      image_id = _strip_name(long_image_id)
+      orig_label, image_id = _long_id_to_label_and_image_id(long_image_id)
+      assert len(image_id) == len('86d47eaee77d6e33')
 
       tasker_1_data = row[2:9]
       tasker_2_data = row[9:16]
       tasker_3_data = row[16:23]
 
       responses = [
-        TaskerResponse(tasker_1_data, url=url),
-        TaskerResponse(tasker_2_data, url=url),
-        TaskerResponse(tasker_3_data, url=url),
+        TaskerResponse(tasker_1_data, url),
+        TaskerResponse(tasker_2_data, url),
+        TaskerResponse(tasker_3_data, url),
       ]
 
       if image_id in KNOWN_BAD_IMAGES:
@@ -123,10 +124,12 @@ if __name__ == '__main__':
           rejection_reason_to_urls['is_truncated'].append(url)
         continue
 
-      if all([resp.is_unambiguous_bird() for resp in responses]):
+      if orig_label == 'bird' and \
+          all([resp.is_unambiguous_bird() for resp in responses]):
         unambiguous_bird_ids.append(image_id)
         unambiguous_bird_urls.append(url)
-      elif all([resp.is_unambiguous_bicycle() for resp in responses]):
+      elif orig_label == 'bicycle' \
+          and all([resp.is_unambiguous_bicycle() for resp in responses]):
         unambiguous_bicycle_ids.append(image_id)
         unambiguous_bicycle_urls.append(url)
       else:
@@ -136,10 +139,13 @@ if __name__ == '__main__':
   print('unambiguous_bicycle_ids: ', len(unambiguous_bicycle_ids))
   print('unambiguous_bird_ids: ', len(unambiguous_bird_ids))
 
-  with open('/tmp/bird_image_ids.csv', 'w') as f:
+  results_dir = '/tmp/'
+  with open(os.path.join(results_dir, 'bird_image_ids.csv'), 'w') as f:
     for bird_id in unambiguous_bird_ids:
       f.write(bird_id + '\n')
 
-  with open('/tmp/bicycle_image_ids.csv', 'w') as f:
+  with open(os.path.join(results_dir, 'bicycle_image_ids.csv'), 'w') as f:
     for bicycle_id in unambiguous_bicycle_ids:
       f.write(bicycle_id + '\n')
+
+  print("Wrote results to %s" % results_dir)
