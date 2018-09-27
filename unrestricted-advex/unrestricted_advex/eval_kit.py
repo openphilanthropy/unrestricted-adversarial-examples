@@ -265,7 +265,8 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   attack_list = [
     attacks.CleanData(),
 
-    attacks.SpatialGridAttack(
+    attacks.FastSpatialGridAttack(
+      model_fn,
       image_shape_hwc=bird_or_bicycle_shape,
       spatial_limits=bird_or_bicycle_spatial_limits,
       grid_granularity=[5, 5, 31],

@@ -27,10 +27,11 @@ def test_spatial_speed():
   bird_or_bicycle_spatial_limits = [18, 18, 30]
   bird_or_bicycle_black_border_size = 20
 
-  spatial_attack = attacks.SpatialGridAttack(
+  spatial_attack = attacks.FastSpatialGridAttack(
+    undefended_keras_model_fn,
     image_shape_hwc=bird_or_bicycle_shape,
     spatial_limits=bird_or_bicycle_spatial_limits,
-    grid_granularity=[5, 5, 31],
+    grid_granularity= [5, 5, 31],
     black_border_size=bird_or_bicycle_black_border_size,
   )
   spatial_attack._stop_after_n_datapoints = 32

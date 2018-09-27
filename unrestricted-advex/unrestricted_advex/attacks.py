@@ -8,6 +8,7 @@ from itertools import product, repeat
 import numpy as np
 import tensorflow as tf
 from cleverhans.attacks import SPSA
+from cleverhans.attacks import SpatialTransformationMethod
 from cleverhans.model import Model
 from foolbox.attacks import BoundaryAttack as FoolboxBoundaryAttack
 from six.moves import xrange
@@ -60,7 +61,7 @@ class SpsaAttack(Attack):
 
   def __call__(self, model, x_np, y_np):  # (4. / 255)):
     if model != self.model:
-      raise NotImplementedError('Cannot call spsa attack on different models')
+      raise ValueError('Cannot call spsa attack on different models')
     del model  # unused except to check that we already wired it up right
 
     with self.graph.as_default():
@@ -116,12 +117,73 @@ class BoundaryAttack(object):
           print("WARNING: The model misclassified the starting point (the target) "
                 "from BoundaryAttack. This means that the attack will fail on this "
                 "specific point (but is likely to succeed on other points.")
-          adv = x_np[i] # Just return the non-adversarial point
+          adv = x_np[i]  # Just return the non-adversarial point
         else:
           raise error
 
       r.append(adv)
     return np.array(r)
+
+
+class FastSpatialGridAttack(Attack):
+  """Fast attack from "A Rotation and a Translation Suffice: Fooling CNNs with
+    Simple Transformations", Engstrom et al. 2018
+
+    https://arxiv.org/pdf/1712.02779.pdf
+    """
+  name = 'spatial_grid'
+
+  def __init__(self, model,
+               image_shape_hwc,
+               spatial_limits,
+               grid_granularity,
+               black_border_size,
+               valid_check=None,
+               ):
+    self.graph = tf.Graph()
+
+    with self.graph.as_default():
+      self.sess = tf.Session(graph=self.graph)
+
+      self.x_input = tf.placeholder(
+        tf.float32, shape=[None] + list(image_shape_hwc))
+      self.y_input = tf.placeholder(tf.float32, shape=(None, 2))
+
+      self.model = model
+      attack = SpatialTransformationMethod(
+        CleverhansPyfuncModelWrapper(self.model), sess=self.sess)
+
+      self.x_adv = attack.generate(
+        self.x_input,
+        y=self.y_input,
+        batch_size=32,
+        n_samples=None,
+        dx_min=-float(spatial_limits[0]) / image_shape_hwc[0],
+        dx_max=float(spatial_limits[0]) / image_shape_hwc[0],
+        n_dxs=grid_granularity[0],
+        dy_min=-float(spatial_limits[1]) / image_shape_hwc[1],
+        dy_max=float(spatial_limits[1]) / image_shape_hwc[1],
+        n_dys=grid_granularity[1],
+        angle_min=-spatial_limits[2],
+        angle_max=spatial_limits[2],
+        n_angles=grid_granularity[2]
+      )
+
+      self.graph.finalize()
+
+  def __call__(self, model_fn, x_np, y_np):
+    if model_fn != self.model:
+      raise ValueError('Cannot call spatial attack on different models')
+    del model_fn  # unused except to check that we already wired it up right
+
+    y_np_one_hot = np.zeros([len(y_np), 2], np.float32)
+    y_np_one_hot[np.arange(len(y_np)), y_np] = 1.0
+
+    with self.graph.as_default():
+      return self.sess.run(self.x_adv, feed_dict={
+        self.x_input: x_np,
+        self.y_input: y_np_one_hot,
+      })
 
 
 class SpatialGridAttack(Attack):
