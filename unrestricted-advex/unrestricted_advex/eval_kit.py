@@ -70,9 +70,9 @@ def run_attack(model, data_iter, attack_fn):
 
 
 def evaluate_two_class_unambiguous_model(
-    model_fn, data_iter, attack_list,
-    model_name=None,
-    eval_results_dir='/tmp/unrestricted_advex_evals',
+      model_fn, data_iter, attack_list,
+      model_name=None,
+      eval_results_dir='/tmp/unrestricted_advex_evals',
 ):
   """
   Evaluates a model_fn on a set of attacks and creates plots
@@ -211,7 +211,6 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
       black_border_size=mnist_black_border_size,
       image_shape_hwc=mnist_shape,
       num_steps=2000,
-      batch_size=512,
     ),
 
     attacks.BoundaryWithRandomSpatialAttack(
@@ -260,7 +259,7 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
 
   bird_or_bicycle_shape = (224, 224, 3)
   bird_or_bicycle_spatial_limits = [18, 18, 30]
-  bird_or_bicycle_black_border_size = 20  # TODO: What should the border size be here?
+  bird_or_bicycle_black_border_size = 20
 
   attack_list = [
     attacks.CleanData(),
@@ -280,7 +279,6 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       black_border_size=0,
       epsilon=(16. / 255),
       num_steps=200,
-      batch_size=32
     ),
   ]
 

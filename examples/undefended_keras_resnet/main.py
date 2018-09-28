@@ -39,8 +39,6 @@ def undefended_keras_model_fn(x_np):
 
 
 if __name__ == '__main__':
-  tf.keras.backend.set_image_data_format('channels_last')
-
   eval_kit.evaluate_bird_or_bicycle_model(
     undefended_keras_model_fn,
     model_name='undefended_keras_resnet')

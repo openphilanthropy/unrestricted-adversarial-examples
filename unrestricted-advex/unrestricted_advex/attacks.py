@@ -427,7 +427,7 @@ class SpsaWithRandomSpatialAttack(Attack):
   name = "spsa_with_random_spatial"
 
   def __init__(self, model, image_shape_hwc, spatial_limits, black_border_size,
-               epsilon=(16. / 255), num_steps=32, batch_size=512, is_debug=False,
+               epsilon=(16. / 255), num_steps=32, is_debug=False,
                valid_check=None):
     self.random_spatial_attack = RandomSpatialAttack(
       image_shape_hwc,
@@ -440,7 +440,7 @@ class SpsaWithRandomSpatialAttack(Attack):
       image_shape_hwc,
       epsilon=epsilon,
       num_steps=num_steps,
-      batch_size=batch_size,
+      batch_size=64, # this is number of samples in the new cleverhans
       is_debug=is_debug)
 
   def __call__(self, model, x_np, y_np):
