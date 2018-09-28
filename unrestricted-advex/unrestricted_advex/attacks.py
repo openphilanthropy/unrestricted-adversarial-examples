@@ -156,7 +156,6 @@ class FastSpatialGridAttack(Attack):
       self.x_adv = attack.generate(
         self.x_input,
         y=self.y_input,
-        batch_size=32,
         n_samples=None,
         dx_min=-float(spatial_limits[0]) / image_shape_hwc[0],
         dx_max=float(spatial_limits[0]) / image_shape_hwc[0],
@@ -179,11 +178,17 @@ class FastSpatialGridAttack(Attack):
     y_np_one_hot = np.zeros([len(y_np), 2], np.float32)
     y_np_one_hot[np.arange(len(y_np)), y_np] = 1.0
 
+    # Reduce the batch size to 1 to avoid OOM errors
     with self.graph.as_default():
-      return self.sess.run(self.x_adv, feed_dict={
-        self.x_input: x_np,
-        self.y_input: y_np_one_hot,
-      })
+      all_x_adv_np = []
+      for i in xrange(len(x_np)):
+        x_adv_np = self.sess.run(self.x_adv, feed_dict={
+          self.x_input: np.expand_dims(x_np[i], axis=0),
+          self.y_input: np.expand_dims(y_np_one_hot[i], axis=0),
+        })
+        all_x_adv_np.append(x_adv_np)
+      return np.concatenate(all_x_adv_np)
+
 
 
 class SpatialGridAttack(Attack):
