@@ -107,3 +107,12 @@ We want our `eval_kit` to complete within 24 hours on a single P100 GPU. This al
 
 Given that constraint on total compute, we want attacks to be as strong as possible. The compute allocation of the current `eval_kit` is something like 45% SPSA, 45% Boundary, 10% spatial. 
 
+
+### I'd like to compete in the full contest. Is the warm-up stage is optional?
+The warm-up is completely optional and unrelated to the full challenge. There are two reasons for the warm-up:
+
+1) We want to make sure that defenders can defeat fixed attacks before we open the flood gates to arbitrary attacks. If we can't solve fixed attacks, certainly we can't solve unbounded attacks.
+
+2) We want to check that the dataset, processes, and associated content is all correct and useful. We've found a few problematic ambiguous images, for example, and this has helped us improve our process for image collection and labeling. So before we open up the complete challenge we want to make sure everything is working as expected.
+
+It is neither necessary nor expected that teams who compete in the final challenge compete in the warm-up (or vice versa), although it certainly won't hurt to have worked with the dataset before.
