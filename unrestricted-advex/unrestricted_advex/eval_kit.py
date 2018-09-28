@@ -256,7 +256,7 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   :param model_name: An optional model_fn name
   """
   if dataset_iter is None:
-    dataset_iter = bird_or_bicycle.get_iterator('test')
+    dataset_iter = bird_or_bicycle.get_iterator('test', batch_size=16)
 
   bird_or_bicycle_shape = (224, 224, 3)
   bird_or_bicycle_spatial_limits = [18, 18, 30]

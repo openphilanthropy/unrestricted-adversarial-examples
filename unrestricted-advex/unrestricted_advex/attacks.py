@@ -138,7 +138,6 @@ class FastSpatialGridAttack(Attack):
                spatial_limits,
                grid_granularity,
                black_border_size,
-               valid_check=None,
                ):
     self.graph = tf.Graph()
 
@@ -165,7 +164,8 @@ class FastSpatialGridAttack(Attack):
         n_dys=grid_granularity[1],
         angle_min=-spatial_limits[2],
         angle_max=spatial_limits[2],
-        n_angles=grid_granularity[2]
+        n_angles=grid_granularity[2],
+        black_border_size=black_border_size,
       )
 
       self.graph.finalize()
