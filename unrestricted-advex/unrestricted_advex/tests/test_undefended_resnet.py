@@ -22,9 +22,9 @@ from examples.undefended_keras_resnet.main import undefended_keras_model_fn
 def test_spatial_speed():
   bird_or_bicycle_shape = (224, 224, 3)
   bird_or_bicycle_spatial_limits = [18, 18, 30]
-  bird_or_bicycle_black_border_size = 25
+  bird_or_bicycle_black_border_size = 20
 
-  grid_granularity = [3, 3, 3]
+  grid_granularity = [5, 5, 31]
   model_fn = undefended_keras_model_fn
 
   spatial_attack = attacks.FastSpatialGridAttack(
@@ -35,10 +35,10 @@ def test_spatial_speed():
     black_border_size=bird_or_bicycle_black_border_size,
   )
 
-  ds_size = 8
+  ds_size = 32
   spatial_attack._stop_after_n_datapoints = ds_size
   dataset_iter = bird_or_bicycle.get_iterator(
-    'train', batch_size=2, verify_dataset=False)
+    'train', batch_size=32, verify_dataset=False)
   return evaluate_two_class_unambiguous_model(
     model_fn, dataset_iter,
     model_name='undefended_keras_resnet_test_spatial',
