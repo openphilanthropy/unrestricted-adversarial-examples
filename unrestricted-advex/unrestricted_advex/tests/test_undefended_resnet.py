@@ -15,13 +15,15 @@ import pytest
 import tensorflow as tf
 import torch
 from bird_or_bicycle import CLASS_NAME_TO_IMAGENET_CLASS
-from tensorflow.keras.applications.resnet50 import preprocess_input
 from unrestricted_advex import attacks
 from unrestricted_advex.eval_kit import evaluate_two_class_unambiguous_model
 
 
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="Resnet tests require CUDA")
 def test_spatial_speed():
+  # Keras isn't being found by travis for some reason
+  from tensorflow.keras.applications.resnet50 import preprocess_input
+
   # Variable scoping lets us use our _graph in our model_fn
   _graph = tf.Graph()
   with _graph.as_default():
