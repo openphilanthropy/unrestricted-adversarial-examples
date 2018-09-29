@@ -1,5 +1,5 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'gcr.io/google.com/tom-experiments/unrestricted-advex-test', '.' ]
+  args: [ 'build', '-t', 'gcr.io/google.com/tom-experiments/unrestricted-advex-base', '-f', 'base.dockerfile', '.' ]
 images:
-- 'gcr.io/google.com/tom-experiments/unrestricted-advex-test'
+- 'gcr.io/google.com/tom-experiments/unrestricted-advex-base'
