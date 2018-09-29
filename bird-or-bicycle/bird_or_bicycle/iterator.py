@@ -21,7 +21,8 @@ class ImageFolderWithFilenames(torchvision.datasets.ImageFolder):
     return sample, target, image_id
 
 
-def get_iterator(split='train', batch_size=32, shuffle=True):
+def get_iterator(split='train', batch_size=32, shuffle=True,
+                 verify_dataset=True):
   """ Create a backend-agnostic iterator for the dataset.
   Images are formatted in channels-last in the Tensorflow style
   :param split: One of ['train', 'test', 'extras']
@@ -29,7 +30,7 @@ def get_iterator(split='train', batch_size=32, shuffle=True):
   :param shuffle: Whether or not to shuffle
   :return:  An iterable that returns (batched_images, batched_labels, batched_image_ids)
   """
-  data_dir = bird_or_bicycle.get_dataset(split)
+  data_dir = bird_or_bicycle.get_dataset(split, verify=verify_dataset)
 
   image_preprocessing = torchvision.transforms.Compose([
     torchvision.transforms.Resize(224),

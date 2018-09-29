@@ -70,9 +70,9 @@ def run_attack(model, data_iter, attack_fn):
 
 
 def evaluate_two_class_unambiguous_model(
-    model_fn, data_iter, attack_list,
-    model_name=None,
-    eval_results_dir='/tmp/unrestricted_advex_evals',
+      model_fn, data_iter, attack_list,
+      model_name=None,
+      eval_results_dir='/tmp/unrestricted_advex_evals',
 ):
   """
   Evaluates a model_fn on a set of attacks and creates plots
@@ -211,7 +211,6 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
       black_border_size=mnist_black_border_size,
       image_shape_hwc=mnist_shape,
       num_steps=2000,
-      batch_size=512,
     ),
 
     attacks.BoundaryWithRandomSpatialAttack(
@@ -256,16 +255,17 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   :param model_name: An optional model_fn name
   """
   if dataset_iter is None:
-    dataset_iter = bird_or_bicycle.get_iterator('test')
+    dataset_iter = bird_or_bicycle.get_iterator('test', batch_size=4)
 
   bird_or_bicycle_shape = (224, 224, 3)
   bird_or_bicycle_spatial_limits = [18, 18, 30]
-  bird_or_bicycle_black_border_size = 20  # TODO: What should the border size be here?
+  bird_or_bicycle_black_border_size = 20
 
   attack_list = [
     attacks.CleanData(),
 
-    attacks.SpatialGridAttack(
+    attacks.FastSpatialGridAttack(
+      model_fn,
       image_shape_hwc=bird_or_bicycle_shape,
       spatial_limits=bird_or_bicycle_spatial_limits,
       grid_granularity=[5, 5, 31],
@@ -279,7 +279,6 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       black_border_size=0,
       epsilon=(16. / 255),
       num_steps=200,
-      batch_size=32
     ),
   ]
 
@@ -292,8 +291,8 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
     image_shape_hwc=bird_or_bicycle_shape,
   )
 
-  # We limit the boundary attack to the first 100 datapoints to speed up eval
-  boundary_attack._stop_after_n_datapoints = 100
+  # We limit the boundary attack to the first datapoints to speed up eval
+  boundary_attack._stop_after_n_datapoints = 32
   attack_list.append(boundary_attack)
 
   return evaluate_two_class_unambiguous_model(
