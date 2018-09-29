@@ -10,18 +10,77 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import warnings
+from distutils.version import LooseVersion
+
 import numpy as np
 import tensorflow as tf
 from cleverhans import utils
 from cleverhans.attacks import Attack
-from cleverhans.compat import reduce_max
-from cleverhans.compat import reduce_sum
 from cleverhans.model import CallableModelWrapper, Model
 
 _logger = utils.create_logger("cleverhans.attacks.tf")
 
 np_dtype = np.dtype('float32')
 tf_dtype = tf.as_dtype('float32')
+
+
+######## Vendored from cleverhans.compat ##########
+
+def reduce_function(op_func, input_tensor, axis=None, keepdims=None,
+                    name=None, reduction_indices=None):
+  """
+  Handler function for Tensorflow depreciation of keep_dims for tf 1.8
+  and above, but tf 1.4 requires keep_dims
+  :param op_func: expects the function to handle eg: tf.reduce_sum.
+  :param input_tensor: The tensor to reduce. Should have numeric type.
+  :param axis: The dimensions to reduce. If None (the default),
+          reduces all dimensions. Must be in the range
+          [-rank(input_tensor), rank(input_tensor)).
+  :param keepdims: If true, retains reduced dimensions with length 1.
+  :param name: A name for the operation (optional).
+  :param reduction_indices: The old (deprecated) name for axis.
+  :param keep_dims: Deprecated alias for keepdims.
+  :return: outputs same value as op_func.
+  """
+
+  if LooseVersion(tf.__version__) < LooseVersion('1.8.0'):
+    warning = "Running on tensorflow version " + \
+              LooseVersion(tf.__version__).vstring + \
+              ". Support for this version in CleverHans is deprecated " + \
+              "and may be removed on or after 2019-01-26"
+    warnings.warn(warning)
+    out = op_func(input_tensor, axis=axis,
+                  keep_dims=keepdims, name=name,
+                  reduction_indices=reduction_indices)
+  else:
+    out = op_func(input_tensor, axis=axis,
+                  keepdims=keepdims, name=name,
+                  reduction_indices=reduction_indices)
+  return out
+
+
+def reduce_max(input_tensor, axis=None, keepdims=None,
+               name=None, reduction_indices=None):
+  """
+  Wrapper around the tf.reduce_max to handle argument keep_dims
+  """
+  return reduce_function(tf.reduce_max, input_tensor, axis=axis,
+                         keepdims=keepdims, name=name,
+                         reduction_indices=reduction_indices)
+
+
+def reduce_sum(input_tensor, axis=None, keepdims=None,
+               name=None, reduction_indices=None):
+  """
+  Wrapper around the tf.reduce_sum to handle argument keep_dims
+  """
+  return reduce_function(tf.reduce_sum, input_tensor, axis=axis,
+                         keepdims=keepdims, name=name,
+                         reduction_indices=reduction_indices)
+
+
+######## END vendored from cleverhans.compat ##########
 
 
 class SpatialTransformationMethod(Attack):
