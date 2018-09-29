@@ -24,6 +24,7 @@ setup(
     'tf_gpu': ['tensorflow-gpu>=1.0.0'],
     'test': [
       'pytest',
+      'keras',
     ],
     'pytorch': ['torch==0.4.0', 'torchvision==0.2.1'],
   },
