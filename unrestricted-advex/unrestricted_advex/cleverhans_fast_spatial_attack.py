@@ -173,7 +173,6 @@ def spm(x, model, y=None, n_samples=None, dx_min=-0.1,
   TensorFlow implementation of the Spatial Transformation Method.
   :return: a tensor for the adversarial example
   """
-  import ipdb; ipdb.set_trace()
   if y is None:
     preds = model.get_probs(x)
     # Using model predictions as ground truth to avoid label leaking
