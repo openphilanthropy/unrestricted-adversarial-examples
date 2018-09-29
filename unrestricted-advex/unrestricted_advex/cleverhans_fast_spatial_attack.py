@@ -215,13 +215,13 @@ def spm(x, model, y=None, n_samples=None, dx_min=-0.1,
   worst_sample_idx = tf.argmax(all_xents, axis=0)  # B
 
   batch_size = tf.shape(x)[0]
-  keys = tf.stack([
+  worst_keys = tf.stack([
     tf.range(batch_size, dtype=tf.int32),
     tf.cast(worst_sample_idx, tf.int32)
   ], axis=1)
   transformed_ims_bshwc = tf.einsum('sbhwc->bshwc', transformed_ims)
-  after_lookup = tf.gather_nd(transformed_ims_bshwc, keys)  # BHWC
-  return after_lookup
+  worst_adv_images = tf.gather_nd(transformed_ims_bshwc, worst_keys)  # BHWC
+  return worst_adv_images
 
 
 def parallel_apply_transformations(x, transforms, black_border_size=0):
