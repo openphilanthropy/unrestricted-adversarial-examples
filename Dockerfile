@@ -16,7 +16,7 @@ RUN \
 
     apt clean && \
     rm -rf /var/lib/apt/lists/* && \
-    pip install tox && \
+    pip install tox
 
 
 # pre-install dependencies
