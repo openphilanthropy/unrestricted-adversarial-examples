@@ -8,10 +8,10 @@ from itertools import product, repeat
 import numpy as np
 import tensorflow as tf
 from cleverhans.attacks import SPSA
-from cleverhans.attacks import SpatialTransformationMethod
 from cleverhans.model import Model
 from foolbox.attacks import BoundaryAttack as FoolboxBoundaryAttack
 from six.moves import xrange
+from unrestricted_advex.cleverhans_fast_spatial_attack import SpatialTransformationMethod
 
 
 class Attack(object):
