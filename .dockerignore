@@ -1,2 +1,3 @@
 .tox
-.git
+.tox/**
+*.pyc

@@ -24,5 +24,7 @@ COPY . /usr/local/unrestricted-adversarial-examples/
 RUN cd /usr/local/unrestricted-adversarial-examples && \
     tox --notest
 
+RUN find -name "*.pyc" -delete
+
 WORKDIR /usr/local/unrestricted-adversarial-examples/
 CMD ["tox"]
