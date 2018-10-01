@@ -13,7 +13,7 @@ setup(
     # https://stackoverflow.com/questions/39590187/in-requirements-txt-what-does-tilde-equals-mean
     'tqdm ~= 4.0',
     'cleverhans ~= 2.1',
-    'foolbox ~= 1.3',
+    'foolbox ~= 1.5',
     'randomgen',
     'terminaltables ~= 3.1',
   ],

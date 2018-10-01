@@ -78,7 +78,7 @@ class SpsaAttack(Attack):
 class BoundaryAttack(object):
   name = "boundary"
 
-  def __init__(self, model, max_l2_distortion=4, label_to_examples=None):
+  def __init__(self, model, image_shape_hwc, max_l2_distortion=4, label_to_examples=None):
     if label_to_examples is None:
       label_to_examples = {}
 
@@ -95,7 +95,20 @@ class BoundaryAttack(object):
         return model(img)
 
     self.label_to_examples = label_to_examples
-    self.attack = FoolboxBoundaryAttack(model=Model())
+
+    h,w,c = image_shape_hwc
+    mse_threshold = max_l2_distortion**2 / (h*w*c)
+    try:
+      # Foolbox 1.5 allows us to use a threshold the attack will abort after
+      # reaching. Because we only care about a distortion of less than 4, as soon
+      # as we reach it, we can just abort and move on to the next image.
+      self.attack = FoolboxBoundaryAttack(model=Model(), threshold=mse_threshold)
+    except:
+      # Fall back to the original implementation.
+      print("WARNING: Using foolbox version < 1.5 will cuase the "
+            "boundary attack to perform more work than is required. "
+            "Please upgrade to version 1.5")
+      self.attack = FoolboxBoundaryAttack(model=Model())
 
   def __call__(self, model, x_np, y_np):
     r = []
@@ -466,6 +479,7 @@ class BoundaryWithRandomSpatialAttack(Attack):
     self.boundary_attack = BoundaryAttack(
       model,
       max_l2_distortion=max_l2_distortion,
+      image_shape_hwc=image_shape_hwc,
       label_to_examples=label_to_examples)
 
   def __call__(self, model, x_np, y_np):
