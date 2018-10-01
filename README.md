@@ -19,16 +19,16 @@ The top few distinct models for each dataset are shown below.  You can see all s
 #### Two-Class MNIST dataset
 | Defense               | Submitted by  | Clean data | Spatial grid attack | SPSA attack | Boundary attack |  Submission Date |
 | --------------------- | ------------- | ------------ |------------ |--------------- |--------------- | --------------- |
-| [MadryPGD LeNet Baseline](#)  |  Google Brain |    100.0%    |      0%    |     19.6%   |     0%     |  Sept 14th, 2018 |
-| [Undefended LeNet Baseline](#)   |  Google Brain   |    100.0%    |     0%    |     0%    |     0%     |  Sept 14th, 2018 |
+| [MadryPGD LeNet Baseline](unrestricted-advex/unrestricted_advex/mnist_baselines)  |  Google Brain |    100.0%    |      0%    |     19.6%   |     0%     |  Sept 14th, 2018 |
+| [Undefended LeNet Baseline](unrestricted-advex/unrestricted_advex/mnist_baselines)   |  Google Brain   |    100.0%    |     0%    |     0%    |     0%     |  Sept 14th, 2018 |
 
 All percentages above correspond to the model's accuracy at 80% coverage.
 
 #### Bird or Bicycle dataset
 | Defense               | Submitted by  | Clean data | Spatial grid attack | SPSA attack | Boundary attack |  Submission Date |
 | --------------------- | ------------- | ------------| ------------ |--------------- |--------------- | --------------- |
-| [Keras ResNet <br>(trained on ImageNet)](unrestricted_advex/undefended_keras_resnet)   |  Google Brain   |    100.0%    |     96.5%    |     1.6%    |     4.0%     |  Sept 29th, 2018 |
-| [Pytorch ResNet <br>(trained on bird-or-bicycle extras)](unrestricted_advex/undefended_pytorch_resnet)  |  Google Brain |    98.8%    |     29.1%   | 2.5%   |     8.0%     |  Oct 1st, 2018 |
+| [Keras ResNet <br>(trained on ImageNet)](examples/undefended_keras_resnet)   |  Google Brain   |    100.0%    |     96.5%    |     1.6%    |     4.0%     |  Sept 29th, 2018 |
+| [Pytorch ResNet <br>(trained on bird-or-bicycle extras)](examples/undefended_pytorch_resnet)  |  Google Brain |    98.8%    |     29.1%   | 2.5%   |     8.0%     |  Oct 1st, 2018 |
 
 
 All percentages above correspond to the model's accuracy at 80% coverage.
