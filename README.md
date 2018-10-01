@@ -19,8 +19,8 @@ The top few distinct models for each dataset are shown below.  You can see all s
 #### Two-Class MNIST dataset
 | Defense               | Submitted by  | Clean data | Spatial grid attack | SPSA attack | Boundary attack |  Submission Date |
 | --------------------- | ------------- | ------------ |------------ |--------------- |--------------- | --------------- |
-| [MadryPGD LeNet Baseline](#)  |  Google Brain |    100.0%    |      0%    |     0%   |     0%     |  Sept 14th, 2018 |
-| [Undefended LeNet Baseline](#)   |  Google Brain   |    100.0%    |     0%    |     19.6%    |     0%     |  Sept 14th, 2018 |
+| [MadryPGD LeNet Baseline](#)  |  Google Brain |    100.0%    |      0%    |     19.6%   |     0%     |  Sept 14th, 2018 |
+| [Undefended LeNet Baseline](#)   |  Google Brain   |    100.0%    |     0%    |     0%    |     0%     |  Sept 14th, 2018 |
 
 All percentages above correspond to the model's accuracy at 80% coverage.
 
