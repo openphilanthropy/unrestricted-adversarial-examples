@@ -76,13 +76,13 @@ class SpsaAttack(Attack):
       return np.concatenate(all_x_adv_np)
 
 
-def corrupt_float32_image(corruption_name, x):
+def corrupt_float32_image(x, corruption_name, severity):
   """Convert to uint8 and back to conform to corruption API"""
   x = (x * 255.).astype(np.uint8)
   corrupt_x = corrupt(
     x,
     corruption_name=corruption_name,
-    severity=1)
+    severity=severity)
   corrupt_x = corrupt_x.astype(np.float64) / 255.
   return corrupt_x
 
@@ -90,8 +90,8 @@ def corrupt_float32_image(corruption_name, x):
 class CommonCorruptionsAttack(object):
   name = "common_corruptions"
 
-  def __init__(self):
-    pass
+  def __init__(self, severity=5):
+    self.severity = severity
 
   def __call__(self, model_fn, images_batch_nhwc, y_np):
     corruption_names = [
@@ -120,10 +120,11 @@ class CommonCorruptionsAttack(object):
     all_worst_x = []
     for idx, x in enumerate(images_batch_nhwc):
       worst_x = x
-      worst_loss = 0
+      worst_loss = np.NINF
 
       for corruption_name in corruption_names:
-        corrupt_x = corrupt_float32_image(corruption_name, x)
+        corrupt_x = corrupt_float32_image(
+          x, corruption_name, self.severity)
         logits = model_fn(np.expand_dims(corrupt_x, 0))[0]
 
         label = y_np[idx]
@@ -140,7 +141,7 @@ class CommonCorruptionsAttack(object):
 
       all_worst_x.append(worst_x)
 
-    return np.vstack(all_worst_x)
+    return np.array(all_worst_x)
 
 
 class BoundaryAttack(object):
