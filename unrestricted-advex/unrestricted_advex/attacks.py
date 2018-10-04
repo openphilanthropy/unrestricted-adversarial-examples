@@ -10,6 +10,7 @@ import tensorflow as tf
 from cleverhans.attacks import SPSA
 from cleverhans.model import Model
 from foolbox.attacks import BoundaryAttack as FoolboxBoundaryAttack
+from imagenet_c import corrupt
 from six.moves import xrange
 from unrestricted_advex.cleverhans_fast_spatial_attack import SpatialTransformationMethod
 
@@ -75,6 +76,53 @@ class SpsaAttack(Attack):
       return np.concatenate(all_x_adv_np)
 
 
+class CommonCorruptionsAttack(object):
+  name = "common_corruptions"
+
+  def __init__(self):
+    pass
+
+  def __call__(self, model_fn, images_batch_nhwc, y_np):
+    corruption_names = [
+      'gaussian_noise',
+      'shot_noise',
+      'impulse_noise',
+      'defocus_blur',
+      'glass_blur',
+      'motion_blur',
+      'zoom_blur',
+      'snow',
+      'frost',
+      'fog',
+      'brightness',
+      'contrast',
+      'elastic_transform',
+      'pixelate',
+      'jpeg_compression',
+      'speckle_noise',
+      'gaussian_blur',
+      'spatter',
+      'saturate']
+
+    all_worst_x = []
+    for idx, x in enumerate(images_batch_nhwc):
+      worst_x = x
+      worst_loss = 0
+
+      for corruption_name in corruption_names:
+        corrupt_x = corrupt(x, corruption_name=corruption_name, severity=1)
+        logits = model_fn(np.expand_dims(corrupt_x, 0))
+
+        label = y_np[idx]
+        correct_logit, wrong_logit = logits[label], logits[1 - label]
+        loss = wrong_logit - correct_logit
+        if loss > worst_loss:
+          worst_x = corrupt_x
+
+      all_worst_x.append(worst_x)
+    return np.concatenate(all_worst_x)
+
+
 class BoundaryAttack(object):
   name = "boundary"
 
@@ -96,8 +144,8 @@ class BoundaryAttack(object):
 
     self.label_to_examples = label_to_examples
 
-    h,w,c = image_shape_hwc
-    mse_threshold = max_l2_distortion**2 / (h*w*c)
+    h, w, c = image_shape_hwc
+    mse_threshold = max_l2_distortion ** 2 / (h * w * c)
     try:
       # Foolbox 1.5 allows us to use a threshold the attack will abort after
       # reaching. Because we only care about a distortion of less than 4, as soon
@@ -201,7 +249,6 @@ class FastSpatialGridAttack(Attack):
         })
         all_x_adv_np.append(x_adv_np)
       return np.concatenate(all_x_adv_np)
-
 
 
 class SpatialGridAttack(Attack):
@@ -453,7 +500,7 @@ class SpsaWithRandomSpatialAttack(Attack):
       image_shape_hwc,
       epsilon=epsilon,
       num_steps=num_steps,
-      batch_size=64, # this is number of samples in the new cleverhans
+      batch_size=64,  # this is number of samples in the new cleverhans
       is_debug=is_debug)
 
   def __call__(self, model, x_np, y_np):
