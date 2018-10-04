@@ -84,7 +84,7 @@ def corrupt_float32_image(x, corruption_name, severity):
     x,
     corruption_name=corruption_name,
     severity=severity)
-  corrupt_x = corrupt_x.astype(np.float64) / 255.
+  corrupt_x = corrupt_x.astype(np.float32) / 255.
   return corrupt_x
 
 
