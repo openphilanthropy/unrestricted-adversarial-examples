@@ -103,7 +103,7 @@ class CommonCorruptionsAttack(object):
       'motion_blur',
       'zoom_blur',
       'snow',
-      # 'frost',
+      'frost',
       'fog',
       'brightness',
       'contrast',
