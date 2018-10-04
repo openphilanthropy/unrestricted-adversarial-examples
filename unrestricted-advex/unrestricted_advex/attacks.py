@@ -76,6 +76,17 @@ class SpsaAttack(Attack):
       return np.concatenate(all_x_adv_np)
 
 
+def corrupt_float32_image(corruption_name, x):
+  """Convert to uint8 and back to conform to corruption API"""
+  x = (x * 255.).astype(np.uint8)
+  corrupt_x = corrupt(
+    x,
+    corruption_name=corruption_name,
+    severity=1)
+  corrupt_x = corrupt_x.astype(np.float64) / 255.
+  return corrupt_x
+
+
 class CommonCorruptionsAttack(object):
   name = "common_corruptions"
 
@@ -92,7 +103,7 @@ class CommonCorruptionsAttack(object):
       'motion_blur',
       'zoom_blur',
       'snow',
-      'frost',
+      # 'frost',
       'fog',
       'brightness',
       'contrast',
@@ -103,6 +114,8 @@ class CommonCorruptionsAttack(object):
       'gaussian_blur',
       'spatter',
       'saturate']
+    assert images_batch_nhwc.shape[1:] == (224, 224, 3), \
+      "Image shape must equal (N, 224, 224, 3)"
 
     all_worst_x = []
     for idx, x in enumerate(images_batch_nhwc):
@@ -110,17 +123,24 @@ class CommonCorruptionsAttack(object):
       worst_loss = 0
 
       for corruption_name in corruption_names:
-        corrupt_x = corrupt(x, corruption_name=corruption_name, severity=1)
-        logits = model_fn(np.expand_dims(corrupt_x, 0))
+        corrupt_x = corrupt_float32_image(corruption_name, x)
+        logits = model_fn(np.expand_dims(corrupt_x, 0))[0]
 
         label = y_np[idx]
         correct_logit, wrong_logit = logits[label], logits[1 - label]
-        loss = wrong_logit - correct_logit
+
+        # We can choose different loss functions to optimize in the
+        # attack. For now, optimize the magnitude of the wrong logit
+        # because we use this as our confidence threshold
+        loss = wrong_logit
+        # loss = wrong_logit - correct_logit
+
         if loss > worst_loss:
           worst_x = corrupt_x
 
       all_worst_x.append(worst_x)
-    return np.concatenate(all_worst_x)
+
+    return np.vstack(all_worst_x)
 
 
 class BoundaryAttack(object):

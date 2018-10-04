@@ -113,11 +113,6 @@ def test_common_corruptions():
     return two_class_logits
 
   # Set up standard attack params
-  bird_or_bicycle_shape = (224, 224, 3)
-  bird_or_bicycle_spatial_limits = [18, 18, 30]
-  bird_or_bicycle_black_border_size = 20
-
-  grid_granularity = [5, 5, 31]
   model_fn = undefended_keras_model_fn
 
   spatial_attack = attacks.CommonCorruptionsAttack()
