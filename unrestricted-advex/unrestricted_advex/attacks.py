@@ -80,6 +80,7 @@ class SpsaAttack(Attack):
 def corrupt_float32_image(x, corruption_name, severity):
   """Convert to uint8 and back to conform to corruption API"""
   x = (x * 255.).astype(np.uint8)
+  print(severity)
   corrupt_x = corrupt(
     x,
     corruption_name=corruption_name,
