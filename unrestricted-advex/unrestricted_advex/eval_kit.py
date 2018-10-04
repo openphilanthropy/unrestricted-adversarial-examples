@@ -264,7 +264,7 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   attack_list = [
     attacks.CleanData(),
 
-    attacks.CommonCorruptionsAttack(severity=2),
+    attacks.CommonCorruptionsAttack(severity=3),
 
     attacks.FastSpatialGridAttack(
       model_fn,
