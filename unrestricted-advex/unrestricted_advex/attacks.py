@@ -90,7 +90,7 @@ def corrupt_float32_image(x, corruption_name, severity):
 class CommonCorruptionsAttack(object):
   name = "common_corruptions"
 
-  def __init__(self, severity=5):
+  def __init__(self, severity=2):
     self.severity = severity
 
   def __call__(self, model_fn, images_batch_nhwc, y_np):
