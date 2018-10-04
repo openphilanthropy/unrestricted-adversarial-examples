@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import multiprocessing
 import random
 from itertools import product, repeat
 
@@ -87,14 +88,11 @@ def corrupt_float32_image(x, corruption_name, severity):
   return corrupt_x
 
 
-class CommonCorruptionsAttack(object):
+class CommonCorruptionsAttack(Attack):
   name = "common_corruptions"
 
-  def __init__(self, severity=3):
-    self.severity = severity
-
-  def __call__(self, model_fn, images_batch_nhwc, y_np):
-    corruption_names = [
+  def __init__(self, severity=1):
+    self.corruption_names = [
       'gaussian_noise',
       'shot_noise',
       'impulse_noise',
@@ -114,20 +112,28 @@ class CommonCorruptionsAttack(object):
       'gaussian_blur',
       'spatter',
       'saturate']
+    self.severity = severity
+    self.pool = multiprocessing.Pool(len(self.corruption_names))
+
+  def __call__(self, model_fn, images_batch_nhwc, y_np):
     assert images_batch_nhwc.shape[1:] == (224, 224, 3), \
       "Image shape must equal (N, 224, 224, 3)"
+    batch_size = len(images_batch_nhwc)
 
-    all_worst_x = []
-    for idx, x in enumerate(images_batch_nhwc):
-      worst_x = x
-      worst_loss = np.NINF
+    # Keep track of the worst corruption for each image
+    worst_corruption = np.copy(images_batch_nhwc)
+    worst_loss = [np.NINF] * batch_size
 
-      for corruption_name in corruption_names:
-        corrupt_x = corrupt_float32_image(
-          x, corruption_name, self.severity)
-        logits = model_fn(np.expand_dims(corrupt_x, 0))[0]
+    # Iterate through each image in the batch
+    for batch_idx, x in enumerate(images_batch_nhwc):
+      corrupt_args = [(x, corruption_name, self.severity)
+                      for corruption_name in self.corruption_names]
+      corrupt_x_batch = self.pool.starmap(corrupt_float32_image, corrupt_args)
+      logits_batch = model_fn(np.array(corrupt_x_batch))
+      label = y_np[batch_idx]
 
-        label = y_np[idx]
+      # This is left un-vectorized for readability
+      for (logits, corrupt_x) in zip(logits_batch, corrupt_x_batch):
         correct_logit, wrong_logit = logits[label], logits[1 - label]
 
         # We can choose different loss functions to optimize in the
@@ -136,15 +142,14 @@ class CommonCorruptionsAttack(object):
         loss = wrong_logit
         # loss = wrong_logit - correct_logit
 
-        if loss > worst_loss:
-          worst_x = corrupt_x
+        if loss > worst_loss[batch_idx]:
+          worst_corruption[batch_idx] = corrupt_x
+          worst_loss[batch_idx] = loss
 
-      all_worst_x.append(worst_x)
-
-    return np.array(all_worst_x)
+    return worst_corruption
 
 
-class BoundaryAttack(object):
+class BoundaryAttack(Attack):
   name = "boundary"
 
   def __init__(self, model, image_shape_hwc, max_l2_distortion=4, label_to_examples=None):

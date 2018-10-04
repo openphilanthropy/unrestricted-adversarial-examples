@@ -264,38 +264,38 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   attack_list = [
     attacks.CleanData(),
 
-    attacks.CommonCorruptionsAttack(severity=3),
-
-    attacks.FastSpatialGridAttack(
-      model_fn,
-      image_shape_hwc=bird_or_bicycle_shape,
-      spatial_limits=bird_or_bicycle_spatial_limits,
-      grid_granularity=[5, 5, 31],
-      black_border_size=bird_or_bicycle_black_border_size,
-    ),
-
-    attacks.SpsaWithRandomSpatialAttack(
-      model_fn,
-      image_shape_hwc=bird_or_bicycle_shape,
-      spatial_limits=bird_or_bicycle_spatial_limits,
-      black_border_size=0,
-      epsilon=(16. / 255),
-      num_steps=200,
-    ),
+    attacks.CommonCorruptionsAttack(),
   ]
-
-  boundary_attack = attacks.BoundaryWithRandomSpatialAttack(
-    model_fn,
-    max_l2_distortion=10,
-    label_to_examples=_get_bird_or_bicycle_label_to_examples(),
-    spatial_limits=bird_or_bicycle_spatial_limits,
-    black_border_size=bird_or_bicycle_black_border_size,
-    image_shape_hwc=bird_or_bicycle_shape,
-  )
-
-  # We limit the boundary attack to the first datapoints to speed up eval
-  boundary_attack._stop_after_n_datapoints = 100
-  attack_list.append(boundary_attack)
+  #   attacks.FastSpatialGridAttack(
+  #     model_fn,
+  #     image_shape_hwc=bird_or_bicycle_shape,
+  #     spatial_limits=bird_or_bicycle_spatial_limits,
+  #     grid_granularity=[5, 5, 31],
+  #     black_border_size=bird_or_bicycle_black_border_size,
+  #   ),
+  #
+  #   attacks.SpsaWithRandomSpatialAttack(
+  #     model_fn,
+  #     image_shape_hwc=bird_or_bicycle_shape,
+  #     spatial_limits=bird_or_bicycle_spatial_limits,
+  #     black_border_size=0,
+  #     epsilon=(16. / 255),
+  #     num_steps=200,
+  #   ),
+  # ]
+  #
+  # boundary_attack = attacks.BoundaryWithRandomSpatialAttack(
+  #   model_fn,
+  #   max_l2_distortion=10,
+  #   label_to_examples=_get_bird_or_bicycle_label_to_examples(),
+  #   spatial_limits=bird_or_bicycle_spatial_limits,
+  #   black_border_size=bird_or_bicycle_black_border_size,
+  #   image_shape_hwc=bird_or_bicycle_shape,
+  # )
+  #
+  # # We limit the boundary attack to the first datapoints to speed up eval
+  # boundary_attack._stop_after_n_datapoints = 100
+  # attack_list.append(boundary_attack)
 
   return evaluate_two_class_unambiguous_model(
     model_fn, dataset_iter,
