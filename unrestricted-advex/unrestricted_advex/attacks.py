@@ -5,13 +5,16 @@ from __future__ import print_function
 import random
 from itertools import product, repeat
 
+import PIL.Image
 import numpy as np
 import tensorflow as tf
+import torchvision.transforms.functional
 from cleverhans.attacks import SPSA
 from cleverhans.model import Model
 from foolbox.attacks import BoundaryAttack as FoolboxBoundaryAttack
 from six.moves import xrange
 from unrestricted_advex.cleverhans_fast_spatial_attack import SpatialTransformationMethod
+import itertools
 
 
 class Attack(object):
@@ -32,6 +35,54 @@ class CleanData(Attack):
     del y_np, model_fn  # unused
     return images_batch_nhwc
 
+
+def apply_transformation(x, angle, dx, dy):
+  return torchvision.transforms.functional.affine(
+    x,
+    angle=angle,
+    translate=[dx, dy],
+    shear=0,
+    resample=PIL.Image.BICUBIC,
+    scale=1
+  )
+
+
+class SimpleSpatialAttack(Attack):
+  """Fast attack from "A Rotation and a Translation Suffice: Fooling CNNs with
+    Simple Transformations", Engstrom et al. 2018
+
+    https://arxiv.org/pdf/1712.02779.pdf
+    """
+  name = 'spatial_grid'
+
+  def __init__(self,
+               image_shape_hwc,
+               spatial_limits,
+               grid_granularity,
+               black_border_size,
+               ):
+    self.image_shape_hwc = image_shape_hwc
+    self.spatial_limits = spatial_limits
+    self.grid_granularity = grid_granularity
+    self.black_border_size = black_border_size
+
+  def __call__(self, model_fn, images_batch_nhwc, y_np):
+    dx_limit, dy_limit, angle_limit = self.spatial_limits
+    n_dxs, n_dys, n_angles = self.grid_granularity
+
+
+    # Define the range of transformations
+    dxs = np.linspace(-dx_limit, dx_limit, n_dxs)
+    dys = np.linspace(-dy_limit, dy_limit, n_dxs)
+    angles = np.linspace(-angle_limit, angle_limit, n_angles)
+
+    transforms = list(itertools.product(*[dxs, dys, angles]))
+
+    for x in images_batch_nhwc:
+      transformed_xs = itertools.starmap(apply_transformation,
+                                       [(x, angle, dx, dy)
+                                       for (angle, dx, dy) in transforms])
+      logits = model_fn(transformed_xs)
 
 class SpsaAttack(Attack):
   name = 'spsa'
@@ -96,8 +147,8 @@ class BoundaryAttack(object):
 
     self.label_to_examples = label_to_examples
 
-    h,w,c = image_shape_hwc
-    mse_threshold = max_l2_distortion**2 / (h*w*c)
+    h, w, c = image_shape_hwc
+    mse_threshold = max_l2_distortion ** 2 / (h * w * c)
     try:
       # Foolbox 1.5 allows us to use a threshold the attack will abort after
       # reaching. Because we only care about a distortion of less than 4, as soon
@@ -201,7 +252,6 @@ class FastSpatialGridAttack(Attack):
         })
         all_x_adv_np.append(x_adv_np)
       return np.concatenate(all_x_adv_np)
-
 
 
 class SpatialGridAttack(Attack):
@@ -453,7 +503,7 @@ class SpsaWithRandomSpatialAttack(Attack):
       image_shape_hwc,
       epsilon=epsilon,
       num_steps=num_steps,
-      batch_size=64, # this is number of samples in the new cleverhans
+      batch_size=64,  # this is number of samples in the new cleverhans
       is_debug=is_debug)
 
   def __call__(self, model, x_np, y_np):
