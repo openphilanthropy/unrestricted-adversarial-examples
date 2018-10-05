@@ -195,10 +195,12 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
   attack_list = [
     attacks.CleanData(),
 
-    attacks.SimpleSpatialAttack(
+    attacks.SpatialGridAttack(
       grid_granularity=[5, 5, 11],
+      valid_check=mnist_utils.mnist_valid_check,
       spatial_limits=mnist_spatial_limits,
       black_border_size=mnist_black_border_size,
+      image_shape_hwc=mnist_shape,
     ),
 
     attacks.SpsaWithRandomSpatialAttack(
