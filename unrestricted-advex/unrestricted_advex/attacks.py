@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import itertools
+import logging
 import multiprocessing
 import random
 from itertools import product, repeat
@@ -105,7 +106,7 @@ class SimpleSpatialAttack(Attack):
 
     # This task is CPU bound, so we try to use all the CPUs
     N_WORKERS = multiprocessing.cpu_count() or 1
-    print("Running SpatialAttack with %s cpus" % N_WORKERS)
+    logging.info("SpatialAttack will run  with %s cpus" % N_WORKERS)
     if N_WORKERS < 8:
       print("WARNING: Running SpatialAttack with fewer than 8 CPUs "
             "is extremely slow because SpatialAttack is CPU-bound")
