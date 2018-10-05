@@ -16,7 +16,6 @@ from cleverhans.attacks import SPSA
 from cleverhans.model import Model
 from foolbox.attacks import BoundaryAttack as FoolboxBoundaryAttack
 from six.moves import xrange
-from unrestricted_advex.cleverhans_fast_spatial_attack import SpatialTransformationMethod
 
 
 class Attack(object):
@@ -258,71 +257,6 @@ class BoundaryAttack(object):
 
       r.append(adv)
     return np.array(r)
-
-
-class FastSpatialGridAttack(Attack):
-  """Fast attack from "A Rotation and a Translation Suffice: Fooling CNNs with
-    Simple Transformations", Engstrom et al. 2018
-
-    https://arxiv.org/pdf/1712.02779.pdf
-    """
-  name = 'spatial_grid'
-
-  def __init__(self, model,
-               image_shape_hwc,
-               spatial_limits,
-               grid_granularity,
-               black_border_size,
-               ):
-    self.graph = tf.Graph()
-
-    with self.graph.as_default():
-      self.sess = tf.Session(graph=self.graph)
-
-      self.x_input = tf.placeholder(
-        tf.float32, shape=[None] + list(image_shape_hwc))
-      self.y_input = tf.placeholder(tf.float32, shape=(None, 2))
-
-      self.model = model
-      attack = SpatialTransformationMethod(
-        CleverhansPyfuncModelWrapper(self.model), sess=self.sess)
-
-      self.x_adv = attack.generate(
-        self.x_input,
-        y=self.y_input,
-        n_samples=None,
-        dx_min=-float(spatial_limits[0]) / image_shape_hwc[0],
-        dx_max=float(spatial_limits[0]) / image_shape_hwc[0],
-        n_dxs=grid_granularity[0],
-        dy_min=-float(spatial_limits[1]) / image_shape_hwc[1],
-        dy_max=float(spatial_limits[1]) / image_shape_hwc[1],
-        n_dys=grid_granularity[1],
-        angle_min=-spatial_limits[2],
-        angle_max=spatial_limits[2],
-        n_angles=grid_granularity[2],
-        black_border_size=black_border_size,
-      )
-
-      self.graph.finalize()
-
-  def __call__(self, model_fn, x_np, y_np):
-    if model_fn != self.model:
-      raise ValueError('Cannot call spatial attack on different models')
-    del model_fn  # unused except to check that we already wired it up right
-
-    y_np_one_hot = np.zeros([len(y_np), 2], np.float32)
-    y_np_one_hot[np.arange(len(y_np)), y_np] = 1.0
-
-    # Reduce the batch size to 1 to avoid OOM errors
-    with self.graph.as_default():
-      all_x_adv_np = []
-      for i in xrange(len(x_np)):
-        x_adv_np = self.sess.run(self.x_adv, feed_dict={
-          self.x_input: np.expand_dims(x_np[i], axis=0),
-          self.y_input: np.expand_dims(y_np_one_hot[i], axis=0),
-        })
-        all_x_adv_np.append(x_adv_np)
-      return np.concatenate(all_x_adv_np)
 
 
 class SpatialGridAttack(Attack):
