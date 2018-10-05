@@ -154,38 +154,6 @@ class SimpleSpatialAttack(Attack):
     return worst_xs
 
 
-class RandomSpatialAttack(Attack):
-  """Fast attack from "A Rotation and a Translation Suffice: Fooling CNNs with
-    Simple Transformations", Engstrom et al. 2018
-
-    https://arxiv.org/pdf/1712.02779.pdf
-    """
-  name = 'spatial_grid'
-
-  def __init__(self,
-               spatial_limits,
-               black_border_size,
-               ):
-    self.spatial_limits = spatial_limits
-    self.black_border_size = black_border_size
-
-  def __call__(self, model_fn, images_batch_nhwc, y_np):
-    trans_x = np.zeros_like(images_batch_nhwc)
-    dx_limit, dy_limit, angle_limit = self.spatial_limits
-
-    # Iterate through each image in the batch
-    for batch_idx, x in enumerate(images_batch_nhwc):
-      trans_x[batch_idx] = apply_transformation(
-        x,
-        angle=np.random.uniform(-angle_limit, angle_limit),
-        dx=np.random.uniform(-dx_limit, dx_limit),
-        dy=np.random.uniform(-dy_limit, dy_limit),
-        black_border_size=self.black_border_size,
-      )
-
-    return trans_x
-
-
 class SpsaAttack(Attack):
   name = 'spsa'
 
@@ -454,7 +422,7 @@ class CleverhansPyfuncModelWrapper(Model):
     return {'logits': logits_op}
 
 
-class OldRandomSpatialAttack(Attack):
+class RandomSpatialAttack(Attack):
   """Apply a single random rotation and translation
   as in "A Rotation and a Translation Suffice: Fooling CNNs with
   Simple Transformations", Engstrom et al. 2018
@@ -530,6 +498,8 @@ class SpsaWithRandomSpatialAttack(Attack):
                epsilon=(16. / 255), num_steps=32, is_debug=False,
                valid_check=None):
     self.random_spatial_attack = RandomSpatialAttack(
+      image_shape_hwc,
+      valid_check=valid_check,
       spatial_limits=spatial_limits,
       black_border_size=black_border_size)
 
@@ -556,6 +526,8 @@ class BoundaryWithRandomSpatialAttack(Attack):
   def __init__(self, model, image_shape_hwc, spatial_limits, black_border_size,
                max_l2_distortion=4, label_to_examples=None, valid_check=None):
     self.random_spatial_attack = RandomSpatialAttack(
+      image_shape_hwc,
+      valid_check=valid_check,
       spatial_limits=spatial_limits,
       black_border_size=black_border_size)
 
