@@ -80,13 +80,16 @@ class SpsaAttack(Attack):
 def corrupt_float32_image(x, corruption_name, severity):
   """Convert to uint8 and back to conform to corruption API"""
   x = (x * 255.).astype(np.uint8)
-  print(severity)
   corrupt_x = corrupt(
     x,
     corruption_name=corruption_name,
     severity=severity)
   corrupt_x = corrupt_x.astype(np.float32) / 255.
   return corrupt_x
+
+
+def _corrupt_float32_image_star(args):
+  return corrupt_float32_image(*args)
 
 
 class CommonCorruptionsAttack(Attack):
@@ -129,7 +132,7 @@ class CommonCorruptionsAttack(Attack):
     for batch_idx, x in enumerate(images_batch_nhwc):
       corrupt_args = [(x, corruption_name, self.severity)
                       for corruption_name in self.corruption_names]
-      corrupt_x_batch = self.pool.starmap(corrupt_float32_image, corrupt_args)
+      corrupt_x_batch = self.pool.map(_corrupt_float32_image_star, corrupt_args)
       logits_batch = model_fn(np.array(corrupt_x_batch))
       label = y_np[batch_idx]
 
