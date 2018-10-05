@@ -133,8 +133,7 @@ class CommonCorruptionsAttack(Attack):
     for batch_idx, x in enumerate(images_batch_nhwc):
       corrupt_args = [(x, corruption_name, self.severity)
                       for corruption_name in self.corruption_names]
-      print("WARNING: in DEBUG mode - Running single threaded for better errors")
-      corrupt_x_batch = map(_corrupt_float32_image_star, corrupt_args)
+      corrupt_x_batch = self.pool.map(_corrupt_float32_image_star, corrupt_args)
       logits_batch = model_fn(np.array(corrupt_x_batch))
       label = y_np[batch_idx]
 
