@@ -98,14 +98,15 @@ class SimpleSpatialAttack(Attack):
                spatial_limits,
                grid_granularity,
                black_border_size,
-               parallelism=16,
                ):
     self.spatial_limits = spatial_limits
     self.grid_granularity = grid_granularity
     self.black_border_size = black_border_size
 
-    self.parallelism = parallelism
-    self.pool = multiprocessing.Pool(self.parallelism)
+    # This task is CPU bound, so we try to use all the CPUs
+    N_WORKERS = multiprocessing.cpu_count() or 1
+    print("Using %s cpus" % N_WORKERS)
+    self.pool = multiprocessing.Pool(N_WORKERS)
 
   def __call__(self, model_fn, images_batch_nhwc, y_np):
     batch_size = len(images_batch_nhwc)
@@ -132,7 +133,8 @@ class SimpleSpatialAttack(Attack):
       adv_x_batch = self.pool.map(_apply_transformation_star, transform_args)
       adv_x_batch = [x for x in adv_x_batch]
 
-      logits_batch = _batched_apply(model_fn, np.array(adv_x_batch), self.parallelism)
+      logits_batch = _batched_apply(model_fn, np.array(adv_x_batch),
+                                    batch_size=32)
       label = int(y_np[batch_idx])
 
       # This is left un-vectorized for readability

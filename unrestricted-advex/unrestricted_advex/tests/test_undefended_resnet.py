@@ -96,7 +96,7 @@ def test_simple_spatial():
     black_border_size=bird_or_bicycle_black_border_size,
   )
 
-  ds_size = 4
+  ds_size = 10
   spatial_attack._stop_after_n_datapoints = ds_size
   dataset_iter = bird_or_bicycle.get_iterator(
     'train', batch_size=2, verify_dataset=False)
