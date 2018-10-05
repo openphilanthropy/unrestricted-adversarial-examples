@@ -89,7 +89,7 @@ def test_common_corruptions():
   spatial_attack = attacks.CommonCorruptionsAttack(
     severity=severity)
 
-  ds_size = 100
+  ds_size = 10
   spatial_attack._stop_after_n_datapoints = ds_size
   dataset_iter = bird_or_bicycle.get_iterator(
     'train', batch_size=2, verify_dataset=False)
