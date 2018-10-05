@@ -1,4 +1,13 @@
 import numpy as np
+from unrestricted_advex.attacks import SimpleSpatialAttack
+
+n_samples = 1000
+
+
+def flatten(x):
+  batch_size = len(x)
+  flat_x = x.reshape([batch_size, -1])
+  return flat_x
 
 
 def bright_pixel_model_fn(x):
@@ -7,71 +16,104 @@ def bright_pixel_model_fn(x):
   Otherwise returns the second class. Spatial attack should push the
   bright pixels off of the image.
   """
-  flat_x = np.ravel(x)
+  brightness_theshold = 0.95
+  flat_x = flatten(x)
   first_logit = np.max(flat_x, axis=1)
-  second_logit = np.ones_like(first_logit) * 0.5
-  res = np.stack([second_logit, first_logit], axis=1)
+  second_logit = np.ones_like(first_logit) * brightness_theshold
+  res = np.stack([first_logit, second_logit], axis=1)
   return res
 
 
-def test_no_transformation(self):
-  x_val = np.random.rand(100, 2, 2, 1)
-  x_val = np.array(x_val, dtype=np.float32)
+def test_no_transformation():
+  n_samples = 100
+  x_np = np.random.rand(n_samples, 2, 2, 3)
+  x_np = np.array(x_np, dtype=np.float32)
+  y_np = np.ones(n_samples)
 
-  x_adv_p = self.attack.generate(x, batch_size=100, dx_min=0.0,
-                                 dx_max=0.0, n_dxs=1, dy_min=0.0,
-                                 dy_max=0.0, n_dys=1, angle_min=0,
-                                 angle_max=0, n_angles=1)
+  attack = SimpleSpatialAttack(
+    spatial_limits=[0, 0, 0],
+    grid_granularity=[1, 1, 1],
+    black_border_size=0,
+  )
 
-  x_adv = self.sess.run(x_adv_p, {x: x_val})
-  self.assertClose(x_adv, x_val)
+  x_adv = attack(bright_pixel_model_fn, x_np, y_np)
+  assert np.max(x_adv - x_np) < 0.00001
 
 
-def test_push_pixels_off_image(self):
-  x_val = np.random.rand(100, 2, 2, 1)
-  x_val = np.array(x_val, dtype=np.float32)
+def test_push_pixels_off_image():
+  x_np = np.random.rand(n_samples, 2, 2, 3)
+  x_np = np.array(x_np, dtype=np.float32)
 
   # The correct answer is that they are bright
   # So the attack must push the pixels off the edge
-  y = np.zeros([100, 2])
-  y[:, 0] = 1.
+  y_np = np.zeros(n_samples, dtype=np.uint8)
 
-  x = tf.placeholder(tf.float32, shape=(None, 2, 2, 1))
-  x_adv_p = self.attack.generate(x,
-                                 y=y, batch_size=100, dx_min=-0.5,
-                                 dx_max=0.5, n_dxs=3, dy_min=-0.5,
-                                 dy_max=0.5, n_dys=3, angle_min=0,
-                                 angle_max=0, n_angles=1)
-  x_adv = self.sess.run(x_adv_p, {x: x_val})
+  clean_logits = bright_pixel_model_fn(x_np)
+  clean_preds = np.argmax(clean_logits, axis=1)
 
-  old_labs = np.argmax(y, axis=1)
-  new_labs = np.argmax(self.sess.run(self.model(x_adv)), axis=1)
-  print(np.mean(old_labs == new_labs))
-  self.assertTrue(np.mean(old_labs == new_labs) < 0.3)
+  clean_acc = np.mean(y_np == clean_preds)
+
+  attack = SimpleSpatialAttack(
+    spatial_limits=[0.5, 0.5, 0],
+    grid_granularity=[3, 3, 1],
+    black_border_size=0,
+  )
+
+  x_adv = attack(bright_pixel_model_fn, x_np, y_np)
+
+  adv_logits = bright_pixel_model_fn(x_adv)
+  adv_preds = np.argmax(adv_logits, axis=1)
+
+  adv_acc = np.mean(y_np == adv_preds)
+  print("clean_mean_brightness: %s" % np.mean(np.max(flatten(x_np), axis=1)))
+  print("adv_mean_brightness: %s" % np.mean(np.max(flatten(x_adv), axis=1)))
+  print("clean_acc: %s" % clean_acc)
+  print("adv_acc: %s" % adv_acc)
+
+  # The attack makes the model worse by pushing pixels off the edge
+  assert abs(clean_acc - 0.5) < 0.1
+  assert abs(adv_acc - 0.1) < 0.1
 
 
-def test_keep_pixels_on_image(self):
-  x_val = np.random.rand(100, 2, 2, 1)
-  x_val = np.array(x_val, dtype=np.float32)
+def test_keep_pixels_on_image():
+  x_np = np.random.rand(n_samples, 2, 2, 3)
+  x_np = np.array(x_np, dtype=np.float32)
 
   # The correct answer is that they are NOT bright
   # So the attack must NOT push the pixels off the edge
-  y = np.zeros([100, 2])
-  y[:, 0] = 1.
+  # Accuracy should not increse by much
+  y_np = np.ones(n_samples, dtype=np.uint8)
 
-  x = tf.placeholder(tf.float32, shape=(None, 2, 2, 1))
-  x_adv_p = self.attack.generate(x,
-                                 y=y, batch_size=100, dx_min=-0.5,
-                                 dx_max=0.5, n_dxs=3, dy_min=-0.5,
-                                 dy_max=0.5, n_dys=3, angle_min=0,
-                                 angle_max=0, n_angles=1)
-  x_adv = self.sess.run(x_adv_p, {x: x_val})
+  clean_logits = bright_pixel_model_fn(x_np)
+  clean_preds = np.argmax(clean_logits, axis=1)
 
-  old_labs = np.argmax(y, axis=1)
-  new_labs = np.argmax(self.sess.run(self.model(x_adv)), axis=1)
-  print(np.mean(old_labs == new_labs))
-  self.assertTrue(np.mean(old_labs == new_labs) < 0.3)
+  clean_acc = np.mean(y_np == clean_preds)
+
+  attack = SimpleSpatialAttack(
+    spatial_limits=[0.5, 0.5, 0],
+    grid_granularity=[3, 3, 1],
+    black_border_size=0,
+  )
+
+  x_adv = attack(bright_pixel_model_fn, x_np, y_np)
+
+  adv_logits = bright_pixel_model_fn(x_adv)
+  adv_preds = np.argmax(adv_logits, axis=1)
+
+  adv_acc = np.mean(y_np == adv_preds)
+  print("clean_mean_brightness: %s" % np.mean(np.max(flatten(x_np), axis=1)))
+  print("adv_mean_brightness: %s" % np.mean(np.max(flatten(x_adv), axis=1)))
+  print("clean_acc: %s" % clean_acc)
+  print("adv_acc: %s" % adv_acc)
+
+  # The attack can't make the model worse, because it can only choose to
+  # NOT push pixels off the edge
+  assert abs(clean_acc - 0.5) < 0.1
+  assert abs(adv_acc - 0.5) < 0.1
 
 
 if __name__ == '__main__':
-  test_two_class_mnist_accuracy()
+  test_push_pixels_off_image()
+  print()
+  test_keep_pixels_on_image()
+  print()

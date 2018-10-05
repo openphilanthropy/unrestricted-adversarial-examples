@@ -2,6 +2,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import itertools
+import multiprocessing
 import random
 from itertools import product, repeat
 
@@ -14,7 +16,6 @@ from cleverhans.model import Model
 from foolbox.attacks import BoundaryAttack as FoolboxBoundaryAttack
 from six.moves import xrange
 from unrestricted_advex.cleverhans_fast_spatial_attack import SpatialTransformationMethod
-import itertools
 
 
 class Attack(object):
@@ -37,14 +38,27 @@ class CleanData(Attack):
 
 
 def apply_transformation(x, angle, dx, dy):
-  return torchvision.transforms.functional.affine(
+  x = PIL.Image.fromarray((x * 255.).astype(np.uint8))
+  x = torchvision.transforms.functional.affine(
     x,
     angle=angle,
     translate=[dx, dy],
     shear=0,
-    resample=PIL.Image.BICUBIC,
+    resample=PIL.Image.BILINEAR,
     scale=1
   )
+  return np.array(x).astype(np.float32) / 255.
+
+
+def _batched_apply(fn, x, batch_size):
+  all_out = []
+  n_batches = int(np.ceil(len(x) / batch_size))
+  for batch_idx in range(n_batches):
+    batch_start = batch_idx * batch_size
+    batch_end = (batch_idx + 1) * batch_size
+    batch = x[batch_start: batch_end]
+    all_out.append(fn(batch))
+  return np.concatenate(all_out)
 
 
 class SimpleSpatialAttack(Attack):
@@ -56,20 +70,23 @@ class SimpleSpatialAttack(Attack):
   name = 'spatial_grid'
 
   def __init__(self,
-               image_shape_hwc,
                spatial_limits,
                grid_granularity,
                black_border_size,
+               parallelism=32,
                ):
-    self.image_shape_hwc = image_shape_hwc
     self.spatial_limits = spatial_limits
     self.grid_granularity = grid_granularity
     self.black_border_size = black_border_size
 
+    self.parallelism = parallelism
+    self.pool = multiprocessing.Pool(self.parallelism)
+
   def __call__(self, model_fn, images_batch_nhwc, y_np):
+    batch_size = len(images_batch_nhwc)
+
     dx_limit, dy_limit, angle_limit = self.spatial_limits
     n_dxs, n_dys, n_angles = self.grid_granularity
-
 
     # Define the range of transformations
     dxs = np.linspace(-dx_limit, dx_limit, n_dxs)
@@ -78,11 +95,35 @@ class SimpleSpatialAttack(Attack):
 
     transforms = list(itertools.product(*[dxs, dys, angles]))
 
-    for x in images_batch_nhwc:
-      transformed_xs = itertools.starmap(apply_transformation,
-                                       [(x, angle, dx, dy)
-                                       for (angle, dx, dy) in transforms])
-      logits = model_fn(transformed_xs)
+    # Keep track of the worst corruption for each image
+    worst_xs = np.copy(images_batch_nhwc)
+    worst_loss = [np.NINF] * batch_size
+
+    # Iterate through each image in the batch
+    for batch_idx, x in enumerate(images_batch_nhwc):
+      # print("starting")
+      transform_args = [(x, angle, dx, dy) for (angle, dx, dy) in transforms]
+
+      adv_x_batch = itertools.starmap(apply_transformation, transform_args)
+      adv_x_batch = [x for x in adv_x_batch]
+
+      logits_batch = _batched_apply(model_fn, np.array(adv_x_batch), self.parallelism)
+      label = int(y_np[batch_idx])
+
+      # This is left un-vectorized for readability
+      for (logits, adv_x) in zip(logits_batch, adv_x_batch):
+        correct_logit, wrong_logit = logits[label], logits[1 - label]
+
+        # We can choose different loss functions to optimize in the
+        # attack. For now, optimize the magnitude of the wrong logit
+        # because we use this as our confidence threshold
+        loss = wrong_logit - correct_logit
+        if loss > worst_loss[batch_idx]:
+          # print(loss)
+          worst_xs[batch_idx] = adv_x
+          worst_loss[batch_idx] = loss
+    return worst_xs
+
 
 class SpsaAttack(Attack):
   name = 'spsa'
@@ -290,7 +331,7 @@ class SpatialGridAttack(Attack):
         border_size=black_border_size
       )
 
-      self._tranformed_x_op = apply_transformation(
+      self._tranformed_x_op = tf_apply_transformation(
         x,
         transform=self._t_for_trans,
         image_height=image_shape_hwc[0],
@@ -380,7 +421,7 @@ def apply_black_border(x, image_height, image_width, border_size):
   return x
 
 
-def apply_transformation(x, transform, image_height, image_width):
+def tf_apply_transformation(x, transform, image_height, image_width):
   # Map a transformation onto the input
   trans_x, trans_y, rot = tf.unstack(transform, axis=1)
   rot *= np.pi / 180  # convert degrees to radians
@@ -443,7 +484,7 @@ class RandomSpatialAttack(Attack):
         border_size=black_border_size
       )
 
-      self._tranformed_x_op = apply_transformation(
+      self._tranformed_x_op = tf_apply_transformation(
         x,
         transform=self._t_for_trans,
         image_height=image_shape_hwc[0],
