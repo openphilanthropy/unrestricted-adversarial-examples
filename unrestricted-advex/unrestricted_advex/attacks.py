@@ -37,8 +37,28 @@ class CleanData(Attack):
     return images_batch_nhwc
 
 
-def apply_transformation(x, angle, dx, dy):
+def apply_transformation(x, angle, dx, dy, black_border_size):
+  """Apply a transformation to an image"""
   x = PIL.Image.fromarray((x * 255.).astype(np.uint8))
+
+  # Apply black border
+  orig_width = x.width
+  orig_height = x.height
+
+  padding_x = int(float(orig_height) * black_border_size)
+  padding_y = int(float(orig_width) * black_border_size)
+
+  x = torchvision.transforms.functional.resize(x, [
+    orig_height - (padding_y * 2),
+    orig_width - (padding_x * 2),
+  ])
+
+  x = torchvision.transforms.functional.pad(x, (
+    padding_x,
+    padding_y,
+  ))
+
+  # Apply rotation and transformation
   x = torchvision.transforms.functional.affine(
     x,
     angle=angle,
@@ -48,6 +68,11 @@ def apply_transformation(x, angle, dx, dy):
     scale=1
   )
   return np.array(x).astype(np.float32) / 255.
+
+
+def _apply_transformation_star(args):
+  """python 2.7 doesn't support Pool.starmap"""
+  return apply_transformation(*args)
 
 
 def _batched_apply(fn, x, batch_size):
@@ -73,7 +98,7 @@ class SimpleSpatialAttack(Attack):
                spatial_limits,
                grid_granularity,
                black_border_size,
-               parallelism=32,
+               parallelism=16,
                ):
     self.spatial_limits = spatial_limits
     self.grid_granularity = grid_granularity
@@ -91,6 +116,7 @@ class SimpleSpatialAttack(Attack):
     # Define the range of transformations
     dxs = np.linspace(-dx_limit, dx_limit, n_dxs)
     dys = np.linspace(-dy_limit, dy_limit, n_dxs)
+    import ipdb; ipdb.set_trace()
     angles = np.linspace(-angle_limit, angle_limit, n_angles)
 
     transforms = list(itertools.product(*[dxs, dys, angles]))
@@ -101,9 +127,10 @@ class SimpleSpatialAttack(Attack):
 
     # Iterate through each image in the batch
     for batch_idx, x in enumerate(images_batch_nhwc):
-      transform_args = [(x, angle, dx, dy) for (angle, dx, dy) in transforms]
+      transform_args = [(x, angle, dx, dy, self.black_border_size)
+                        for (angle, dx, dy) in transforms]
 
-      adv_x_batch = itertools.starmap(apply_transformation, transform_args)
+      adv_x_batch = self.pool.map(_apply_transformation_star, transform_args)
       adv_x_batch = [x for x in adv_x_batch]
 
       logits_batch = _batched_apply(model_fn, np.array(adv_x_batch), self.parallelism)
