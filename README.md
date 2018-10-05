@@ -27,8 +27,8 @@ All percentages above correspond to the model's accuracy at 80% coverage.
 #### Bird or Bicycle dataset
 | Defense               | Submitted by  | Clean data | Spatial grid attack | SPSA attack | Boundary attack |  Submission Date |
 | --------------------- | ------------- | ------------| ------------ |--------------- |--------------- | --------------- |
-| [Keras ResNet <br>(trained on ImageNet)](examples/undefended_keras_resnet)   |  Google Brain   |    100.0%    |     96.5%    |     1.6%    |     4.0%     |  Sept 29th, 2018 |
-| [Pytorch ResNet <br>(trained on bird-or-bicycle extras)](examples/undefended_pytorch_resnet)  |  Google Brain |    98.8%    |     29.1%   | 2.5%   |     8.0%     |  Oct 1st, 2018 |
+| [Keras ResNet <br>(trained on ImageNet)](examples/undefended_keras_resnet)   |  Google Brain   |    100.0%    |     92.2%    |     1.6%    |     4.0%     |  Sept 29th, 2018 |
+| [Pytorch ResNet <br>(trained on bird-or-bicycle extras)](examples/undefended_pytorch_resnet)  |  Google Brain |    98.8%    |     49.5%   | 2.5%   |     8.0%     |  Oct 1st, 2018 |
 
 
 All percentages above correspond to the model's accuracy at 80% coverage.
