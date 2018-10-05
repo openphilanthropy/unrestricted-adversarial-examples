@@ -105,7 +105,7 @@ class CommonCorruptionsAttack(Attack):
       'motion_blur',
       'zoom_blur',
       'snow',
-      'frost',
+      # 'frost', # Frost is not working correctly
       'fog',
       'brightness',
       'contrast',
