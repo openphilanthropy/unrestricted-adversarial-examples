@@ -101,7 +101,6 @@ class SimpleSpatialAttack(Attack):
 
     # Iterate through each image in the batch
     for batch_idx, x in enumerate(images_batch_nhwc):
-      # print("starting")
       transform_args = [(x, angle, dx, dy) for (angle, dx, dy) in transforms]
 
       adv_x_batch = itertools.starmap(apply_transformation, transform_args)
@@ -119,7 +118,6 @@ class SimpleSpatialAttack(Attack):
         # because we use this as our confidence threshold
         loss = wrong_logit - correct_logit
         if loss > worst_loss[batch_idx]:
-          # print(loss)
           worst_xs[batch_idx] = adv_x
           worst_loss[batch_idx] = loss
     return worst_xs
