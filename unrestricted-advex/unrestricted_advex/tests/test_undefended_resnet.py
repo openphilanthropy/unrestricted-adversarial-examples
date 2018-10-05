@@ -85,7 +85,7 @@ def test_spatial_speed():
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="Resnet tests require CUDA")
 def test_common_corruptions():
   model_fn = create_undefended_keras_model_fn()
-  severity = 3
+  severity = 1
   spatial_attack = attacks.CommonCorruptionsAttack(
     severity=severity)
 
