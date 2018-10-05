@@ -79,13 +79,14 @@ class SpsaAttack(Attack):
 
 def corrupt_float32_image(x, corruption_name, severity):
   """Convert to uint8 and back to conform to corruption API"""
-  x = (x * 255.).astype(np.uint8)
+  x = np.copy(x)  # We make a copy to avoid changing things in-place
+  x = (x * 255).astype(np.uint8)
+
   corrupt_x = corrupt(
     x,
     corruption_name=corruption_name,
     severity=severity)
-  corrupt_x = corrupt_x.astype(np.float32) / 255.
-  return corrupt_x
+  return corrupt_x.astype(np.float32) / 255.
 
 
 def _corrupt_float32_image_star(args):
@@ -104,7 +105,7 @@ class CommonCorruptionsAttack(Attack):
       'glass_blur',
       'motion_blur',
       'zoom_blur',
-      'snow',
+      # 'snow', # Snow does not work in python 2.7
       # 'frost', # Frost is not working correctly
       'fog',
       'brightness',
