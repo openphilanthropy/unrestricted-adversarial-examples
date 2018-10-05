@@ -16,6 +16,8 @@ setup(
     'foolbox ~= 1.5',
     'randomgen',
     'terminaltables ~= 3.1',
+    'imagenet_c ~= 0.0.2',
+    'scikit-image ~= 0.13'
   ],
   # Explicit dependence on TensorFlow is not supported.
   # See https://github.com/tensorflow/tensorflow/issues/7166
