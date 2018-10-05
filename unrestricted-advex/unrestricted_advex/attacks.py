@@ -116,7 +116,6 @@ class SimpleSpatialAttack(Attack):
     # Define the range of transformations
     dxs = np.linspace(-dx_limit, dx_limit, n_dxs)
     dys = np.linspace(-dy_limit, dy_limit, n_dxs)
-    import ipdb; ipdb.set_trace()
     angles = np.linspace(-angle_limit, angle_limit, n_angles)
 
     transforms = list(itertools.product(*[dxs, dys, angles]))
