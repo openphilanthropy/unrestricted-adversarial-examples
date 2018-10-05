@@ -105,7 +105,10 @@ class SimpleSpatialAttack(Attack):
 
     # This task is CPU bound, so we try to use all the CPUs
     N_WORKERS = multiprocessing.cpu_count() or 1
-    print("Using %s cpus" % N_WORKERS)
+    print("Running SpatialAttack with %s cpus" % N_WORKERS)
+    if N_WORKERS < 8:
+      print("WARNING: Running SpatialAttack with fewer than 8 CPUs "
+            "is extremely slow because SpatialAttack is CPU-bound")
     self.pool = multiprocessing.Pool(N_WORKERS)
 
   def __call__(self, model_fn, images_batch_nhwc, y_np):
