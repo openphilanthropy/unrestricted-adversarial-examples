@@ -305,7 +305,7 @@ class BoundaryAttack(Attack):
       self.attack = FoolboxBoundaryAttack(model=Model(), threshold=mse_threshold)
     except:
       # Fall back to the original implementation.
-      print("WARNING: Using foolbox version < 1.5 will cuase the "
+      print("WARNING: Using foolbox version < 1.5 will cause the "
             "boundary attack to perform more work than is required. "
             "Please upgrade to version 1.5")
       self.attack = FoolboxBoundaryAttack(model=Model())
