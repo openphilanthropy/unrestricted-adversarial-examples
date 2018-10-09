@@ -17,8 +17,14 @@ from bird_or_bicycle import CLASS_NAME_TO_IMAGENET_CLASS
 from unrestricted_advex import attacks
 from unrestricted_advex.eval_kit import evaluate_two_class_unambiguous_model
 
+_cached_model_fn = None
+
 
 def create_undefended_keras_model_fn():
+  global _cached_model_fn
+  if _cached_model_fn:
+    return _cached_model_fn
+
   # Keras isn't being found by travis for some reason
   from tensorflow.keras.applications.resnet50 import preprocess_input
 
@@ -50,8 +56,8 @@ def create_undefended_keras_model_fn():
       axis=1)
     return two_class_logits
 
+  _cached_model_fn = undefended_keras_model_fn
   return undefended_keras_model_fn
-
 
 
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="Resnet tests require CUDA")
@@ -69,15 +75,35 @@ def test_simple_spatial():
     black_border_size=bird_or_bicycle_black_border_size,
   )
 
+  ds_size = 4
+  spatial_attack._stop_after_n_datapoints = ds_size
+  dataset_iter = bird_or_bicycle.get_iterator(
+    'train', batch_size=2, verify_dataset=False)
+
+  evaluate_two_class_unambiguous_model(
+    model_fn, dataset_iter,
+    model_name='test_spatial',
+    attack_list=[spatial_attack])
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="Resnet tests require CUDA")
+def test_common_corruptions():
+  model_fn = create_undefended_keras_model_fn()
+  severity = 1
+  spatial_attack = attacks.CommonCorruptionsAttack(
+    severity=severity)
+
   ds_size = 10
   spatial_attack._stop_after_n_datapoints = ds_size
   dataset_iter = bird_or_bicycle.get_iterator(
     'train', batch_size=2, verify_dataset=False)
-  return evaluate_two_class_unambiguous_model(
+
+  evaluate_two_class_unambiguous_model(
     model_fn, dataset_iter,
-    model_name='test_spatial_padding',
+    model_name='test_common_corruption,severity=%s' % severity,
     attack_list=[spatial_attack])
 
 
 if __name__ == '__main__':
+  test_common_corruptions()
   test_simple_spatial()

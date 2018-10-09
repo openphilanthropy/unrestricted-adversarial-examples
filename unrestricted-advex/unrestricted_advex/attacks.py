@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import itertools
 import logging
+
 import multiprocessing
 import random
 from itertools import product, repeat
@@ -15,6 +16,7 @@ import torchvision.transforms.functional
 from cleverhans.attacks import SPSA
 from cleverhans.model import Model
 from foolbox.attacks import BoundaryAttack as FoolboxBoundaryAttack
+from imagenet_c import corrupt
 from six.moves import xrange
 
 
@@ -196,7 +198,84 @@ class SpsaAttack(Attack):
       return np.concatenate(all_x_adv_np)
 
 
-class BoundaryAttack(object):
+def corrupt_float32_image(x, corruption_name, severity):
+  """Convert to uint8 and back to conform to corruption API"""
+  x = np.copy(x)  # We make a copy to avoid changing things in-place
+  x = (x * 255).astype(np.uint8)
+
+  corrupt_x = corrupt(
+    x,
+    corruption_name=corruption_name,
+    severity=severity)
+  return corrupt_x.astype(np.float32) / 255.
+
+
+def _corrupt_float32_image_star(args):
+  return corrupt_float32_image(*args)
+
+
+class CommonCorruptionsAttack(Attack):
+  name = "common_corruptions"
+
+  def __init__(self, severity=1):
+    self.corruption_names = [
+      'gaussian_noise',
+      'shot_noise',
+      'impulse_noise',
+      'defocus_blur',
+      'glass_blur',
+      'motion_blur',
+      'zoom_blur',
+      # 'snow', # Snow does not work in python 2.7
+      # 'frost', # Frost is not working correctly
+      'fog',
+      'brightness',
+      'contrast',
+      'elastic_transform',
+      'pixelate',
+      'jpeg_compression',
+      'speckle_noise',
+      'gaussian_blur',
+      'spatter',
+      'saturate']
+    self.severity = severity
+    self.pool = multiprocessing.Pool(len(self.corruption_names))
+
+  def __call__(self, model_fn, images_batch_nhwc, y_np):
+    assert images_batch_nhwc.shape[1:] == (224, 224, 3), \
+      "Image shape must equal (N, 224, 224, 3)"
+    batch_size = len(images_batch_nhwc)
+
+    # Keep track of the worst corruption for each image
+    worst_corruption = np.copy(images_batch_nhwc)
+    worst_loss = [np.NINF] * batch_size
+
+    # Iterate through each image in the batch
+    for batch_idx, x in enumerate(images_batch_nhwc):
+      corrupt_args = [(x, corruption_name, self.severity)
+                      for corruption_name in self.corruption_names]
+      corrupt_x_batch = self.pool.map(_corrupt_float32_image_star, corrupt_args)
+      logits_batch = model_fn(np.array(corrupt_x_batch))
+      label = y_np[batch_idx]
+
+      # This is left un-vectorized for readability
+      for (logits, corrupt_x) in zip(logits_batch, corrupt_x_batch):
+        correct_logit, wrong_logit = logits[label], logits[1 - label]
+
+        # We can choose different loss functions to optimize in the
+        # attack. For now, optimize the magnitude of the wrong logit
+        # because we use this as our confidence threshold
+        loss = wrong_logit
+        # loss = wrong_logit - correct_logit
+
+        if loss > worst_loss[batch_idx]:
+          worst_corruption[batch_idx] = corrupt_x
+          worst_loss[batch_idx] = loss
+
+    return worst_corruption
+
+
+class BoundaryAttack(Attack):
   name = "boundary"
 
   def __init__(self, model, image_shape_hwc, max_l2_distortion=4, label_to_examples=None):

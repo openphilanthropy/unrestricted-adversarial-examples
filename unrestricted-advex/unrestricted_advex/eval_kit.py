@@ -270,6 +270,8 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       black_border_size=bird_or_bicycle_black_border_size,
     ),
 
+    attacks.CommonCorruptionsAttack(),
+
     attacks.SpsaWithRandomSpatialAttack(
       model_fn,
       image_shape_hwc=bird_or_bicycle_shape,
