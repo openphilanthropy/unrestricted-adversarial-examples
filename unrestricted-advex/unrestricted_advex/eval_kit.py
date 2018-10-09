@@ -190,7 +190,7 @@ def evaluate_two_class_mnist_model(model_fn, dataset_iter=None, model_name=None)
 
   mnist_spatial_limits = [10, 10, 10]
   mnist_shape = (28, 28, 1)
-  mnist_black_border_size = 0.15
+  mnist_black_border_size = 4
 
   attack_list = [
     attacks.CleanData(),
@@ -259,7 +259,7 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
 
   bird_or_bicycle_shape = (224, 224, 3)
   bird_or_bicycle_spatial_limits = [18, 18, 30]
-  bird_or_bicycle_black_border_size = 0.15
+  bird_or_bicycle_black_border_size = 20
 
   attack_list = [
     attacks.CleanData(),
@@ -267,7 +267,7 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
     attacks.SimpleSpatialAttack(
       spatial_limits=bird_or_bicycle_spatial_limits,
       grid_granularity=[5, 5, 31],
-      black_border_size=bird_or_bicycle_black_border_size,
+      black_border_frac=0.15,
     ),
 
     attacks.CommonCorruptionsAttack(),
@@ -276,7 +276,7 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
       model_fn,
       image_shape_hwc=bird_or_bicycle_shape,
       spatial_limits=bird_or_bicycle_spatial_limits,
-      black_border_size=0,
+      black_border_size=bird_or_bicycle_black_border_size,
       epsilon=(16. / 255),
       num_steps=200,
     ),

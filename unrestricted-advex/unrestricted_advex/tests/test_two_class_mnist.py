@@ -59,7 +59,7 @@ def test_two_class_mnist_accuracy():
     attacks.SimpleSpatialAttack(
       grid_granularity=[5, 5, 11],
       spatial_limits=mnist_spatial_limits,
-      black_border_size=mnist_black_border_size,
+      black_border_frac=mnist_black_border_size,
     ),
   ]
 

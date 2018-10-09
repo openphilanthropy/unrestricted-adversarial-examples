@@ -99,11 +99,11 @@ class SimpleSpatialAttack(Attack):
   def __init__(self,
                spatial_limits,
                grid_granularity,
-               black_border_size,
+               black_border_frac,
                ):
     self.spatial_limits = spatial_limits
     self.grid_granularity = grid_granularity
-    self.black_border_size = black_border_size
+    self.black_border_size = black_border_frac
 
     # This task is CPU bound, so we try to use all the CPUs
     N_WORKERS = multiprocessing.cpu_count() or 1

@@ -64,7 +64,6 @@ def create_undefended_keras_model_fn():
 def test_simple_spatial():
   # Set up standard attack params
   bird_or_bicycle_spatial_limits = [18, 18, 30]
-  bird_or_bicycle_black_border_size = 0.15
 
   grid_granularity = [5, 5, 31]
   model_fn = create_undefended_keras_model_fn()
@@ -72,7 +71,7 @@ def test_simple_spatial():
   spatial_attack = attacks.SimpleSpatialAttack(
     spatial_limits=bird_or_bicycle_spatial_limits,
     grid_granularity=grid_granularity,
-    black_border_size=bird_or_bicycle_black_border_size,
+    black_border_frac=0.15,
   )
 
   ds_size = 4

@@ -33,7 +33,7 @@ def test_no_transformation():
   attack = SimpleSpatialAttack(
     spatial_limits=[0, 0, 0],
     grid_granularity=[1, 1, 1],
-    black_border_size=0,
+    black_border_frac=0,
   )
 
   x_adv = attack(bright_pixel_model_fn, x_np, y_np)
@@ -56,7 +56,7 @@ def test_push_pixels_off_image():
   attack = SimpleSpatialAttack(
     spatial_limits=[0.5, 0.5, 0],
     grid_granularity=[3, 3, 1],
-    black_border_size=0,
+    black_border_frac=0,
   )
 
   x_adv = attack(bright_pixel_model_fn, x_np, y_np)
@@ -92,7 +92,7 @@ def test_keep_pixels_on_image():
   attack = SimpleSpatialAttack(
     spatial_limits=[0.5, 0.5, 0],
     grid_granularity=[3, 3, 1],
-    black_border_size=0,
+    black_border_frac=0,
   )
 
   x_adv = attack(bright_pixel_model_fn, x_np, y_np)
