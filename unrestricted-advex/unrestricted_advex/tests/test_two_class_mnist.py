@@ -56,12 +56,10 @@ def test_two_class_mnist_accuracy():
       image_shape_hwc=mnist_shape,
     ),
 
-    attacks.SpatialGridAttack(
+    attacks.SimpleSpatialAttack(
       grid_granularity=[5, 5, 11],
-      valid_check=mnist_utils.mnist_valid_check,
       spatial_limits=mnist_spatial_limits,
-      black_border_size=mnist_black_border_size,
-      image_shape_hwc=mnist_shape,
+      black_border_frac=mnist_black_border_size,
     ),
   ]
 

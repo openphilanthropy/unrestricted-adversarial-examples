@@ -2,18 +2,22 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import itertools
+import logging
+
 import multiprocessing
 import random
 from itertools import product, repeat
 
+import PIL.Image
 import numpy as np
 import tensorflow as tf
+import torchvision.transforms.functional
 from cleverhans.attacks import SPSA
 from cleverhans.model import Model
 from foolbox.attacks import BoundaryAttack as FoolboxBoundaryAttack
 from imagenet_c import corrupt
 from six.moves import xrange
-from unrestricted_advex.cleverhans_fast_spatial_attack import SpatialTransformationMethod
 
 
 class Attack(object):
@@ -33,6 +37,123 @@ class CleanData(Attack):
   def __call__(self, model_fn, images_batch_nhwc, y_np):
     del y_np, model_fn  # unused
     return images_batch_nhwc
+
+
+def apply_transformation(x, angle, dx, dy, black_border_size):
+  """Apply a transformation to an image"""
+  x = PIL.Image.fromarray((x * 255.).astype(np.uint8))
+
+  # Apply black border
+  orig_width = x.width
+  orig_height = x.height
+
+  padding_x = int(float(orig_height) * black_border_size)
+  padding_y = int(float(orig_width) * black_border_size)
+
+  x = torchvision.transforms.functional.resize(x, [
+    orig_height - (padding_y * 2),
+    orig_width - (padding_x * 2),
+  ])
+
+  x = torchvision.transforms.functional.pad(x, (
+    padding_x,
+    padding_y,
+  ))
+
+  # Apply rotation and transformation
+  x = torchvision.transforms.functional.affine(
+    x,
+    angle=angle,
+    translate=[dx, dy],
+    shear=0,
+    resample=PIL.Image.BILINEAR,
+    scale=1
+  )
+  return np.array(x).astype(np.float32) / 255.
+
+
+def _apply_transformation_star(args):
+  """python 2.7 doesn't support Pool.starmap"""
+  return apply_transformation(*args)
+
+
+def _batched_apply(fn, x, batch_size):
+  all_out = []
+  n_batches = int(np.ceil(len(x) / batch_size))
+  for batch_idx in range(n_batches):
+    batch_start = batch_idx * batch_size
+    batch_end = (batch_idx + 1) * batch_size
+    batch = x[batch_start: batch_end]
+    all_out.append(fn(batch))
+  return np.concatenate(all_out)
+
+
+class SimpleSpatialAttack(Attack):
+  """Fast attack from "A Rotation and a Translation Suffice: Fooling CNNs with
+    Simple Transformations", Engstrom et al. 2018
+
+    https://arxiv.org/pdf/1712.02779.pdf
+    """
+  name = 'spatial_grid'
+
+  def __init__(self,
+               spatial_limits,
+               grid_granularity,
+               black_border_frac,
+               ):
+    self.spatial_limits = spatial_limits
+    self.grid_granularity = grid_granularity
+    self.black_border_size = black_border_frac
+
+    # This task is CPU bound, so we try to use all the CPUs
+    N_WORKERS = multiprocessing.cpu_count() or 1
+    logging.info("SpatialAttack will run  with %s cpus" % N_WORKERS)
+    if N_WORKERS < 8:
+      print("WARNING: Running SpatialAttack with fewer than 8 CPUs "
+            "is extremely slow because SpatialAttack is CPU-bound")
+    self.pool = multiprocessing.Pool(N_WORKERS)
+
+  def __call__(self, model_fn, images_batch_nhwc, y_np):
+    batch_size = len(images_batch_nhwc)
+
+    dx_limit, dy_limit, angle_limit = self.spatial_limits
+    n_dxs, n_dys, n_angles = self.grid_granularity
+
+    # Define the range of transformations
+    dxs = np.linspace(-dx_limit, dx_limit, n_dxs)
+    dys = np.linspace(-dy_limit, dy_limit, n_dxs)
+    angles = np.linspace(-angle_limit, angle_limit, n_angles)
+
+    transforms = list(itertools.product(*[dxs, dys, angles]))
+
+    # Keep track of the worst corruption for each image
+    worst_xs = np.copy(images_batch_nhwc)
+    worst_loss = [np.NINF] * batch_size
+
+    # Iterate through each image in the batch
+    for batch_idx, x in enumerate(images_batch_nhwc):
+      transform_args = [(x, angle, dx, dy, self.black_border_size)
+                        for (angle, dx, dy) in transforms]
+
+      adv_x_batch = self.pool.map(_apply_transformation_star, transform_args)
+      adv_x_batch = [x for x in adv_x_batch]
+
+      logits_batch = _batched_apply(model_fn, np.array(adv_x_batch),
+                                    batch_size=32)
+      label = int(y_np[batch_idx])
+
+      # This is left un-vectorized for readability
+      for (logits, adv_x) in zip(logits_batch, adv_x_batch):
+        correct_logit, wrong_logit = logits[label], logits[1 - label]
+
+        # We can choose different loss functions to optimize in the
+        # attack. For now, optimize the magnitude of the wrong logit
+        # because we use this as our confidence threshold
+        loss = wrong_logit - correct_logit
+        if loss > worst_loss[batch_idx]:
+          worst_xs[batch_idx] = adv_x
+          worst_loss[batch_idx] = loss
+    return worst_xs
 
 
 class SpsaAttack(Attack):
@@ -217,71 +338,6 @@ class BoundaryAttack(Attack):
     return np.array(r)
 
 
-class FastSpatialGridAttack(Attack):
-  """Fast attack from "A Rotation and a Translation Suffice: Fooling CNNs with
-    Simple Transformations", Engstrom et al. 2018
-
-    https://arxiv.org/pdf/1712.02779.pdf
-    """
-  name = 'spatial_grid'
-
-  def __init__(self, model,
-               image_shape_hwc,
-               spatial_limits,
-               grid_granularity,
-               black_border_size,
-               ):
-    self.graph = tf.Graph()
-
-    with self.graph.as_default():
-      self.sess = tf.Session(graph=self.graph)
-
-      self.x_input = tf.placeholder(
-        tf.float32, shape=[None] + list(image_shape_hwc))
-      self.y_input = tf.placeholder(tf.float32, shape=(None, 2))
-
-      self.model = model
-      attack = SpatialTransformationMethod(
-        CleverhansPyfuncModelWrapper(self.model), sess=self.sess)
-
-      self.x_adv = attack.generate(
-        self.x_input,
-        y=self.y_input,
-        n_samples=None,
-        dx_min=-float(spatial_limits[0]) / image_shape_hwc[0],
-        dx_max=float(spatial_limits[0]) / image_shape_hwc[0],
-        n_dxs=grid_granularity[0],
-        dy_min=-float(spatial_limits[1]) / image_shape_hwc[1],
-        dy_max=float(spatial_limits[1]) / image_shape_hwc[1],
-        n_dys=grid_granularity[1],
-        angle_min=-spatial_limits[2],
-        angle_max=spatial_limits[2],
-        n_angles=grid_granularity[2],
-        black_border_size=black_border_size,
-      )
-
-      self.graph.finalize()
-
-  def __call__(self, model_fn, x_np, y_np):
-    if model_fn != self.model:
-      raise ValueError('Cannot call spatial attack on different models')
-    del model_fn  # unused except to check that we already wired it up right
-
-    y_np_one_hot = np.zeros([len(y_np), 2], np.float32)
-    y_np_one_hot[np.arange(len(y_np)), y_np] = 1.0
-
-    # Reduce the batch size to 1 to avoid OOM errors
-    with self.graph.as_default():
-      all_x_adv_np = []
-      for i in xrange(len(x_np)):
-        x_adv_np = self.sess.run(self.x_adv, feed_dict={
-          self.x_input: np.expand_dims(x_np[i], axis=0),
-          self.y_input: np.expand_dims(y_np_one_hot[i], axis=0),
-        })
-        all_x_adv_np.append(x_adv_np)
-      return np.concatenate(all_x_adv_np)
-
-
 class SpatialGridAttack(Attack):
   """Attack from "A Rotation and a Translation Suffice: Fooling CNNs with
   Simple Transformations", Engstrom et al. 2018
@@ -318,7 +374,7 @@ class SpatialGridAttack(Attack):
         border_size=black_border_size
       )
 
-      self._tranformed_x_op = apply_transformation(
+      self._tranformed_x_op = tf_apply_transformation(
         x,
         transform=self._t_for_trans,
         image_height=image_shape_hwc[0],
@@ -408,7 +464,7 @@ def apply_black_border(x, image_height, image_width, border_size):
   return x
 
 
-def apply_transformation(x, transform, image_height, image_width):
+def tf_apply_transformation(x, transform, image_height, image_width):
   # Map a transformation onto the input
   trans_x, trans_y, rot = tf.unstack(transform, axis=1)
   rot *= np.pi / 180  # convert degrees to radians
@@ -471,7 +527,7 @@ class RandomSpatialAttack(Attack):
         border_size=black_border_size
       )
 
-      self._tranformed_x_op = apply_transformation(
+      self._tranformed_x_op = tf_apply_transformation(
         x,
         transform=self._t_for_trans,
         image_height=image_shape_hwc[0],

@@ -264,21 +264,19 @@ def evaluate_bird_or_bicycle_model(model_fn, dataset_iter=None, model_name=None)
   attack_list = [
     attacks.CleanData(),
 
-    attacks.CommonCorruptionsAttack(),
-
-    attacks.FastSpatialGridAttack(
-      model_fn,
-      image_shape_hwc=bird_or_bicycle_shape,
+    attacks.SimpleSpatialAttack(
       spatial_limits=bird_or_bicycle_spatial_limits,
       grid_granularity=[5, 5, 31],
-      black_border_size=bird_or_bicycle_black_border_size,
+      black_border_frac=0.15,
     ),
+
+    attacks.CommonCorruptionsAttack(),
 
     attacks.SpsaWithRandomSpatialAttack(
       model_fn,
       image_shape_hwc=bird_or_bicycle_shape,
       spatial_limits=bird_or_bicycle_spatial_limits,
-      black_border_size=0,
+      black_border_size=bird_or_bicycle_black_border_size,
       epsilon=(16. / 255),
       num_steps=200,
     ),
