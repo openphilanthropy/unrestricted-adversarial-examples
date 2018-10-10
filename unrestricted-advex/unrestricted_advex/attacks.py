@@ -17,6 +17,7 @@ from cleverhans.model import Model
 from foolbox.attacks import BoundaryAttack as FoolboxBoundaryAttack
 from imagenet_c import corrupt
 from six.moves import xrange
+from unrestricted_advex.utils import suppress_stdout
 
 
 class Attack(object):
