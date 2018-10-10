@@ -26,14 +26,12 @@ def train_overfit_classifier(num_batches, batch_size):
   return mnist_utils.np_two_class_mnist_model(model_dir)
 
 
-@pytest.mark.skipif(not tf.test.is_gpu_available(),
-                    reason="Running attacks on MNIST currently requires a GPU :( ")
 def test_two_class_mnist_accuracy():
   """ Train an mnist model on a subset of mnist and then evaluate it
   on small attacks *on the training set*.
   """
-  model_fn = train_overfit_classifier(num_batches=32, batch_size=1)
-  dataset_iter = mnist_utils.get_two_class_iterator('train', num_datapoints=32, batch_size=1)
+  model_fn = train_overfit_classifier(num_batches=4, batch_size=1)
+  dataset_iter = mnist_utils.get_two_class_iterator('train', num_datapoints=4, batch_size=1)
 
   mnist_spatial_limits = [10, 10, 10]
   mnist_shape = (28, 28, 1)
