@@ -4,7 +4,6 @@ from __future__ import print_function
 
 import itertools
 import logging
-
 import multiprocessing
 import random
 from itertools import product, repeat
@@ -18,6 +17,7 @@ from cleverhans.model import Model
 from foolbox.attacks import BoundaryAttack as FoolboxBoundaryAttack
 from imagenet_c import corrupt
 from six.moves import xrange
+from unrestricted_advex.utils import suppress_stdout
 
 
 class Attack(object):
@@ -305,7 +305,7 @@ class BoundaryAttack(Attack):
       self.attack = FoolboxBoundaryAttack(model=Model(), threshold=mse_threshold)
     except:
       # Fall back to the original implementation.
-      print("WARNING: Using foolbox version < 1.5 will cuase the "
+      print("WARNING: Using foolbox version < 1.5 will cause the "
             "boundary attack to perform more work than is required. "
             "Please upgrade to version 1.5")
       self.attack = FoolboxBoundaryAttack(model=Model())
@@ -316,10 +316,11 @@ class BoundaryAttack(Attack):
       other = 1 - y_np[i]
       initial_adv = random.choice(self.label_to_examples[other])
       try:
-        adv = self.attack(x_np[i], y_np[i],
-                          log_every_n_steps=100,  # Reduce verbosity of the attack
-                          starting_point=initial_adv
-                          )
+        with suppress_stdout():  # Foolbox is extremely verbose, so we silence it
+          adv = self.attack(x_np[i], y_np[i],
+                            log_every_n_steps=100,  # Reduce verbosity of the attack
+                            starting_point=initial_adv
+                            )
         distortion = np.sum((x_np[i] - adv) ** 2) ** .5
         if distortion > self.max_l2_distortion:
           # project to the surface of the L2 ball
