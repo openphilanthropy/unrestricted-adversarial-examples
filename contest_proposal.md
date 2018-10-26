@@ -318,8 +318,9 @@ The image is determined to be valid only if all of the following hold true:
 3. the image is not truncated, is not occluded, and is not a depiction of any sort.
 
 
-### Addendum: Optional "closed" defense submissions
-If a researcher has an idea for a defense that they would like to try out, but they do not yet want to make the defense mechanism public, they can optionally submit a **closed defense**. A closed defense releases the pre-trained model and weights, but not the code, hyperparameters, nor any data required to train it. If staked (by the review board, or by the submitter), successful attacks against a closed defense can still be granted the attacker prize. However, **closed defense submissions cannot win the competition**. A closed defense can be re-submitted as an open defense, in which case the 90-day timer starts and it becomes eligible to win.
+# Addendum: Optional "closed" defense submissions
+If a researcher has an idea for a defense that they would like to try out, but they do not yet want 
+to make the defense mechanism public, they can optionally submit a **closed defense**. A closed defense releases the pre-trained model and weights, but not the code, hyperparameters, nor any data required to train it. If staked (by the review board, or by the submitter), successful attacks against a closed defense can still be granted the attacker prize. However, **closed defense submissions cannot win the competition**. A closed defense can be re-submitted as an open defense, in which case the 90-day timer starts and it becomes eligible to win.
 
 
 # Additional Contest Mechanics FAQ
