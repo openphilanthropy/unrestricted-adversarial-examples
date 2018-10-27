@@ -364,3 +364,17 @@ All this considered, for a contest with N models, we could imagine having maybe 
 ### What are the eligibility rules for the contest? In particular, are family members or spouses of Google employees eligible?
 
 When we figure out any prizes for the full contest, the contest organizers definitely won't be eligible for prizes. We believe (but can't commit to saying) anyone else, including google employees, will be able to get prizes.
+
+### Do the organizers have an equivalency for the abstain mechanism in mind, if this is not implemented? Or may defenders provide an arbitrary threshold below which the model is said to abstain?
+
+Models will return one of {bird, bicycle, abstain} for each input. The requirements are:
+
+- If the model outputs "bird", the true class label must be bird.
+- If the model outputs "bicycle", the true class label must be bicycle.
+- If the model outputs "abstain", the true class label can be either bird or bicycle.
+- The model must abstain on no more than 20% of the clean, un-modified training data.
+
+
+### Are confident mistakes on the clean eligibility dataset acceptable provided the model achieves at least 80% accuracy?
+
+Confident mistakes on the clean eligibility dataset are acceptable. However, defenses that make confident mistakes on the clean eligibility dataset are highly likely to make confident mistakes on adversarial images as well.
