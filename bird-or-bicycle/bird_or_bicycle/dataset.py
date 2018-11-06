@@ -141,7 +141,7 @@ def _map_with_tqdm(fn, iterable, n_workers=N_WORKERS, total=None):
   pool.join()
 
 
-def _download_to_dir(image_ids, dest_dir, split):
+def _download_to_dir(image_ids, dest_dir):
   print("Bird or Bicycle Data Version: {VERSION}. Saving {n_images} images to {dest_dir} \
     (using {N_WORKERS} parallel processes)".format(
     VERSION=VERSION,
@@ -257,7 +257,7 @@ def get_dataset(split, data_root=None, force_download=False, verify=True):
   for label_name in ['bird', 'bicycle']:
     image_ids = label_name_to_image_ids[label_name]
     dest_dir = os.path.join(split_root, label_name)
-    _download_to_dir(image_ids, dest_dir, split)
+    _download_to_dir(image_ids, dest_dir)
 
   _crop_and_resize_images(split_root)
   if verify:
