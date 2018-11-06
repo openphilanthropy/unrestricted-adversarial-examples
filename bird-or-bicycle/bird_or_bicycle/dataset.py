@@ -24,7 +24,7 @@ from PIL import Image
 from bird_or_bicycle import metadata
 from tqdm import tqdm
 
-VERSION = '0.0.3'
+VERSION = '0.0.4'
 METADATA_ROOT = os.path.dirname(metadata.__file__)
 
 # https://stackoverflow.com/questions/20886565/using-multiprocessing-process-with-a-maximum-number-of-simultaneous-processes
@@ -226,11 +226,6 @@ def verify_dataset_integrity(split, data_root=None):
       Please remove the corrupt dataset and try again" % (
         class_dir, expected_images, len(images_in_class))
 
-  if False:  # Disable checksum for now
-    shasum = _compute_sha1sum_of_directory(split_root)
-    assert shasum == metadata.SHASUMS[
-      VERSION][split], "sha1sum mismatch (got: %s). Please remove the files in %s" % (
-      shasum, split_root)
   print("Verification of dataset successful. Dataset is correctly prepared.")
 
 

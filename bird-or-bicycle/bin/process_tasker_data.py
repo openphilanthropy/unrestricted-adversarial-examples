@@ -3,7 +3,7 @@ import json
 import os.path
 from collections import defaultdict
 
-MIN_BBOX_AREA = (0.5 * 299) ** 2
+MIN_BBOX_AREA = (0.4 * 299) ** 2
 
 ALLOW_TRUNCATED = True
 ALLOW_OCCLUDED = True
@@ -79,7 +79,12 @@ if __name__ == '__main__':
   unambiguous_bicycle_urls = []
 
   rejection_reason_to_urls = defaultdict(list)
-  filename = '/Users/tomfeelslucky/Downloads/bird-or-bicycle-tasker-data - shuffled_urls_v0-0-1.csv'
+
+  # Raw tasker labels can be fetched with the following command:
+  #
+  # wget --no-check-certificate https://drive.google.com/open?id=1pfW-QEDKieQrEBioopGJxz-CJhrSiPJq -O /tmp/tasker_labels_0.0.4.csv
+  #
+  filename = '/tmp/tasker_labels_0.0.4.csv'
   with open(filename, 'r') as f:
     reader = csv.reader(f)
     _ = next(reader)
