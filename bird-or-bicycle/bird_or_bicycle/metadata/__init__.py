@@ -10,8 +10,8 @@ NUM_IMAGES_PER_CLASS = {
     'extras': 13000,
   },
   '0.0.4': {
-    'train': 500,
-    'test': 500,
-    'extras': 13000,
+    'train': 125,
+    'test': 125,
+    'extras': 13750,
   }
 }

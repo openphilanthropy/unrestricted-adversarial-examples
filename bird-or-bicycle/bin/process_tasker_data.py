@@ -5,7 +5,7 @@ from collections import defaultdict
 
 MIN_BBOX_AREA = (0.4 * 299) ** 2
 
-ALLOW_TRUNCATED = True
+ALLOW_TRUNCATED = False
 ALLOW_OCCLUDED = True
 
 
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
   # Raw tasker labels can be fetched with the following command:
   #
-  # wget --no-check-certificate https://drive.google.com/open?id=1pfW-QEDKieQrEBioopGJxz-CJhrSiPJq -O /tmp/tasker_labels_0.0.4.csv
+  # wget --no-check-certificate "https://drive.google.com/uc?authuser=0&id=1pfW-QEDKieQrEBioopGJxz-CJhrSiPJq&export=download" -O /tmp/tasker_labels_0.0.4.csv
   #
   filename = '/tmp/tasker_labels_0.0.4.csv'
   with open(filename, 'r') as f:
@@ -122,12 +122,12 @@ if __name__ == '__main__':
       if not ALLOW_OCCLUDED:
         if not all([not resp.is_occluded for resp in responses]):
           rejection_reason_to_urls['is_occluded'].append(url)
-        continue
+          continue
 
       if not ALLOW_TRUNCATED:
         if not all([not resp.is_truncated for resp in responses]):
           rejection_reason_to_urls['is_truncated'].append(url)
-        continue
+          continue
 
       if orig_label == 'bird' and \
           all([resp.is_unambiguous_bird() for resp in responses]):
@@ -144,6 +144,8 @@ if __name__ == '__main__':
   print('unambiguous_bicycle_ids: ', len(unambiguous_bicycle_ids))
   print('unambiguous_bird_ids: ', len(unambiguous_bird_ids))
 
+
+
   results_dir = '/tmp/'
   with open(os.path.join(results_dir, 'bird_image_ids.csv'), 'w') as f:
     for bird_id in unambiguous_bird_ids:
@@ -154,3 +156,9 @@ if __name__ == '__main__':
       f.write(bicycle_id + '\n')
 
   print("Wrote results to %s" % results_dir)
+
+  print('=================================')
+  print('rejection reasons')
+  print('=================================')
+  for reason, urls in rejection_reason_to_urls.items():
+    print('%s => %s' % (reason, len(urls)))

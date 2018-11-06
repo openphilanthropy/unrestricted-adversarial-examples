@@ -22,12 +22,14 @@ from subprocess import check_output
 import torchvision
 from PIL import Image
 from bird_or_bicycle import metadata
+from bird_or_bicycle.metadata import NUM_IMAGES_PER_CLASS
 from tqdm import tqdm
 
 VERSION = '0.0.4'
 METADATA_ROOT = os.path.dirname(metadata.__file__)
 
-# https://stackoverflow.com/questions/20886565/using-multiprocessing-process-with-a-maximum-number-of-simultaneous-processes
+# https://stackoverflow.com/questions/20886565/using-multiprocessing-process-with-a-maximum
+# -number-of-simultaneous-processes
 N_WORKERS = multiprocessing.cpu_count() * 2 or 1
 
 OPEN_IMAGES_BIRD_CLASS = '/m/015p6'
@@ -49,11 +51,12 @@ def _is_valid_extras_image(bbox_row, strict=False, min_bbox_area=0.2 ** 2):
   :param min_bbox_area:
   :return:
   """
-  image_id, source, label_name, confidence, x_min, x_max, y_min, y_max, is_occluded, is_truncated, is_group_of, is_depiction, is_inside = bbox_row
+  image_id, source, label_name, confidence, x_min, x_max, y_min, y_max, is_occluded, \
+  is_truncated, is_group_of, is_depiction, is_inside = bbox_row
 
   if strict:
     if int(is_occluded) or int(is_depiction) or int(is_inside) or int(
-        is_group_of) or int(is_truncated):
+          is_group_of) or int(is_truncated):
       return False
 
   # Check that the image is not very small
@@ -139,7 +142,7 @@ def _map_with_tqdm(fn, iterable, n_workers=N_WORKERS, total=None):
 
 
 def _download_to_dir(image_ids, dest_dir, split):
-  print("Version: {VERSION}. Saving {n_images} images to {dest_dir} \
+  print("Bird or Bicycle Data Version: {VERSION}. Saving {n_images} images to {dest_dir} \
     (using {N_WORKERS} parallel processes)".format(
     VERSION=VERSION,
     n_images=len(image_ids),
@@ -188,10 +191,13 @@ def _get_bird_and_bicycle_image_ids(split):
     path = os.path.join(METADATA_ROOT, VERSION, "%s_image_ids.csv" % label_name)
     with open(path, 'r') as f:
       image_ids = f.read().strip().split('\n')
+
+      n_train = NUM_IMAGES_PER_CLASS[VERSION]['train']
+      n_test = NUM_IMAGES_PER_CLASS[VERSION]['test']
       if split == "test":
-        image_ids = image_ids[0:500]
+        image_ids = image_ids[0:n_test]
       elif split == 'train':
-        image_ids = image_ids[500:1000]
+        image_ids = image_ids[n_test:(n_test + n_train)]
       else:
         raise ValueError()
 
