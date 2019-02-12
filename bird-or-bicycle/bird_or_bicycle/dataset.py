@@ -76,7 +76,7 @@ def _get_extras_image_ids():
   bbox_url = 'https://storage.googleapis.com/openimages/2018_04/train/train-annotations-bbox.csv'
   bbox_file = os.path.join(METADATA_ROOT, 'train-annotations-bbox.csv')
   if not os.path.isfile(bbox_file):
-    cmd = 'wget %s -O %s' % (bbox_url, bbox_file)
+    cmd = 'wget %s -O "%s"' % (bbox_url, bbox_file)
     print(cmd)
     check_output(cmd, shell=True)
 
