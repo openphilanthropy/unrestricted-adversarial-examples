@@ -27,7 +27,7 @@ install:
   - source activate test-environment
 
   # install TensorFlow
-  - pip install tensorflow==1.15.2
+  - pip install tensorflow==1.14.0
 
 # command to run tests
 script:
