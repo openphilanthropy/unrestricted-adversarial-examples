@@ -4,7 +4,9 @@ dist: trusty
 language: python
 python:
   - 2.7
-  - 3.5
+# Python 3.5 is unfortunately bitrotten. See this build for an example
+# https://travis-ci.org/google/unrestricted-adversarial-examples/builds/625054022
+#  - 3.5
 
 env:
   - TENSORFLOW_V=1.8.0
