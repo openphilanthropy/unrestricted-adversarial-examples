@@ -4,8 +4,6 @@ dist: trusty
 language: python
 python:
   - 3.5
-env:
-  - TENSORFLOW_V=1.15.2
 
 install:
   # code below is taken from http://conda.pydata.org/docs/travis.html
@@ -29,7 +27,7 @@ install:
   - source activate test-environment
 
   # install TensorFlow
-  - pip install tensorflow=="$TENSORFLOW_V"
+  - pip install tensorflow==1.15.2
 
 # command to run tests
 script:
