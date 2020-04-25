@@ -7,7 +7,7 @@ This repository contains code for [the warm-up to the challenge](warmup.md), as 
 ![image](https://user-images.githubusercontent.com/306655/44686400-f0b74800-aa02-11e8-8967-fa354244813f.png)
 
 
-#### Current Status
+### Current Status
 The [latest submission by Chongli Qin et al](https://github.com/deepmind/deepmind-research/tree/master/unrestricted_advx) has claimed to solve the warm-up to the challenge. We are verifying the submission with our advisory board, and preparing to launch the full-fledged version of the contest.
 
 ### <a name="leaderboard"></a>Leaderboard for the warm-up to the contest
