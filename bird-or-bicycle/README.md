@@ -29,6 +29,6 @@ train_generator = train_datagen.flow_from_directory(train_dataset_folder)
 
 # Splits
 
-- clean train -> 1k
-- clean test -> 1k
-- extras -> 40k
+- clean train -> 125 images/class
+- clean test -> 125 images/class
+- extras -> 13750 images/class
